@@ -13,7 +13,7 @@ export default function TopBar({ user }) {
   }, [user]);
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 border-b border-border bg-card/90 backdrop-blur">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 border-b border-border backdrop-blur bg-[hsl(var(--card))]">
       <span className="font-display text-xl text-primary md:hidden">Ball Up Top</span>
       <div className="hidden md:block" />
       <div className="flex items-center gap-3">
@@ -27,6 +27,6 @@ export default function TopBar({ user }) {
           </Avatar>
         </Link>
       </div>
-    </header>
-  );
+    </header>);
+
 }
