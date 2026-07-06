@@ -14,7 +14,7 @@ export default function TopBar({ user }) {
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 border-b border-border backdrop-blur bg-[#b3ccf5]">
-      <span className="font-display text-xl text-primary md:hidden">Ball Up Top</span>
+      <span className="font-display text-xl md:hidden text-[hsl(var(--primary))]">Ball Up Top</span>
       <div className="hidden md:block" />
       <div className="flex items-center gap-3">
         <Link to="/notifications" className="relative p-2 rounded-full hover:bg-muted">
