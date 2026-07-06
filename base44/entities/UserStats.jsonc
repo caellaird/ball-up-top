@@ -1,0 +1,37 @@
+{
+  "name": "UserStats",
+  "type": "object",
+  "properties": {
+    "user_name": {
+      "type": "string"
+    },
+    "games_played": {
+      "type": "number",
+      "default": 0
+    },
+    "games_won": {
+      "type": "number",
+      "default": 0
+    },
+    "challenge_wins": {
+      "type": "number",
+      "default": 0
+    },
+    "ball_knower_points": {
+      "type": "number",
+      "default": 0
+    },
+    "ball_knower_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "ball_knower_longest_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "last_answer_date": {
+      "type": "string",
+      "format": "date"
+    }
+  }
+}

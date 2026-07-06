@@ -1,0 +1,75 @@
+{
+  "name": "Game",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "pickup",
+        "full_court_5v5",
+        "half_court_3v3",
+        "one_v_one",
+        "scrimmage"
+      ],
+      "default": "pickup"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 90
+    },
+    "max_players": {
+      "type": "number",
+      "default": 10
+    },
+    "current_player_count": {
+      "type": "number",
+      "default": 1
+    },
+    "skill_level": {
+      "type": "number",
+      "default": 5
+    },
+    "cost": {
+      "type": "number",
+      "default": 0
+    },
+    "description": {
+      "type": "string"
+    },
+    "creator_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "full",
+        "started",
+        "completed",
+        "cancelled"
+      ],
+      "default": "open"
+    },
+    "winning_team": {
+      "type": "string"
+    },
+    "final_score": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "location_name",
+    "start_time"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "DailyQuestion",
+  "type": "object",
+  "properties": {
+    "question_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "question": {
+      "type": "string"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "correct_index": {
+      "type": "number"
+    },
+    "explanation": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "default": "medium"
+    }
+  },
+  "required": [
+    "question_date",
+    "question",
+    "options",
+    "correct_index"
+  ]
+}

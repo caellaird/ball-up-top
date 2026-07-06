@@ -1,0 +1,51 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "favorite_team": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "PG",
+        "SG",
+        "SF",
+        "PF",
+        "C",
+        "Any"
+      ]
+    },
+    "skill_level": {
+      "type": "number",
+      "default": 5
+    },
+    "privacy_level": {
+      "type": "string",
+      "enum": [
+        "public",
+        "friends",
+        "private"
+      ],
+      "default": "public"
+    }
+  },
+  "required": [
+    "username"
+  ]
+}

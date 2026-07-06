@@ -1,0 +1,27 @@
+{
+  "name": "Friend",
+  "type": "object",
+  "properties": {
+    "requester_name": {
+      "type": "string"
+    },
+    "addressee_id": {
+      "type": "string"
+    },
+    "addressee_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "addressee_id"
+  ]
+}

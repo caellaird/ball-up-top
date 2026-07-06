@@ -1,0 +1,23 @@
+{
+  "name": "DailyQuestionAnswer",
+  "type": "object",
+  "properties": {
+    "question_id": {
+      "type": "string"
+    },
+    "selected_index": {
+      "type": "number"
+    },
+    "is_correct": {
+      "type": "boolean"
+    },
+    "points_earned": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "question_id",
+    "selected_index"
+  ]
+}

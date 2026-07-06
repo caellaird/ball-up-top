@@ -1,0 +1,32 @@
+{
+  "name": "Community",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "member_count": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}
