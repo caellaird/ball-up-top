@@ -11,19 +11,15 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
-import AppLayout from '@/components/layout/AppLayout';
+import MobileShell from '@/components/layout/MobileShell';
 import Home from '@/pages/Home';
-import Daily from '@/pages/Daily';
-import Games from '@/pages/Games';
-import GameDetail from '@/pages/GameDetail';
+import BallUp from '@/pages/BallUp';
+import Groups from '@/pages/Groups';
 import Challenges from '@/pages/Challenges';
 import ChallengeDetail from '@/pages/ChallengeDetail';
-import Communities from '@/pages/Communities';
-import CommunityDetail from '@/pages/CommunityDetail';
 import Messages from '@/pages/Messages';
 import Conversation from '@/pages/Conversation';
 import Profile from '@/pages/Profile';
-import Leaderboards from '@/pages/Leaderboards';
 import Friends from '@/pages/Friends';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
@@ -59,19 +55,14 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<AppLayout />}>
+        <Route element={<MobileShell />}>
           <Route path="/" element={<Home />} />
-          <Route path="/daily" element={<Daily />} />
-          <Route path="/games" element={<Games />} />
-          <Route path="/games/:id" element={<GameDetail />} />
+          <Route path="/ball-up" element={<BallUp />} />
+          <Route path="/groups" element={<Groups />} />
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/challenges/:id" element={<ChallengeDetail />} />
-          <Route path="/communities" element={<Communities />} />
-          <Route path="/communities/:id" element={<CommunityDetail />} />
-          <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:threadId" element={<Conversation />} />
           <Route path="/profile/:username" element={<Profile />} />
-          <Route path="/leaderboards" element={<Leaderboards />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />

@@ -13,6 +13,18 @@
       "type": "number",
       "default": 0
     },
+    "losses": {
+      "type": "number",
+      "default": 0
+    },
+    "current_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "longest_streak": {
+      "type": "number",
+      "default": 0
+    },
     "challenge_wins": {
       "type": "number",
       "default": 0

@@ -1,28 +1,53 @@
 import React, { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import Header from '@/components/layout/Header';
+import SegmentedControl from '@/components/shared/SegmentedControl';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
-import CreateChallengeDialog from '@/components/challenges/CreateChallengeDialog';
 import EmptyState from '@/components/shared/EmptyState';
 
 export default function Challenges() {
+  const { user } = useOutletContext();
+  const [tab, setTab] = useState('pending');
   const [challenges, setChallenges] = useState(null);
 
   useEffect(() => {
-    base44.entities.Challenge.list('-created_date', 50).then(setChallenges);
+    load();
   }, []);
 
-  if (challenges === null) return <div className="text-center text-muted-foreground py-10">Loading challenges...</div>;
+  const load = async () => {
+    const all = await base44.entities.Challenge.list('-created_date', 100);
+    setChallenges(all.filter((c) => c.created_by_id === user.id || c.opponent_id === user.id));
+  };
+
+  const grouped = {
+    pending: challenges?.filter((c) => c.status === 'pending') || [],
+    accepted: challenges?.filter((c) => c.status === 'accepted') || [],
+    completed: challenges?.filter((c) => c.status === 'completed') || [],
+  };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl">Challenges</h1>
-        <CreateChallengeDialog onCreated={(c) => setChallenges([c, ...challenges])} />
+      <Header title="Challenges" />
+      <div className="px-4 pt-4 pb-2 sticky top-14 z-20 bg-background">
+        <SegmentedControl
+          options={[
+            { value: 'pending', label: 'Pending' },
+            { value: 'accepted', label: 'Accepted' },
+            { value: 'completed', label: 'Completed' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       </div>
-      {challenges.length === 0 ? (
-        <EmptyState title="No challenges yet" description="Create one or join a public challenge!" />
+      {challenges === null ? (
+        <div className="text-center text-muted-foreground py-10">Loading challenges...</div>
+      ) : grouped[tab].length === 0 ? (
+        <EmptyState title="Nothing here" description="Tap BALL UP to challenge a friend!" />
       ) : (
-        challenges.map((c) => <ChallengeCard key={c.id} challenge={c} />)
+        <div className="pt-2">
+          {grouped[tab].map((c) => <ChallengeCard key={c.id} challenge={c} />)}
+        </div>
       )}
     </div>
   );

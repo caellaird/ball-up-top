@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter:wght@400&family=Archivo:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,35 +6,35 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 221 39% 11%;
+    --background: 210 30% 97%;
+    --foreground: 220 25% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 221 39% 11%;
+    --card-foreground: 220 25% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 221 39% 11%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 45 97% 50%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 136 53% 43%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 220 25% 14%;
+    --primary: 203 72% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 355 68% 42%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 25% 94%;
+    --muted-foreground: 220 12% 45%;
+    --accent: 24 96% 55%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 5 81% 56%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 80%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 210 20% 89%;
+    --input: 210 20% 89%;
+    --ring: 203 72% 52%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --font-heading: 'Archivo', sans-serif;
-    --font-body: 'Archivo', sans-serif;
-    --font-display: 'Architects Daughter', system-ui;
-    --font-mono: 'Archivo', sans-serif;
+    --radius: 1.1rem;
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-display: 'Poppins', sans-serif;
+    --font-mono: 'Inter', sans-serif;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;

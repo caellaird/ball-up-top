@@ -10,5 +10,5 @@ export async function getOrCreateProfile(user) {
 export async function getOrCreateStats(user) {
   const existing = await base44.entities.UserStats.filter({ created_by_id: user.id });
   if (existing.length > 0) return existing[0];
-  return base44.entities.UserStats.create({ user_name: user.full_name });
+  return base44.entities.UserStats.create({ user_name: user.full_name, games_played: 0, games_won: 0, losses: 0, current_streak: 0, longest_streak: 0 });
 }

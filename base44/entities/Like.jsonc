@@ -4,6 +4,15 @@
   "properties": {
     "post_id": {
       "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "fire",
+        "trash_talk"
+      ],
+      "default": "like"
     }
   },
   "required": [

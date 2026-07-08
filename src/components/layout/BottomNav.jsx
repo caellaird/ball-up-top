@@ -1,28 +1,46 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Trophy, MessageCircle, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Swords, Users, User, Zap } from 'lucide-react';
 
 const items = [
   { to: '/', icon: Home, label: 'Home' },
-  { to: '/daily', icon: Calendar, label: 'Daily' },
-  { to: '/games', icon: Trophy, label: 'Play' },
-  { to: '/messages', icon: MessageCircle, label: 'Messages' },
+  { to: '/challenges', icon: Swords, label: 'Challenges' },
+];
+const rightItems = [
+  { to: '/groups', icon: Users, label: 'Groups' },
   { to: '/profile/me', icon: User, label: 'Profile' },
 ];
 
 export default function BottomNav() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const isActive = (to) => location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur px-2 py-2 md:hidden">
-      {items.map(({ to, icon: Icon, label }) => {
-        const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
-        return (
-          <Link key={to} to={to} className="flex flex-col items-center gap-1 px-3 py-1">
-            <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
+    <nav className="sticky bottom-0 z-40 bg-card/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <div className="relative flex items-end justify-around px-2 pt-2 pb-2">
+        {items.map(({ to, icon: Icon, label }) => (
+          <Link key={to} to={to} className="flex flex-col items-center gap-1 px-3 py-1 w-16">
+            <Icon className={`w-6 h-6 ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-[10px] font-semibold ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
           </Link>
-        );
-      })}
+        ))}
+
+        <button onClick={() => navigate('/ball-up')} className="flex flex-col items-center -mt-8 w-16">
+          <span className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--secondary))] shadow-lg shadow-[hsl(var(--accent)/0.4)] flex items-center justify-center border-4 border-background">
+            <Zap className="w-7 h-7 text-white fill-white" />
+          </span>
+          <span className="text-[10px] font-bold text-secondary mt-1">BALL UP</span>
+        </button>
+
+        {rightItems.map(({ to, icon: Icon, label }) => (
+          <Link key={to} to={to} className="flex flex-col items-center gap-1 px-3 py-1 w-16">
+            <Icon className={`w-6 h-6 ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-[10px] font-semibold ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 }

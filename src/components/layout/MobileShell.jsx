@@ -1,31 +1,27 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
-import TopBar from './TopBar';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
-export default function AppLayout() {
+export default function MobileShell() {
   const { user, loading } = useCurrentUser();
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div className="md:pl-60">
-        <TopBar user={user} />
-        <main className="max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-10">
+    <div className="min-h-screen bg-muted/50 flex justify-center">
+      <div className="relative w-full max-w-[430px] min-h-screen bg-background flex flex-col shadow-2xl overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto pb-28">
           <Outlet context={{ user }} />
         </main>
+        <BottomNav />
       </div>
-      <BottomNav />
     </div>
   );
 }

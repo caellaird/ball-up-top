@@ -14,10 +14,16 @@
     "banner_url": {
       "type": "string"
     },
+    "cover_url": {
+      "type": "string"
+    },
     "city": {
       "type": "string"
     },
     "favorite_team": {
+      "type": "string"
+    },
+    "favorite_sport": {
       "type": "string"
     },
     "position": {
@@ -34,6 +40,10 @@
     "skill_level": {
       "type": "number",
       "default": 5
+    },
+    "ready_to_ball": {
+      "type": "boolean",
+      "default": false
     },
     "privacy_level": {
       "type": "string",

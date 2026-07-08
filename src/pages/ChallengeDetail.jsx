@@ -1,81 +1,100 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useOutletContext } from 'react-router-dom';
+import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import Header from '@/components/layout/Header';
+import { MapPin, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+import { SPORT_EMOJI } from '@/lib/constants';
+import { sendNotification } from '@/lib/notify';
+import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
   const { user } = useOutletContext();
+  const navigate = useNavigate();
   const [challenge, setChallenge] = useState(null);
-  const [participants, setParticipants] = useState([]);
-  const [myParticipant, setMyParticipant] = useState(null);
-  const [scoreInput, setScoreInput] = useState('');
+  const [showComplete, setShowComplete] = useState(false);
 
   useEffect(() => {
-    load();
+    base44.entities.Challenge.get(id).then(setChallenge);
   }, [id]);
 
-  const load = async () => {
-    const c = await base44.entities.Challenge.get(id);
-    setChallenge(c);
-    const p = await base44.entities.ChallengeParticipant.filter({ challenge_id: id }, '-score');
-    setParticipants(p);
-    setMyParticipant(p.find((x) => x.created_by_id === user.id) || null);
-  };
-
-  const join = async () => {
-    const p = await base44.entities.ChallengeParticipant.create({ challenge_id: id, user_name: user.full_name });
-    setParticipants([...participants, p]);
-    setMyParticipant(p);
-  };
-
-  const logScore = async () => {
-    const score = Number(scoreInput);
-    if (Number.isNaN(score)) return;
-    const updated = await base44.entities.ChallengeParticipant.update(myParticipant.id, { score });
-    setParticipants(participants.map((p) => (p.id === updated.id ? updated : p)));
-    setMyParticipant(updated);
-    setScoreInput('');
-  };
-
-  const completeChallenge = async () => {
-    const winner = [...participants].sort((a, b) => b.score - a.score)[0];
-    const updated = await base44.entities.Challenge.update(id, { status: 'completed', winner_name: winner?.user_name });
+  const respond = async (status) => {
+    const updated = await base44.entities.Challenge.update(id, { status });
     setChallenge(updated);
+    await sendNotification({
+      userId: challenge.created_by_id,
+      type: 'challenge_response',
+      actorName: user.full_name,
+      title: `${user.full_name} ${status} your challenge`,
+      link: `/challenges/${id}`,
+    });
   };
 
   if (!challenge) return <div className="text-center text-muted-foreground py-10">Loading challenge...</div>;
 
+  const isOpponent = challenge.opponent_id === user.id;
   const isCreator = challenge.created_by_id === user.id;
 
   return (
     <div>
-      <h1 className="font-heading text-2xl mb-2">{challenge.title}</h1>
-      <p className="text-sm text-muted-foreground mb-4">{challenge.type.replace('_', ' ')} · {challenge.status}</p>
-      {challenge.description && <p className="text-sm mb-4">{challenge.description}</p>}
-      {challenge.winner_name && <p className="text-sm font-semibold text-primary mb-4">🏆 Winner: {challenge.winner_name}</p>}
+      <Header title="Challenge" />
+      <div className="p-4">
+        <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center">
+          <span className="text-4xl">{SPORT_EMOJI[challenge.sport] || '🏆'}</span>
+          <h1 className="font-heading text-xl font-bold mt-2">{challenge.creator_name} vs {challenge.opponent_name}</h1>
+          <p className="text-sm text-muted-foreground capitalize mt-1">{challenge.sport?.replace('_', ' ')} · {challenge.series_type}</p>
 
-      {!myParticipant && challenge.status === 'active' && <Button onClick={join} className="rounded-full mb-6">Join Challenge</Button>}
-      {myParticipant && challenge.status === 'active' && (
-        <div className="flex gap-2 mb-6">
-          <Input type="number" placeholder="Your score" value={scoreInput} onChange={(e) => setScoreInput(e.target.value)} />
-          <Button onClick={logScore}>Log Score</Button>
-        </div>
-      )}
-      {isCreator && challenge.status === 'active' && (
-        <Button onClick={completeChallenge} variant="secondary" className="rounded-full mb-6">Complete Challenge</Button>
-      )}
-
-      <h3 className="font-semibold mb-3">Standings</h3>
-      <div className="space-y-2">
-        {participants.map((p, i) => (
-          <div key={p.id} className="flex items-center justify-between text-sm bg-muted rounded-lg px-3 py-2">
-            <span>#{i + 1} {p.user_name}</span>
-            <span className="font-semibold">{p.score}</span>
+          <div className="flex justify-center gap-4 text-sm text-muted-foreground mt-3">
+            {challenge.location_name && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{challenge.location_name}</span>}
+            {challenge.scheduled_time && <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{format(new Date(challenge.scheduled_time), 'MMM d, h:mm a')}</span>}
           </div>
-        ))}
+
+          {challenge.status === 'completed' && (
+            <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
+              <p className="font-heading font-bold text-lg">{challenge.score_creator} - {challenge.score_opponent}</p>
+              {challenge.winner_name && <p className="text-sm text-accent font-semibold">🏆 {challenge.winner_name} wins</p>}
+              {challenge.caption && <p className="text-sm mt-2">{challenge.caption}</p>}
+            </div>
+          )}
+        </div>
+
+        {challenge.photos?.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            {challenge.photos.map((p) => <img key={p} src={p} alt="" className="rounded-2xl object-cover w-full h-32" />)}
+          </div>
+        )}
+
+        {challenge.status === 'pending' && isOpponent && (
+          <div className="flex gap-3">
+            <Button onClick={() => respond('accepted')} className="flex-1 rounded-full h-12">Accept</Button>
+            <Button onClick={() => respond('declined')} variant="secondary" className="flex-1 rounded-full h-12">Decline</Button>
+          </div>
+        )}
+        {challenge.status === 'pending' && isCreator && (
+          <p className="text-center text-sm text-muted-foreground">Waiting for {challenge.opponent_name} to respond...</p>
+        )}
+        {challenge.status === 'accepted' && (
+          <Button onClick={() => setShowComplete(true)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
+            Complete Challenge
+          </Button>
+        )}
       </div>
+
+      {challenge && (
+        <CompleteChallengeSheet
+          open={showComplete}
+          onOpenChange={setShowComplete}
+          challenge={challenge}
+          user={user}
+          onCompleted={(updated) => {
+            setChallenge(updated);
+            setShowComplete(false);
+            navigate(`/challenges/${id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

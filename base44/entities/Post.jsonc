@@ -20,7 +20,27 @@
     "community_id": {
       "type": "string"
     },
+    "challenge_id": {
+      "type": "string"
+    },
+    "game_emoji": {
+      "type": "string"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "score_text": {
+      "type": "string"
+    },
     "like_count": {
+      "type": "number",
+      "default": 0
+    },
+    "fire_count": {
+      "type": "number",
+      "default": 0
+    },
+    "trash_count": {
       "type": "number",
       "default": 0
     },

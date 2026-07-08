@@ -2,53 +2,84 @@
   "name": "Challenge",
   "type": "object",
   "properties": {
-    "title": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "type": {
+    "sport": {
       "type": "string",
       "enum": [
-        "head_to_head",
-        "group",
-        "streak",
-        "skill",
-        "trash_talk"
+        "basketball",
+        "golf",
+        "pickleball",
+        "darts",
+        "disc_golf",
+        "cornhole",
+        "trivia",
+        "chugging",
+        "custom"
       ],
-      "default": "head_to_head"
+      "default": "basketball"
     },
     "creator_name": {
       "type": "string"
     },
-    "start_date": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "end_date": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "rules": {
+    "opponent_id": {
       "type": "string"
+    },
+    "opponent_name": {
+      "type": "string"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "series_type": {
+      "type": "string",
+      "enum": [
+        "single",
+        "bo3",
+        "bo5",
+        "bo7",
+        "open"
+      ],
+      "default": "single"
     },
     "status": {
       "type": "string",
       "enum": [
-        "active",
+        "pending",
+        "accepted",
+        "declined",
         "completed",
         "cancelled"
       ],
-      "default": "active"
+      "default": "pending"
+    },
+    "score_creator": {
+      "type": "number"
+    },
+    "score_opponent": {
+      "type": "number"
+    },
+    "winner_id": {
+      "type": "string"
     },
     "winner_name": {
       "type": "string"
+    },
+    "caption": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [
-    "title",
-    "start_date",
-    "end_date"
+    "sport",
+    "opponent_id",
+    "opponent_name"
   ]
 }

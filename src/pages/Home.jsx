@@ -1,52 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import PostComposer from '@/components/feed/PostComposer';
+import Header from '@/components/layout/Header';
+import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
 
 export default function Home() {
   const { user } = useOutletContext();
+  const [tab, setTab] = useState('friends');
   const [posts, setPosts] = useState(null);
-  const [likedIds, setLikedIds] = useState(new Set());
+  const [myReactions, setMyReactions] = useState({});
 
   useEffect(() => {
     load();
-  }, []);
+  }, [tab]);
 
   const load = async () => {
     const data = await base44.entities.Post.list('-created_date', 30);
     setPosts(data);
     const myLikes = await base44.entities.Like.filter({ created_by_id: user.id });
-    setLikedIds(new Set(myLikes.map((l) => l.post_id)));
+    const map = {};
+    myLikes.forEach((l) => {
+      map[l.post_id] = map[l.post_id] || {};
+      map[l.post_id][l.type || 'like'] = true;
+    });
+    setMyReactions(map);
   };
 
-  const toggleLike = async (post) => {
-    const isLiked = likedIds.has(post.id);
-    const newLiked = new Set(likedIds);
-    if (isLiked) {
-      const existing = await base44.entities.Like.filter({ post_id: post.id, created_by_id: user.id });
+  const countField = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count' };
+  const flagField = { like: 'liked', fire: 'fired', trash_talk: 'trashed' };
+
+  const onReact = async (post, type) => {
+    const field = countField[type];
+    const flag = flagField[type];
+    const already = myReactions[post.id]?.[type];
+    const newMap = { ...myReactions, [post.id]: { ...myReactions[post.id], [type]: !already } };
+
+    if (already) {
+      const existing = await base44.entities.Like.filter({ post_id: post.id, created_by_id: user.id, type });
       if (existing[0]) await base44.entities.Like.delete(existing[0].id);
-      await base44.entities.Post.update(post.id, { like_count: Math.max((post.like_count || 1) - 1, 0) });
-      newLiked.delete(post.id);
+      await base44.entities.Post.update(post.id, { [field]: Math.max((post[field] || 1) - 1, 0) });
     } else {
-      await base44.entities.Like.create({ post_id: post.id });
-      await base44.entities.Post.update(post.id, { like_count: (post.like_count || 0) + 1 });
-      newLiked.add(post.id);
+      await base44.entities.Like.create({ post_id: post.id, type });
+      await base44.entities.Post.update(post.id, { [field]: (post[field] || 0) + 1 });
     }
-    setLikedIds(newLiked);
-    setPosts(posts.map((p) => (p.id === post.id ? { ...p, like_count: p.like_count + (isLiked ? -1 : 1) } : p)));
+    setMyReactions(newMap);
+    setPosts(posts.map((p) => (p.id === post.id ? { ...p, [field]: p[field] + (already ? -1 : 1) } : p)));
   };
-
-  if (posts === null) return <div className="text-center text-muted-foreground py-10">Loading feed...</div>;
 
   return (
     <div>
-      <PostComposer onPosted={(p) => setPosts([p, ...posts])} />
-      {posts.length === 0 ? (
-        <EmptyState title="Your feed is empty" description="Be the first to post and get the run started!" />
+      <Header />
+      <div className="px-4 pt-4 pb-2 sticky top-14 z-20 bg-background">
+        <SegmentedControl
+          options={[{ value: 'friends', label: 'Friends' }, { value: 'explore', label: 'Explore' }]}
+          value={tab}
+          onChange={setTab}
+        />
+      </div>
+      {posts === null ? (
+        <div className="text-center text-muted-foreground py-10">Loading feed...</div>
+      ) : posts.length === 0 ? (
+        <EmptyState title="No posts yet" description="Complete a challenge to share your first result!" />
       ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} liked={likedIds.has(post.id)} onToggleLike={toggleLike} />)
+        <div className="pt-2">
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              reactions={{
+                liked: !!myReactions[post.id]?.like,
+                fired: !!myReactions[post.id]?.fire,
+                trashed: !!myReactions[post.id]?.trash_talk,
+              }}
+              onReact={onReact}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
