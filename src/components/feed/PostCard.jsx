@@ -4,6 +4,7 @@ import { Flame, MessageCircle, Share2, Swords } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
+import { getOrCreateProfile } from '@/lib/ensureProfile';
 
 export default function PostCard({ post, reactions, onReact }) {
   const [showComments, setShowComments] = useState(false);
@@ -19,7 +20,8 @@ export default function PostCard({ post, reactions, onReact }) {
   const submitComment = async () => {
     if (!commentText.trim()) return;
     const user = await base44.auth.me();
-    const c = await base44.entities.Comment.create({ post_id: post.id, author_name: user.full_name, body: commentText });
+    const profile = await getOrCreateProfile(user);
+    const c = await base44.entities.Comment.create({ post_id: post.id, author_name: user.full_name, author_avatar: profile.avatar_url, body: commentText });
     await base44.entities.Post.update(post.id, { comment_count: (post.comment_count || 0) + 1 });
     setComments([c, ...comments]);
     setCommentText('');
@@ -80,9 +82,12 @@ export default function PostCard({ post, reactions, onReact }) {
       {showComments && (
         <div className="mt-3 pt-3 border-t border-border space-y-2">
           {comments.map((c) => (
-            <div key={c.id} className="text-sm">
-              <span className="font-semibold">{c.author_name}: </span>
-              <span>{c.body}</span>
+            <div key={c.id} className="flex items-start gap-2 text-sm">
+              <Avatar className="w-6 h-6 mt-0.5">
+                <AvatarImage src={c.author_avatar} />
+                <AvatarFallback className="text-[10px]">{c.author_name?.[0] || 'U'}</AvatarFallback>
+              </Avatar>
+              <p><span className="font-semibold">{c.author_name}: </span><span>{c.body}</span></p>
             </div>
           ))}
           <div className="flex gap-2 pt-1">

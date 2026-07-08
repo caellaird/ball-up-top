@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AvatarUpload from '@/components/profile/AvatarUpload';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -68,10 +69,14 @@ export default function Profile() {
       <div className="h-28 bg-gradient-to-r from-primary to-secondary" style={profile.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: 'cover' } : {}} />
       <div className="px-4 -mt-10">
         <div className="flex items-end justify-between mb-3">
-          <Avatar className="w-20 h-20 border-4 border-background">
-            <AvatarImage src={profile.avatar_url} />
-            <AvatarFallback className="text-2xl">{displayName?.[0] || 'U'}</AvatarFallback>
-          </Avatar>
+          {isSelf ? (
+            <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} />
+          ) : (
+            <Avatar className="w-20 h-20 border-4 border-background">
+              <AvatarImage src={profile.avatar_url} />
+              <AvatarFallback className="text-2xl">{displayName?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+          )}
           {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-2" onClick={() => setEditing(true)}>Edit Profile</Button>}
         </div>
         <h1 className="font-heading text-xl font-bold">{displayName}</h1>

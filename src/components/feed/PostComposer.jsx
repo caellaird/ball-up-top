@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
+import { getOrCreateProfile } from '@/lib/ensureProfile';
 
 export default function PostComposer({ onPosted }) {
   const [body, setBody] = useState('');
@@ -11,7 +12,8 @@ export default function PostComposer({ onPosted }) {
     if (!body.trim()) return;
     setPosting(true);
     const user = await base44.auth.me();
-    const post = await base44.entities.Post.create({ author_name: user.full_name, body });
+    const profile = await getOrCreateProfile(user);
+    const post = await base44.entities.Post.create({ author_name: user.full_name, author_avatar: profile.avatar_url, body });
     setBody('');
     setPosting(false);
     onPosted(post);
