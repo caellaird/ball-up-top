@@ -6,13 +6,18 @@ import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { SPORTS, SERIES_TYPES } from '@/lib/constants';
 import { sendNotification } from '@/lib/notify';
+import { enrichFriends } from '@/lib/friendsHelpers';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SPORT_EMOJI } from '@/lib/constants';
 
 export default function BallUp() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [sport, setSport] = useState(null);
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState(null);
+  const [friendQuery, setFriendQuery] = useState('');
+  const [recentOpponentIds, setRecentOpponentIds] = useState([]);
   const [opponent, setOpponent] = useState(null);
   const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
@@ -20,17 +25,25 @@ export default function BallUp() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    base44.entities.Friend.filter({ status: 'accepted' }).then((all) => {
-      setFriends(all.filter((f) => f.created_by_id === user.id || f.addressee_id === user.id));
+    base44.entities.Friend.filter({ status: 'accepted' }).then(async (all) => {
+      const mine = all.filter((f) => f.created_by_id === user.id || f.addressee_id === user.id);
+      setFriends(await enrichFriends(mine, user.id));
+    });
+    base44.entities.Challenge.list('-created_date', 30).then((all) => {
+      const mine = all.filter((c) => c.created_by_id === user.id);
+      setRecentOpponentIds([...new Set(mine.map((c) => c.opponent_id))]);
     });
   }, []);
 
   const back = () => (step > 1 ? setStep(step - 1) : navigate(-1));
 
-  const opponentInfo = (f) => ({
-    id: f.created_by_id === user.id ? f.addressee_id : f.created_by_id,
-    name: f.created_by_id === user.id ? f.addressee_name : f.requester_name,
+  const filteredFriends = (friends || []).filter((f) => {
+    const q = friendQuery.trim().toLowerCase();
+    if (!q) return true;
+    return f.name?.toLowerCase().includes(q) || f.profile?.username?.toLowerCase().includes(q);
   });
+  const recentFriends = filteredFriends.filter((f) => recentOpponentIds.includes(f.userId));
+  const otherFriends = filteredFriends.filter((f) => !recentOpponentIds.includes(f.userId));
 
   const send = async () => {
     setSending(true);
@@ -84,23 +97,37 @@ export default function BallUp() {
 
         {step === 2 && (
           <div>
-            <h1 className="font-heading text-2xl font-extrabold mb-6">Who's Getting Cooked?</h1>
-            {friends.length === 0 ? (
+            <h1 className="font-heading text-2xl font-extrabold mb-4">Who's Getting Cooked?</h1>
+            <Input
+              placeholder="Search friends..."
+              value={friendQuery}
+              onChange={(e) => setFriendQuery(e.target.value)}
+              className="h-11 rounded-full mb-4"
+            />
+            {friends === null ? (
+              <p className="text-muted-foreground text-sm">Loading friends...</p>
+            ) : filteredFriends.length === 0 ? (
               <p className="text-muted-foreground text-sm">Add friends first to challenge them.</p>
             ) : (
-              <div className="space-y-2">
-                {friends.map((f) => {
-                  const info = opponentInfo(f);
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => { setOpponent(info); setStep(3); }}
-                      className={`w-full text-left px-4 py-3 rounded-2xl border-2 ${opponent?.id === info.id ? 'border-accent bg-accent/10' : 'border-border bg-card'}`}
-                    >
-                      {info.name}
-                    </button>
-                  );
-                })}
+              <div className="space-y-4">
+                {recentFriends.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Recently Challenged</p>
+                    <div className="space-y-2">
+                      {recentFriends.map((f) => (
+                        <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name }); setStep(3); }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  {recentFriends.length > 0 && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">All Friends</p>}
+                  <div className="space-y-2">
+                    {otherFriends.map((f) => (
+                      <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name }); setStep(3); }} />
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -162,5 +189,29 @@ function Row({ label, value }) {
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold">{value || '—'}</span>
     </div>
+  );
+}
+
+function FriendPickCard({ f, selected, onSelect }) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-2xl border-2 ${selected ? 'border-accent bg-accent/10' : 'border-border bg-card'}`}
+    >
+      <div className="relative">
+        <Avatar className="w-10 h-10">
+          <AvatarImage src={f.profile?.avatar_url} />
+          <AvatarFallback>{f.name?.[0] || 'U'}</AvatarFallback>
+        </Avatar>
+        {f.profile?.ready_to_ball && <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-accent border-2 border-card" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm truncate">{f.name}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {f.profile?.username ? `@${f.profile.username}` : ''}
+          {f.profile?.favorite_sport ? ` · ${SPORT_EMOJI[f.profile.favorite_sport] || ''} ${f.profile.favorite_sport}` : ''}
+        </p>
+      </div>
+    </button>
   );
 }

@@ -16,7 +16,9 @@
       "enum": [
         "pending",
         "accepted",
-        "declined"
+        "declined",
+        "cancelled",
+        "blocked"
       ],
       "default": "pending"
     }

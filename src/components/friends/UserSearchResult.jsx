@@ -1,0 +1,35 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+
+export default function UserSearchResult({ result, onAdd, onCancel }) {
+  const { targetUser, profile, relation } = result;
+
+  return (
+    <div className="flex items-center gap-3 bg-card rounded-2xl shadow-sm p-3 mb-2 mx-4">
+      <Link to={profile?.username ? `/profile/${profile.username}` : '#'}>
+        <Avatar className="w-11 h-11">
+          <AvatarImage src={profile?.avatar_url} />
+          <AvatarFallback>{targetUser.full_name?.[0] || 'U'}</AvatarFallback>
+        </Avatar>
+      </Link>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm truncate">{targetUser.full_name}</p>
+        {profile?.username && <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>}
+      </div>
+      {relation === 'accepted' && (
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/10 text-accent">Friends</span>
+      )}
+      {relation === 'pending_outgoing' && (
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={onCancel}>Cancel</Button>
+      )}
+      {relation === 'pending_incoming' && (
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-muted text-muted-foreground">Respond below</span>
+      )}
+      {!relation && (
+        <Button size="sm" className="rounded-full" onClick={onAdd}>Add Friend</Button>
+      )}
+    </div>
+  );
+}

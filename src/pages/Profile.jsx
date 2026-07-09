@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateProfile, getOrCreateStats } from '@/lib/ensureProfile';
 import { SPORT_EMOJI } from '@/lib/constants';
+import FriendsListSheet from '@/components/friends/FriendsListSheet';
 
 export default function Profile() {
   const { username } = useParams();
@@ -19,6 +20,8 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState('');
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ bio: '', city: '', favorite_sport: '' });
+  const [friendRecords, setFriendRecords] = useState([]);
+  const [showFriends, setShowFriends] = useState(false);
   const isSelf = username === 'me';
 
   useEffect(() => {
@@ -49,6 +52,8 @@ export default function Profile() {
       setForm({ bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
       setAwards(awardList);
+      const allFriends = await base44.entities.Friend.filter({ status: 'accepted' });
+      setFriendRecords(allFriends.filter((f) => f.created_by_id === ownerId || f.addressee_id === ownerId));
     }
   };
 
@@ -91,8 +96,11 @@ export default function Profile() {
           <Stat label="Streak" value={stats?.current_streak || 0} />
         </div>
 
+        <button onClick={() => setShowFriends(true)} className="block w-full text-center mt-4 text-sm font-semibold text-primary">
+          Friends ({friendRecords.length})
+        </button>
         {isSelf && (
-          <Link to="/friends" className="block text-center mt-4 text-sm font-semibold text-primary">Manage Friends →</Link>
+          <Link to="/friends" className="block text-center mt-1 text-xs text-muted-foreground">Manage requests →</Link>
         )}
 
         <div className="mt-6">
@@ -108,6 +116,13 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      <FriendsListSheet
+        open={showFriends}
+        onOpenChange={setShowFriends}
+        friendRecords={friendRecords}
+        userId={profile.created_by_id || user.id}
+      />
 
       <Sheet open={editing} onOpenChange={setEditing}>
         <SheetContent side="bottom" className="rounded-t-3xl">
