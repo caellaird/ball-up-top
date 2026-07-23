@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { AWARD_TYPES, SPORT_EMOJI } from '@/lib/constants';
-import { getOrCreateStats } from '@/lib/ensureProfile';
+import { recordGameResult } from '@/lib/ensureProfile';
 
 export default function CompleteChallengeSheet({ open, onOpenChange, challenge, user, onCompleted }) {
   const [scoreCreator, setScoreCreator] = useState('');
@@ -13,7 +13,12 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const [caption, setCaption] = useState('');
   const [award, setAward] = useState('');
   const [photos, setPhotos] = useState([]);
+  const [finalGame, setFinalGame] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const isSeries = challenge.series_type !== 'single';
+  const gameNumber = (challenge.creator_games_won || 0) + (challenge.opponent_games_won || 0) + 1;
+  const isOpenEnded = isSeries && !challenge.games_to_win;
 
   const uploadPhotos = async (files) => {
     const uploads = await Promise.all(
@@ -22,23 +27,20 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     setPhotos([...photos, ...uploads.map((u) => u.file_url)]);
   };
 
-  const submit = async () => {
-    const sc = Number(scoreCreator);
-    const so = Number(scoreOpponent);
-    if (Number.isNaN(sc) || Number.isNaN(so)) return;
-    setSaving(true);
-    const isCreatorWinner = sc > so;
-    const winnerName = sc === so ? '' : isCreatorWinner ? challenge.creator_name : challenge.opponent_name;
-    const winnerId = sc === so ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
+  const finalizeSeries = async (creatorWins, opponentWins) => {
+    const isCreatorWinner = creatorWins > opponentWins;
+    const winnerName = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.creator_name : challenge.opponent_name;
+    const winnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
 
     const updated = await base44.entities.Challenge.update(challenge.id, {
       status: 'completed',
-      score_creator: sc,
-      score_opponent: so,
+      creator_games_won: creatorWins,
+      opponent_games_won: opponentWins,
+      score_creator: creatorWins,
+      score_opponent: opponentWins,
       winner_id: winnerId,
       winner_name: winnerName,
-      caption,
-      photos,
+      photos: [...(challenge.photos || []), ...photos],
     });
 
     if (award) {
@@ -53,33 +55,77 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     await base44.entities.Post.create({
       author_name: user.full_name,
-      body: caption || `${challenge.creator_name} vs ${challenge.opponent_name}`,
+      body: caption || (isSeries
+        ? `${challenge.series_name}: ${challenge.creator_name} vs ${challenge.opponent_name} — final`
+        : `${challenge.creator_name} vs ${challenge.opponent_name}`),
       media_urls: photos,
       challenge_id: challenge.id,
       game_emoji: SPORT_EMOJI[challenge.sport] || '🏆',
       location_name: challenge.location_name,
-      score_text: `${challenge.creator_name} ${sc} - ${so} ${challenge.opponent_name}`,
+      score_text: `${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}`,
     });
 
-    const stats = await getOrCreateStats(user);
-    const won = challenge.created_by_id === user.id ? isCreatorWinner : !isCreatorWinner;
-    await base44.entities.UserStats.update(stats.id, {
-      games_played: (stats.games_played || 0) + 1,
-      games_won: (stats.games_won || 0) + (won ? 1 : 0),
-      losses: (stats.losses || 0) + (won ? 0 : 1),
-      current_streak: won ? (stats.current_streak || 0) + 1 : 0,
-      longest_streak: won ? Math.max((stats.current_streak || 0) + 1, stats.longest_streak || 0) : stats.longest_streak || 0,
+    const creatorWon = isCreatorWinner;
+    await Promise.all([
+      recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
+      recordGameResult(challenge.opponent_id, challenge.opponent_name, !creatorWon),
+    ]);
+
+    return updated;
+  };
+
+  const submit = async () => {
+    const sc = Number(scoreCreator);
+    const so = Number(scoreOpponent);
+    if (Number.isNaN(sc) || Number.isNaN(so)) return;
+    setSaving(true);
+
+    if (!isSeries) {
+      const updated = await finalizeSeries(sc, so);
+      setSaving(false);
+      onCompleted(updated);
+      return;
+    }
+
+    // Series: log this individual game first
+    const isCreatorGameWinner = sc > so;
+    const gameWinnerName = sc === so ? '' : isCreatorGameWinner ? challenge.creator_name : challenge.opponent_name;
+    await base44.entities.SeriesGame.create({
+      challenge_id: challenge.id,
+      game_number: gameNumber,
+      score_creator: sc,
+      score_opponent: so,
+      winner_name: gameWinnerName,
+      caption,
+      photos,
     });
 
-    setSaving(false);
-    onCompleted(updated);
+    const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
+    const opponentWins = (challenge.opponent_games_won || 0) + (!isCreatorGameWinner && sc !== so ? 1 : 0);
+
+    const seriesClinched = challenge.games_to_win
+      ? creatorWins >= challenge.games_to_win || opponentWins >= challenge.games_to_win
+      : finalGame;
+
+    if (seriesClinched) {
+      const updated = await finalizeSeries(creatorWins, opponentWins);
+      setSaving(false);
+      onCompleted(updated);
+    } else {
+      const updated = await base44.entities.Challenge.update(challenge.id, {
+        creator_games_won: creatorWins,
+        opponent_games_won: opponentWins,
+      });
+      setSaving(false);
+      onCompleted(updated);
+    }
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[90vh] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="font-heading">Complete Challenge</SheetTitle>
+          <SheetTitle className="font-heading">{isSeries ? `Log Game ${gameNumber}` : 'Complete Challenge'}</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 mt-4">
           <div className="flex items-center gap-3">
@@ -109,6 +155,13 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
             </div>
           </div>
 
+          {isOpenEnded && (
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input type="checkbox" checked={finalGame} onChange={(e) => setFinalGame(e.target.checked)} />
+              This is the final game of the series
+            </label>
+          )}
+
           <div>
             <p className="text-sm font-medium mb-2">Give {challenge.opponent_name} an award</p>
             <div className="flex flex-wrap gap-2">
@@ -125,7 +178,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
           </div>
 
           <Button onClick={submit} disabled={saving} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
-            {saving ? 'Publishing...' : 'Publish Result'}
+            {saving ? 'Publishing...' : isSeries ? 'Save Game Result' : 'Publish Result'}
           </Button>
         </div>
       </SheetContent>

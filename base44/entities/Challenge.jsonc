@@ -44,6 +44,23 @@
       ],
       "default": "single"
     },
+    "series_name": {
+      "type": "string"
+    },
+    "games_to_win": {
+      "type": "number"
+    },
+    "creator_games_won": {
+      "type": "number",
+      "default": 0
+    },
+    "opponent_games_won": {
+      "type": "number",
+      "default": 0
+    },
+    "notes": {
+      "type": "string"
+    },
     "status": {
       "type": "string",
       "enum": [

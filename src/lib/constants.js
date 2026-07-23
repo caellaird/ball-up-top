@@ -26,3 +26,6 @@ export const SERIES_TYPES = [
   { key: 'bo7', label: 'Best of 7' },
   { key: 'open', label: 'Open Series' },
 ];
+
+// Number of game wins needed to clinch each series type (null = open-ended, ended manually)
+export const GAMES_TO_WIN = { single: 1, bo3: 2, bo5: 3, bo7: 4, open: null };

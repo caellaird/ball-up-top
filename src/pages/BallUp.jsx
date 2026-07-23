@@ -4,7 +4,7 @@ import { X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
-import { SPORTS, SERIES_TYPES } from '@/lib/constants';
+import { SPORTS, SERIES_TYPES, GAMES_TO_WIN } from '@/lib/constants';
 import { sendNotification } from '@/lib/notify';
 import { enrichFriends } from '@/lib/friendsHelpers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,6 +22,7 @@ export default function BallUp() {
   const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [seriesType, setSeriesType] = useState('single');
+  const [seriesName, setSeriesName] = useState('');
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -55,6 +56,8 @@ export default function BallUp() {
       location_name: location,
       scheduled_time: date ? new Date(date).toISOString() : undefined,
       series_type: seriesType,
+      series_name: seriesType !== 'single' ? seriesName : undefined,
+      games_to_win: GAMES_TO_WIN[seriesType],
     });
     await sendNotification({
       userId: opponent.id,
@@ -157,7 +160,19 @@ export default function BallUp() {
                 </button>
               ))}
             </div>
-            <Button onClick={() => setStep(5)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
+            {seriesType !== 'single' && (
+              <Input
+                placeholder="Enter Series Name (e.g. Summer Basketball Series)"
+                value={seriesName}
+                onChange={(e) => setSeriesName(e.target.value)}
+                className="h-12 rounded-2xl mb-6"
+              />
+            )}
+            <Button
+              onClick={() => setStep(5)}
+              disabled={seriesType !== 'single' && !seriesName.trim()}
+              className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]"
+            >
               BALL UP TOP
             </Button>
           </div>
@@ -172,6 +187,7 @@ export default function BallUp() {
               <Row label="Location" value={location} />
               <Row label="Date" value={date ? new Date(date).toLocaleString() : '—'} />
               <Row label="Series" value={SERIES_TYPES.find((s) => s.key === seriesType)?.label} />
+              {seriesType !== 'single' && <Row label="Series Name" value={seriesName} />}
             </div>
             <Button onClick={send} disabled={sending} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))] font-bold">
               {sending ? 'Sending...' : 'SEND CHALLENGE'}

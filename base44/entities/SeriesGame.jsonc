@@ -1,0 +1,33 @@
+{
+  "name": "SeriesGame",
+  "type": "object",
+  "properties": {
+    "challenge_id": {
+      "type": "string"
+    },
+    "game_number": {
+      "type": "number"
+    },
+    "score_creator": {
+      "type": "number"
+    },
+    "score_opponent": {
+      "type": "number"
+    },
+    "winner_name": {
+      "type": "string"
+    },
+    "caption": {
+      "type": "string"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "challenge_id"
+  ]
+}
