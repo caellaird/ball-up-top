@@ -27,3 +27,17 @@ export async function enrichFriend(f, userId) {
 export async function enrichFriends(records, userId) {
   return Promise.all(records.map((f) => enrichFriend(f, userId)));
 }
+
+// Finds an existing DM thread between two users, or creates one. Returns the Thread record.
+export async function findOrCreateThread(userId, userName, otherId, otherName) {
+  const existing = await base44.entities.Thread.filter({ type: 'dm' });
+  let thread = existing.find((t) => t.participant_ids?.includes(otherId) && t.participant_ids?.includes(userId));
+  if (!thread) {
+    thread = await base44.entities.Thread.create({
+      type: 'dm',
+      participant_ids: [userId, otherId],
+      participant_names: [userName, otherName],
+    });
+  }
+  return thread;
+}

@@ -19,6 +19,16 @@ export default function PostCard({ post, reactions, onReact }) {
     setShowComments(true);
   };
 
+  const handleShare = async () => {
+    const shareText = post.score_text || post.body;
+    const shareUrl = `${window.location.origin}/profile/${post.author_username || 'me'}`;
+    if (navigator.share) {
+      await navigator.share({ title: `${post.author_name} on Ball Up Top`, text: shareText, url: shareUrl });
+    } else {
+      await navigator.clipboard.writeText(`${shareText} — ${shareUrl}`);
+    }
+  };
+
   const submitComment = async () => {
     if (!commentText.trim()) return;
     const user = await base44.auth.me();
@@ -101,7 +111,7 @@ export default function PostCard({ post, reactions, onReact }) {
         <button onClick={loadComments} className="flex items-center gap-1.5">
           <MessageCircle className="w-4 h-4" /> {post.comment_count || 0}
         </button>
-        <button className="ml-auto"><Share2 className="w-4 h-4" /></button>
+        <button className="ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
       </div>
 
       {showComments && (

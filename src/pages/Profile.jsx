@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useOutletContext, Link } from 'react-router-dom';
+import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AvatarUpload from '@/components/profile/AvatarUpload';
@@ -8,12 +8,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateProfile, getOrCreateStats } from '@/lib/ensureProfile';
+import { findOrCreateThread } from '@/lib/friendsHelpers';
 import { SPORT_EMOJI } from '@/lib/constants';
 import FriendsListSheet from '@/components/friends/FriendsListSheet';
+import HeadToHead from '@/components/profile/HeadToHead';
+import ProfileQRCode from '@/components/profile/ProfileQRCode';
 
 export default function Profile() {
   const { username } = useParams();
   const { user } = useOutletContext();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [awards, setAwards] = useState([]);
@@ -63,6 +67,11 @@ export default function Profile() {
     setEditing(false);
   };
 
+  const message = async () => {
+    const thread = await findOrCreateThread(user.id, user.full_name, profile.created_by_id, displayName);
+    navigate(`/messages/${thread.id}`);
+  };
+
   if (!profile) return <div className="text-center text-muted-foreground py-10">Loading profile...</div>;
 
   const wins = stats?.games_won || 0;
@@ -83,6 +92,7 @@ export default function Profile() {
             </Avatar>
           )}
           {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-2" onClick={() => setEditing(true)}>Edit Profile</Button>}
+          {!isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-2" onClick={message}>Message</Button>}
         </div>
         <h1 className="font-heading text-xl font-bold">{displayName}</h1>
         <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}</p>
@@ -102,6 +112,17 @@ export default function Profile() {
         {isSelf && (
           <Link to="/friends" className="block text-center mt-1 text-xs text-muted-foreground">Manage requests →</Link>
         )}
+
+        {!isSelf && (
+          <HeadToHead
+            currentUserId={user.id}
+            currentUserName={user.full_name}
+            profileOwnerId={profile.created_by_id}
+            profileOwnerName={displayName}
+          />
+        )}
+
+        {isSelf && <ProfileQRCode username={profile.username} />}
 
         <div className="mt-6">
           <h3 className="font-heading font-bold mb-3">Trophy Case</h3>

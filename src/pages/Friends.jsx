@@ -8,7 +8,7 @@ import Header from '@/components/layout/Header';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import EmptyState from '@/components/shared/EmptyState';
 import UserSearchResult from '@/components/friends/UserSearchResult';
-import { enrichFriends } from '@/lib/friendsHelpers';
+import { enrichFriends, findOrCreateThread } from '@/lib/friendsHelpers';
 import { sendNotification } from '@/lib/notify';
 
 export default function Friends() {
@@ -105,11 +105,7 @@ export default function Friends() {
   };
 
   const message = async (friend) => {
-    const existing = await base44.entities.Thread.filter({ type: 'dm' });
-    let thread = existing.find((t) => t.participant_ids?.includes(friend.userId) && t.participant_ids?.includes(user.id));
-    if (!thread) {
-      thread = await base44.entities.Thread.create({ type: 'dm', participant_ids: [user.id, friend.userId], participant_names: [user.full_name, friend.name] });
-    }
+    const thread = await findOrCreateThread(user.id, user.full_name, friend.userId, friend.name);
     navigate(`/messages/${thread.id}`);
   };
 
