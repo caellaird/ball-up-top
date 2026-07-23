@@ -5,11 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
+import MediaViewer from '@/components/feed/MediaViewer';
 
 export default function PostCard({ post, reactions, onReact }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
+  const [viewerIndex, setViewerIndex] = useState(null);
 
   const loadComments = async () => {
     const data = await base44.entities.Comment.filter({ post_id: post.id }, '-created_date');
@@ -55,12 +57,35 @@ export default function PostCard({ post, reactions, onReact }) {
 
       <p className="text-sm whitespace-pre-wrap mb-3">{post.body}</p>
 
+      {post.tagged_user_names?.length > 0 && (
+        <p className="text-xs text-muted-foreground mb-3">
+          with{' '}
+          {post.tagged_user_names.map((name, i) => {
+            const username = post.tagged_usernames?.[i];
+            return (
+              <React.Fragment key={post.tagged_user_ids?.[i] || name}>
+                {i > 0 && ', '}
+                <Link to={username ? `/profile/${username}` : '#'} className="font-semibold text-primary">
+                  {username ? `@${username}` : name}
+                </Link>
+              </React.Fragment>
+            );
+          })}
+        </p>
+      )}
+
       {post.media_urls?.length > 0 && (
         <div className={`grid gap-1.5 mb-3 ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {post.media_urls.slice(0, 5).map((url) => (
-            <img key={url} src={url} alt="" className="rounded-2xl object-cover w-full h-40" />
+          {post.media_urls.slice(0, 5).map((url, i) => (
+            <button key={url} onClick={() => setViewerIndex(i)} className="block">
+              <img src={url} alt="" className="rounded-2xl object-cover w-full h-40" />
+            </button>
           ))}
         </div>
+      )}
+
+      {viewerIndex !== null && (
+        <MediaViewer urls={post.media_urls} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
       )}
 
       <div className="flex items-center gap-5 text-muted-foreground text-sm pt-1">

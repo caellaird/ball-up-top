@@ -32,6 +32,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     const winnerName = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.creator_name : challenge.opponent_name;
     const winnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
 
+    const opponentProfiles = await base44.entities.Profile.filter({ created_by_id: challenge.opponent_id });
+    const opponentUsername = opponentProfiles[0]?.username || '';
+
     const updated = await base44.entities.Challenge.update(challenge.id, {
       status: 'completed',
       creator_games_won: creatorWins,
@@ -63,6 +66,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       game_emoji: SPORT_EMOJI[challenge.sport] || '🏆',
       location_name: challenge.location_name,
       score_text: `${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}`,
+      tagged_user_ids: [challenge.opponent_id],
+      tagged_user_names: [challenge.opponent_name],
+      tagged_usernames: [opponentUsername],
     });
 
     const creatorWon = isCreatorWinner;

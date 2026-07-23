@@ -32,6 +32,24 @@
     "score_text": {
       "type": "string"
     },
+    "tagged_user_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tagged_user_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tagged_usernames": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "like_count": {
       "type": "number",
       "default": 0
