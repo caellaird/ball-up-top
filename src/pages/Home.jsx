@@ -18,7 +18,15 @@ export default function Home() {
 
   const load = async () => {
     const data = await base44.entities.Post.list('-created_date', 30);
-    setPosts(data);
+    if (tab === 'friends') {
+      const accepted = await base44.entities.Friend.filter({ status: 'accepted' });
+      const mine = accepted.filter((f) => f.created_by_id === user.id || f.addressee_id === user.id);
+      const friendIds = new Set(mine.map((f) => (f.created_by_id === user.id ? f.addressee_id : f.created_by_id)));
+      friendIds.add(user.id);
+      setPosts(data.filter((p) => friendIds.has(p.created_by_id)));
+    } else {
+      setPosts(data);
+    }
     const myLikes = await base44.entities.Like.filter({ created_by_id: user.id });
     const map = {};
     myLikes.forEach((l) => {
