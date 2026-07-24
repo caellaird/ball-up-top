@@ -10,10 +10,12 @@
     },
     "body": {
       "type": "string"
+    },
+    "media_url": {
+      "type": "string"
     }
   },
   "required": [
-    "thread_id",
-    "body"
+    "thread_id"
   ]
 }

@@ -3,9 +3,10 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
-import { MapPin, Clock, Pencil } from 'lucide-react';
+import { MapPin, Clock, Pencil, CalendarPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { SPORT_EMOJI } from '@/lib/constants';
+import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
@@ -77,6 +78,17 @@ export default function ChallengeDetail() {
             {challenge.scheduled_time && <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{format(new Date(challenge.scheduled_time), 'MMM d, h:mm a')}</span>}
           </div>
           {challenge.notes && <p className="text-sm mt-3 text-muted-foreground">{challenge.notes}</p>}
+
+          {challenge.scheduled_time && challenge.status !== 'completed' && challenge.status !== 'declined' && challenge.status !== 'cancelled' && (
+            <a
+              href={buildGoogleCalendarUrl(challenge)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary mt-3"
+            >
+              <CalendarPlus className="w-4 h-4" /> Add to Google Calendar
+            </a>
+          )}
 
           {isSeries && (
             <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
