@@ -3,9 +3,11 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Image as ImageIcon, X, Settings as SettingsIcon, ArrowLeft } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, Image as ImageIcon, X, Settings as SettingsIcon, ArrowLeft, Users, Trophy } from 'lucide-react';
 import MessageBubble from '@/components/messages/MessageBubble';
 import GroupSettingsSheet from '@/components/messages/GroupSettingsSheet';
+import ChallengeButtonSheet from '@/components/messages/ChallengeButtonSheet';
 import { markThreadRead, setTyping, isTyping, hasRead, notifyMessageParticipants } from '@/lib/messaging';
 
 export default function Conversation() {
@@ -18,8 +20,10 @@ export default function Conversation() {
   const [uploading, setUploading] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChallenge, setShowChallenge] = useState(false);
   const [threadReads, setThreadReads] = useState([]);
   const [myUsername, setMyUsername] = useState('');
+  const [otherProfile, setOtherProfile] = useState(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const lastTypingUpdate = useRef(0);
@@ -61,6 +65,13 @@ export default function Conversation() {
     setThread(t);
     const myProfiles = await base44.entities.Profile.filter({ created_by_id: user.id });
     if (myProfiles[0]) setMyUsername(myProfiles[0].username);
+    if (t.type !== 'group') {
+      const otherId = (t.participant_ids || []).find((id) => id !== user.id);
+      if (otherId) {
+        const others = await base44.entities.Profile.filter({ created_by_id: otherId });
+        setOtherProfile(others[0] || null);
+      }
+    }
     const msgs = await base44.entities.Message.filter({ thread_id: threadId }, 'created_date');
     setMessages(msgs);
     await markThreadRead(threadId, user.id);
@@ -129,18 +140,51 @@ export default function Conversation() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-8rem)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <button onClick={() => navigate(-1)} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h2 className="font-heading text-lg truncate">{otherName}</h2>
-          {isGroup && !typingNames.length && <p className="text-xs text-muted-foreground truncate">{thread.participant_names?.join(', ')}</p>}
-          {typingNames.length > 0 && <p className="text-xs text-primary">{typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing...</p>}
+      <div className="flex items-center gap-3 mb-3 bg-card rounded-2xl shadow-sm px-3 py-2.5">
+        <button onClick={() => navigate(-1)} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <div className="relative shrink-0">
+          <Avatar className="w-11 h-11">
+            <AvatarImage src={isGroup ? thread.avatar_url : otherProfile?.avatar_url} />
+            <AvatarFallback className={isGroup ? 'bg-secondary text-secondary-foreground' : ''}>
+              {isGroup ? <Users className="w-5 h-5" /> : (otherName?.[0] || 'U')}
+            </AvatarFallback>
+          </Avatar>
+          {!isGroup && otherProfile?.ready_to_ball && (
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
+          )}
         </div>
-        {isGroup && <Button size="icon" variant="ghost" onClick={() => setShowSettings(true)}><SettingsIcon className="w-5 h-5" /></Button>}
+
+        <div className="flex-1 min-w-0">
+          <h2 className="font-heading text-base font-bold truncate">{otherName}</h2>
+          {isGroup && <p className="text-xs text-muted-foreground truncate">{thread.participant_ids?.length || 0} members</p>}
+          {typingNames.length > 0 ? (
+            <p className="text-xs text-primary font-medium truncate">{typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing…</p>
+          ) : !isGroup && otherProfile?.ready_to_ball ? (
+            <p className="text-xs text-primary font-medium">Ready to ball</p>
+          ) : null}
+        </div>
+
+        {isGroup && (
+          <div className="flex -space-x-2 mr-1 shrink-0">
+            {(thread.participant_names || []).slice(0, 3).map((name, i) => (
+              <Avatar key={i} className="w-6 h-6 border-2 border-card">
+                <AvatarFallback className="text-[9px]">{name?.[0]}</AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+        )}
+
+        {isGroup && (
+          <Button size="icon" variant="ghost" className="shrink-0" onClick={() => setShowSettings(true)}>
+            <SettingsIcon className="w-5 h-5" />
+          </Button>
+        )}
       </div>
-      <div className="flex-1 overflow-y-auto space-y-1 mb-4">
+
+      <div className="flex-1 overflow-y-auto space-y-1 mb-4 px-1">
         {messages.map((m) => (
           <MessageBubble
             key={m.id}
@@ -165,13 +209,20 @@ export default function Conversation() {
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
+        <button
+          onClick={() => setShowChallenge(true)}
+          className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center shadow-md active:scale-95 transition"
+          aria-label="Start a Challenge"
+        >
+          <Trophy className="w-4 h-4" />
+        </button>
         <input type="file" accept="image/*" ref={fileInputRef} onChange={sendMedia} className="hidden" />
         <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" disabled={uploading}>
           <ImageIcon className="w-4 h-4" />
         </Button>
         <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} />
-        <Button onClick={send} size="icon"><Send className="w-4 h-4" /></Button>
+        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent"><Send className="w-4 h-4" /></Button>
       </div>
 
       {isGroup && (
@@ -184,6 +235,14 @@ export default function Conversation() {
           onLeave={() => navigate(-1)}
         />
       )}
+
+      <ChallengeButtonSheet
+        open={showChallenge}
+        onOpenChange={setShowChallenge}
+        thread={thread}
+        user={user}
+        onSent={() => setShowChallenge(false)}
+      />
     </div>
   );
 }

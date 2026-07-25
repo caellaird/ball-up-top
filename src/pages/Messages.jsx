@@ -70,8 +70,13 @@ export default function Messages() {
     const reads = threadReads[t.id] || [];
     const typers = reads.filter((r) => isTyping(r, user.id));
     if (typers.length === 0) return null;
+    if (typers.length === 1) {
+      const pi = t.participant_ids?.indexOf(typers[0].created_by_id);
+      return `${t.participant_names?.[pi] || 'Someone'} is typing…`;
+    }
     const pi = t.participant_ids?.indexOf(typers[0].created_by_id);
-    return t.participant_names?.[pi] || 'Someone';
+    const firstName = t.participant_names?.[pi] || 'Someone';
+    return `${firstName} and ${typers.length - 1} other${typers.length - 1 > 1 ? 's' : ''} are typing…`;
   };
 
   const filtered = threads.filter((t) => {
@@ -86,8 +91,8 @@ export default function Messages() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-heading text-2xl">Messages</h1>
-        <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setShowCreateGroup(true)}>
+        <h1 className="font-heading text-2xl font-extrabold">Messages</h1>
+        <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => setShowCreateGroup(true)}>
           <Users className="w-4 h-4 mr-1.5" /> New Group
         </Button>
       </div>
@@ -95,7 +100,7 @@ export default function Messages() {
         placeholder="Search conversations..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="h-10 rounded-full mb-4"
+        className="h-11 rounded-full mb-4 bg-card"
       />
       <CreateGroupSheet
         open={showCreateGroup}
@@ -110,35 +115,43 @@ export default function Messages() {
       {filtered.length === 0 ? (
         <EmptyState title={threads.length === 0 ? 'No conversations yet' : 'No results'} description={threads.length === 0 ? "Start a DM from a friend's profile!" : 'Try a different search.'} />
       ) : (
-        filtered.map((t) => {
-          const isGroup = t.type === 'group';
-          const idx = t.participant_ids?.findIndex((pid) => pid !== user.id);
-          const title = isGroup ? (t.name || 'Group') : (t.participant_names?.[idx] || t.name || 'Conversation');
-          const typingName = getTypingName(t);
-          const unread = isUnread(t);
-          return (
-            <Link key={t.id} to={`/messages/${t.id}`} className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 mb-2 hover:shadow-md transition">
-              <div className="relative">
-                <Avatar className="w-10 h-10">
-                  {isGroup ? (
-                    <AvatarFallback><Users className="w-4 h-4" /></AvatarFallback>
-                  ) : (
-                    <AvatarFallback>{title[0]}</AvatarFallback>
-                  )}
-                </Avatar>
-                {unread && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary border-2 border-card" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm ${unread ? 'font-bold' : 'font-semibold'}`}>{title}</p>
-                {isGroup && !typingName && <p className="text-[11px] text-muted-foreground truncate">{t.participant_names?.join(', ')}</p>}
-                <p className={`text-xs truncate ${typingName ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                  {typingName ? `${typingName} is typing...` : t.last_message}
-                </p>
-              </div>
-              {t.last_message_at && !typingName && <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}</span>}
-            </Link>
-          );
-        })
+        <div className="space-y-2.5">
+          {filtered.map((t) => {
+            const isGroup = t.type === 'group';
+            const idx = t.participant_ids?.findIndex((pid) => pid !== user.id);
+            const title = isGroup ? (t.name || 'Group') : (t.participant_names?.[idx] || t.name || 'Conversation');
+            const typingLabel = getTypingName(t);
+            const unread = isUnread(t);
+            return (
+              <Link
+                key={t.id}
+                to={`/messages/${t.id}`}
+                className="flex items-center gap-3 bg-card rounded-2xl p-3 shadow-sm hover:shadow-md active:scale-[0.99] transition"
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="w-14 h-14">
+                    <AvatarImage src={isGroup ? t.avatar_url : undefined} />
+                    <AvatarFallback className={isGroup ? 'bg-secondary text-secondary-foreground text-lg' : 'text-lg'}>
+                      {isGroup ? <Users className="w-6 h-6" /> : title[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  {unread && <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary border-2 border-card" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm ${unread ? 'font-extrabold' : 'font-bold'} truncate`}>{title}</p>
+                  {isGroup && !typingLabel && <p className="text-[11px] text-muted-foreground truncate">{t.participant_names?.join(', ')}</p>}
+                  <p className={`text-xs truncate ${typingLabel ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                    {typingLabel || t.last_message || 'No messages yet'}
+                  </p>
+                </div>
+                {t.last_message_at && !typingLabel && (
+                  <span className="text-xs text-muted-foreground shrink-0">{formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}</span>
+                )}
+                {unread && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+              </Link>
+            );
+          })}
+        </div>
       )}
     </div>
   );
