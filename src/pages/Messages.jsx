@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/shared/EmptyState';
 import CreateGroupSheet from '@/components/messages/CreateGroupSheet';
 import { Users } from 'lucide-react';
@@ -13,6 +14,7 @@ export default function Messages() {
   const navigate = useNavigate();
   const [threads, setThreads] = useState(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     load();
@@ -26,14 +28,29 @@ export default function Messages() {
 
   if (threads === null) return <div className="text-center text-muted-foreground py-10">Loading messages...</div>;
 
+  const filtered = threads.filter((t) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    const isGroup = t.type === 'group';
+    const idx = t.participant_ids?.findIndex((pid) => pid !== user.id);
+    const title = isGroup ? (t.name || 'Group') : (t.participant_names?.[idx] || '');
+    return title.toLowerCase().includes(q) || (t.participant_names || []).some((n) => n.toLowerCase().includes(q));
+  });
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="font-heading text-2xl">Messages</h1>
         <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setShowCreateGroup(true)}>
           <Users className="w-4 h-4 mr-1.5" /> New Group
         </Button>
       </div>
+      <Input
+        placeholder="Search conversations..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="h-10 rounded-full mb-4"
+      />
       <CreateGroupSheet
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
@@ -44,10 +61,10 @@ export default function Messages() {
           navigate(`/messages/${thread.id}`);
         }}
       />
-      {threads.length === 0 ? (
-        <EmptyState title="No conversations yet" description="Start a DM from a friend's profile!" />
+      {filtered.length === 0 ? (
+        <EmptyState title={threads.length === 0 ? 'No conversations yet' : 'No results'} description={threads.length === 0 ? "Start a DM from a friend's profile!" : 'Try a different search.'} />
       ) : (
-        threads.map((t) => {
+        filtered.map((t) => {
           const isGroup = t.type === 'group';
           const idx = t.participant_ids?.findIndex((pid) => pid !== user.id);
           const title = isGroup ? (t.name || 'Group') : (t.participant_names?.[idx] || t.name || 'Conversation');

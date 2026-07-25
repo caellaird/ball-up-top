@@ -3,7 +3,8 @@ import { useParams, useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Image as ImageIcon } from 'lucide-react';
+import { Send, Image as ImageIcon, X } from 'lucide-react';
+import MessageBubble from '@/components/messages/MessageBubble';
 
 export default function Conversation() {
   const { threadId } = useParams();
@@ -12,13 +13,21 @@ export default function Conversation() {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     load();
     const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.data.thread_id === threadId) setMessages((prev) => [...prev, event.data]);
+      if (event.data.thread_id !== threadId) return;
+      if (event.type === 'create') {
+        setMessages((prev) => [...prev, event.data]);
+      } else if (event.type === 'update') {
+        setMessages((prev) => prev.map((m) => (m.id === event.data.id ? event.data : m)));
+      } else if (event.type === 'delete') {
+        setMessages((prev) => prev.filter((m) => m.id !== event.data.id));
+      }
     });
     return unsubscribe;
   }, [threadId]);
@@ -38,7 +47,14 @@ export default function Conversation() {
     if (!text.trim()) return;
     const body = text;
     setText('');
-    await base44.entities.Message.create({ thread_id: threadId, sender_name: user.full_name, body });
+    const msgData = { thread_id: threadId, sender_name: user.full_name, body };
+    if (replyTo) {
+      msgData.reply_to_id = replyTo.id;
+      msgData.reply_to_sender = replyTo.sender_name;
+      msgData.reply_to_body = replyTo.body || (replyTo.media_url ? '📷 Photo' : '');
+      setReplyTo(null);
+    }
+    await base44.entities.Message.create(msgData);
     await base44.entities.Thread.update(threadId, { last_message: body, last_message_at: new Date().toISOString() });
   };
 
@@ -65,22 +81,30 @@ export default function Conversation() {
         <h2 className="font-heading text-lg">{otherName}</h2>
         {isGroup && <p className="text-xs text-muted-foreground truncate">{thread.participant_names?.join(', ')}</p>}
       </div>
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-        {messages.map((m) => {
-          const isMe = m.created_by_id === user.id;
-          return (
-            <div key={m.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-              {isGroup && !isMe && <span className="text-[11px] text-muted-foreground ml-1 mb-0.5">{m.sender_name}</span>}
-              {m.media_url ? (
-                <img src={m.media_url} alt="" className="max-w-[220px] rounded-2xl" />
-              ) : (
-                <div className={`max-w-xs px-4 py-2 rounded-2xl text-sm ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{m.body}</div>
-              )}
-            </div>
-          );
-        })}
+      <div className="flex-1 overflow-y-auto space-y-1 mb-4">
+        {messages.map((m) => (
+          <MessageBubble
+            key={m.id}
+            message={m}
+            isMe={m.created_by_id === user.id}
+            isGroup={isGroup}
+            userId={user.id}
+            onReply={setReplyTo}
+          />
+        ))}
         <div ref={bottomRef} />
       </div>
+
+      {replyTo && (
+        <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-muted/50 rounded-lg border-l-2 border-primary">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-muted-foreground">Replying to {replyTo.sender_name}</p>
+            <p className="text-xs text-muted-foreground truncate">{replyTo.body || '📷 Photo'}</p>
+          </div>
+          <button onClick={() => setReplyTo(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <input type="file" accept="image/*" ref={fileInputRef} onChange={sendMedia} className="hidden" />
         <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" disabled={uploading}>

@@ -66,6 +66,16 @@ export default function BallUp() {
       title: `${user.full_name} challenged you to ${sport}!`,
       link: `/challenges/${challenge.id}`,
     });
+    await base44.entities.Post.create({
+      author_name: user.full_name,
+      body: `Challenged ${opponent.name} to ${SPORTS.find((s) => s.key === sport)?.label || sport}!`,
+      challenge_id: challenge.id,
+      game_emoji: SPORT_EMOJI[sport] || '🏆',
+      location_name: location,
+      tagged_user_ids: [opponent.id],
+      tagged_user_names: [opponent.name],
+      tagged_usernames: opponent.username ? [opponent.username] : [],
+    });
     setSending(false);
     navigate(`/challenges/${challenge.id}`);
   };
@@ -118,7 +128,7 @@ export default function BallUp() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Recently Challenged</p>
                     <div className="space-y-2">
                       {recentFriends.map((f) => (
-                        <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name }); setStep(3); }} />
+                        <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name, username: f.profile?.username }); setStep(3); }} />
                       ))}
                     </div>
                   </div>
@@ -127,7 +137,7 @@ export default function BallUp() {
                   {recentFriends.length > 0 && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">All Friends</p>}
                   <div className="space-y-2">
                     {otherFriends.map((f) => (
-                      <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name }); setStep(3); }} />
+                      <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name, username: f.profile?.username }); setStep(3); }} />
                     ))}
                   </div>
                 </div>

@@ -6,8 +6,9 @@ import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import MediaViewer from '@/components/feed/MediaViewer';
+import ChallengeVote from '@/components/feed/ChallengeVote';
 
-export default function PostCard({ post, reactions, onReact }) {
+export default function PostCard({ post, reactions, onReact, userId }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -64,6 +65,8 @@ export default function PostCard({ post, reactions, onReact }) {
           <Swords className="w-4 h-4 text-secondary" />
         </div>
       )}
+
+      {post.challenge_id && <ChallengeVote post={post} userId={userId} />}
 
       <p className="text-sm whitespace-pre-wrap mb-3">{post.body}</p>
 

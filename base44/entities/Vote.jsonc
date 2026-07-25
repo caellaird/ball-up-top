@@ -1,0 +1,22 @@
+{
+  "name": "Vote",
+  "type": "object",
+  "properties": {
+    "post_id": {
+      "type": "string"
+    },
+    "challenge_id": {
+      "type": "string"
+    },
+    "voted_for_id": {
+      "type": "string"
+    },
+    "voted_for_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "post_id",
+    "voted_for_id"
+  ]
+}

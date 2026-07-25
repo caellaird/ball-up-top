@@ -83,6 +83,7 @@ export default function Home() {
                 trashed: !!myReactions[post.id]?.trash_talk,
               }}
               onReact={onReact}
+              userId={user.id}
             />
           ))}
         </div>
