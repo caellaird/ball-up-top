@@ -17,6 +17,8 @@ import HeadToHead from '@/components/profile/HeadToHead';
 import ProfileQRCode from '@/components/profile/ProfileQRCode';
 import TrophyCase from '@/components/profile/TrophyCase';
 import CompletedChallenges from '@/components/profile/CompletedChallenges';
+import { ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
@@ -86,7 +88,22 @@ export default function Profile() {
     navigate(`/messages/${thread.id}`);
   };
 
-  if (!profile) return <div className="text-center text-muted-foreground py-10">Loading profile...</div>;
+  if (!profile) return (
+    <div className="space-y-4">
+      <Skeleton className="w-full h-32 rounded-none" />
+      <div className="px-4 flex items-end gap-3">
+        <Skeleton className="w-20 h-20 rounded-full -mt-12" />
+        <Skeleton className="h-8 w-20 rounded-full mb-2" />
+      </div>
+      <div className="px-4 space-y-2">
+        <Skeleton className="h-5 w-1/3" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="grid grid-cols-4 gap-2 mt-4">
+          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+        </div>
+      </div>
+    </div>
+  );
 
   const wins = profileStats?.wins ?? stats?.games_won ?? 0;
   const losses = profileStats?.losses ?? stats?.losses ?? 0;
@@ -97,6 +114,13 @@ export default function Profile() {
 
   return (
     <div>
+      {!isSelf && (
+        <div className="flex items-center px-4 pt-3 pb-1">
+          <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
+      )}
       {isSelf ? (
         <BannerUpload profile={profile} onUploaded={setProfile} />
       ) : (

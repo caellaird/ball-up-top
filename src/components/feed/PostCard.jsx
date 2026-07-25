@@ -60,10 +60,10 @@ export default function PostCard({ post, reactions, onReact, userId }) {
       </div>
 
       {post.score_text && (
-        <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-3 flex items-center justify-between">
+        <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-3 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
           <span className="font-heading font-bold text-sm">{post.score_text}</span>
           <Swords className="w-4 h-4 text-secondary" />
-        </div>
+        </Link>
       )}
 
       {post.challenge_id && <ChallengeVote post={post} userId={userId} />}

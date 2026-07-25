@@ -61,6 +61,7 @@ const AuthenticatedApp = () => {
           <Route path="/groups" element={<Groups />} />
           <Route path="/challenges" element={<Challenges />} />
           <Route path="/challenges/:id" element={<ChallengeDetail />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:threadId" element={<Conversation />} />
           <Route path="/profile/:username" element={<Profile />} />
           <Route path="/friends" element={<Friends />} />

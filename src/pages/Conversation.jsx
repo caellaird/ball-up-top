@@ -3,7 +3,7 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Image as ImageIcon, X, Settings as SettingsIcon } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Settings as SettingsIcon, ArrowLeft } from 'lucide-react';
 import MessageBubble from '@/components/messages/MessageBubble';
 import GroupSettingsSheet from '@/components/messages/GroupSettingsSheet';
 import { markThreadRead, setTyping, isTyping, hasRead, notifyMessageParticipants } from '@/lib/messaging';
@@ -120,9 +120,12 @@ export default function Conversation() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="flex flex-col h-[calc(100dvh-8rem)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <button onClick={() => navigate(-1)} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <h2 className="font-heading text-lg truncate">{otherName}</h2>
           {isGroup && !typingNames.length && <p className="text-xs text-muted-foreground truncate">{thread.participant_names?.join(', ')}</p>}
           {typingNames.length > 0 && <p className="text-xs text-primary">{typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing...</p>}
@@ -170,7 +173,7 @@ export default function Conversation() {
           thread={thread}
           user={user}
           onUpdated={setThread}
-          onLeave={() => navigate('/messages')}
+          onLeave={() => navigate(-1)}
         />
       )}
     </div>

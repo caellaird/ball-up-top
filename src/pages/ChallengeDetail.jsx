@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
+import { useParams, useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
@@ -19,6 +19,8 @@ export default function ChallengeDetail() {
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [creatorUsername, setCreatorUsername] = useState('');
+  const [opponentUsername, setOpponentUsername] = useState('');
 
   useEffect(() => {
     load();
@@ -27,6 +29,12 @@ export default function ChallengeDetail() {
   const load = async () => {
     const c = await base44.entities.Challenge.get(id);
     setChallenge(c);
+    const [creatorProfiles, opponentProfiles] = await Promise.all([
+      base44.entities.Profile.filter({ created_by_id: c.created_by_id }),
+      base44.entities.Profile.filter({ created_by_id: c.opponent_id }),
+    ]);
+    if (creatorProfiles[0]) setCreatorUsername(creatorProfiles[0].username);
+    if (opponentProfiles[0]) setOpponentUsername(opponentProfiles[0].username);
     if (c.series_type !== 'single') {
       const g = await base44.entities.SeriesGame.filter({ challenge_id: id }, 'game_number');
       setGames(g);
@@ -56,7 +64,7 @@ export default function ChallengeDetail() {
 
   return (
     <div>
-      <Header title="Challenge" />
+      <Header title="Challenge" onBack={() => navigate(-1)} />
       <div className="p-4">
         <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center relative">
           {isCreator && challenge.status !== 'completed' && challenge.status !== 'declined' && (
@@ -68,7 +76,7 @@ export default function ChallengeDetail() {
           {isSeries && challenge.series_name && (
             <p className="font-heading text-sm font-bold text-[hsl(var(--accent))] mt-2">{challenge.series_name}</p>
           )}
-          <h1 className="font-heading text-xl font-bold mt-1">{challenge.creator_name} vs {challenge.opponent_name}</h1>
+          <h1 className="font-heading text-xl font-bold mt-1"><Link to={`/profile/${creatorUsername || 'me'}`} className="hover:underline">{challenge.creator_name}</Link> vs <Link to={`/profile/${opponentUsername || 'me'}`} className="hover:underline">{challenge.opponent_name}</Link></h1>
           <p className="text-sm text-muted-foreground capitalize mt-1">
             {challenge.sport?.replace('_', ' ')} · {challenge.series_type}
           </p>

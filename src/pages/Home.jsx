@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
+import ListSkeleton from '@/components/shared/ListSkeleton';
 
 export default function Home() {
   const { user } = useOutletContext();
@@ -68,7 +69,7 @@ export default function Home() {
         />
       </div>
       {posts === null ? (
-        <div className="text-center text-muted-foreground py-10">Loading feed...</div>
+        <ListSkeleton count={4} />
       ) : posts.length === 0 ? (
         <EmptyState title="No posts yet" description="Complete a challenge to share your first result!" />
       ) : (

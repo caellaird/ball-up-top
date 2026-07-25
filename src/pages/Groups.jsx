@@ -9,6 +9,7 @@ import CreateGroupSheet from '@/components/messages/CreateGroupSheet';
 import NewDmSheet from '@/components/messages/NewDmSheet';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { MessageCircle, Users } from 'lucide-react';
+import ListSkeleton from '@/components/shared/ListSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Groups() {
@@ -88,7 +89,7 @@ export default function Groups() {
 
       <div className="mt-4">
         {threads === null ? (
-          <div className="text-center text-muted-foreground py-10">Loading...</div>
+          <ListSkeleton count={4} />
         ) : threads.length === 0 ? (
           <EmptyState title="No chats yet" description="Start a conversation from your friends list!" />
         ) : (

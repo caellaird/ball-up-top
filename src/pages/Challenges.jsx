@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import EmptyState from '@/components/shared/EmptyState';
+import ListSkeleton from '@/components/shared/ListSkeleton';
 
 export default function Challenges() {
   const { user } = useOutletContext();
@@ -41,7 +42,7 @@ export default function Challenges() {
         />
       </div>
       {challenges === null ? (
-        <div className="text-center text-muted-foreground py-10">Loading challenges...</div>
+        <ListSkeleton count={4} />
       ) : grouped[tab].length === 0 ? (
         <EmptyState title="Nothing here" description="Tap BALL UP to challenge a friend!" />
       ) : (
