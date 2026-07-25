@@ -11,6 +11,9 @@
     "actor_name": {
       "type": "string"
     },
+    "actor_username": {
+      "type": "string"
+    },
     "title": {
       "type": "string"
     },

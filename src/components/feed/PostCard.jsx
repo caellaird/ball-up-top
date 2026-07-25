@@ -34,7 +34,7 @@ export default function PostCard({ post, reactions, onReact, userId }) {
     if (!commentText.trim()) return;
     const user = await base44.auth.me();
     const profile = await getOrCreateProfile(user);
-    const c = await base44.entities.Comment.create({ post_id: post.id, author_name: user.full_name, author_avatar: profile.avatar_url, body: commentText });
+    const c = await base44.entities.Comment.create({ post_id: post.id, author_name: user.full_name, author_username: profile.username, author_avatar: profile.avatar_url, body: commentText });
     await base44.entities.Post.update(post.id, { comment_count: (post.comment_count || 0) + 1 });
     setComments([c, ...comments]);
     setCommentText('');
@@ -50,7 +50,7 @@ export default function PostCard({ post, reactions, onReact, userId }) {
           </Avatar>
         </Link>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">{post.author_name}</p>
+          <Link to={`/profile/${post.author_username || 'me'}`}><p className="font-semibold text-sm">{post.author_name}</p></Link>
           <p className="text-xs text-muted-foreground truncate">
             {post.location_name ? `📍 ${post.location_name} · ` : ''}
             {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
@@ -125,7 +125,7 @@ export default function PostCard({ post, reactions, onReact, userId }) {
                 <AvatarImage src={c.author_avatar} />
                 <AvatarFallback className="text-[10px]">{c.author_name?.[0] || 'U'}</AvatarFallback>
               </Avatar>
-              <p><span className="font-semibold">{c.author_name}: </span><span>{c.body}</span></p>
+              <p><Link to={`/profile/${c.author_username || 'me'}`} className="font-semibold">{c.author_name}</Link><span>: </span><span>{c.body}</span></p>
             </div>
           ))}
           <div className="flex gap-2 pt-1">

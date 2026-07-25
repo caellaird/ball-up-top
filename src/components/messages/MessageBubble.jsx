@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '😮', '😢'];
@@ -63,7 +64,7 @@ export default function MessageBubble({ message, isMe, isGroup, userId, onReply,
   return (
     <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-1`}>
       {isGroup && !isMe && (
-        <span className="text-[11px] text-muted-foreground ml-1 mb-0.5">{message.sender_name}</span>
+        <Link to={`/profile/${message.sender_username || 'me'}`} className="text-[11px] text-muted-foreground ml-1 mb-0.5 hover:underline">{message.sender_name}</Link>
       )}
 
       {message.reply_to_id && (

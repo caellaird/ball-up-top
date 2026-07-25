@@ -31,7 +31,7 @@ export default function CreateGroupSheet({ open, onOpenChange, user, onCreated }
   };
 
   const create = async () => {
-    if (selected.length === 0) return;
+    if (selected.length === 0 || !name.trim()) return;
     setSaving(true);
     const thread = await base44.entities.Thread.create({
       type: 'group',
@@ -48,7 +48,7 @@ export default function CreateGroupSheet({ open, onOpenChange, user, onCreated }
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
         <SheetHeader><SheetTitle className="font-heading">New Group</SheetTitle></SheetHeader>
         <div className="space-y-3 mt-4">
-          <Input placeholder="Group name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input placeholder="Group name (required)" value={name} onChange={(e) => setName(e.target.value)} />
           <p className="text-xs text-muted-foreground">Select friends to add</p>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {friends.map((f) => {
@@ -69,7 +69,7 @@ export default function CreateGroupSheet({ open, onOpenChange, user, onCreated }
             })}
             {friends.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No friends yet.</p>}
           </div>
-          <Button onClick={create} disabled={selected.length === 0 || saving} className="w-full rounded-full h-12">
+          <Button onClick={create} disabled={selected.length === 0 || !name.trim() || saving} className="w-full rounded-full h-12">
             {saving ? 'Creating...' : `Create Group${selected.length ? ` (${selected.length + 1})` : ''}`}
           </Button>
         </div>

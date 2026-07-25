@@ -24,6 +24,7 @@ export default function PostComposer({ onPosted }) {
     const profile = await getOrCreateProfile(user);
     const post = await base44.entities.Post.create({
       author_name: user.full_name,
+      author_username: profile.username,
       author_avatar: profile.avatar_url,
       body,
       tagged_user_ids: tagged.map((t) => t.id),

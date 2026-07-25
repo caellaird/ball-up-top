@@ -3,6 +3,7 @@ import { useParams, useOutletContext, Link, useNavigate } from 'react-router-dom
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AvatarUpload from '@/components/profile/AvatarUpload';
+import BannerUpload from '@/components/profile/BannerUpload';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -96,11 +97,15 @@ export default function Profile() {
 
   return (
     <div>
-      <div
-        className="h-28 bg-gradient-to-r from-primary to-secondary"
-        style={profile.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: 'cover' } : {}}
-      />
-      <div className="px-4 -mt-10">
+      {isSelf ? (
+        <BannerUpload profile={profile} onUploaded={setProfile} />
+      ) : (
+        <div
+          className="h-32 bg-gradient-to-r from-primary to-secondary"
+          style={profile.banner_url ? { backgroundImage: `url(${profile.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+        />
+      )}
+      <div className="px-4 -mt-12 relative z-10">
         <div className="flex items-end justify-between mb-3">
           {isSelf ? (
             <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} />

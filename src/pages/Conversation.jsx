@@ -19,6 +19,7 @@ export default function Conversation() {
   const [replyTo, setReplyTo] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [threadReads, setThreadReads] = useState([]);
+  const [myUsername, setMyUsername] = useState('');
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const lastTypingUpdate = useRef(0);
@@ -50,6 +51,8 @@ export default function Conversation() {
   const load = async () => {
     const t = await base44.entities.Thread.get(threadId);
     setThread(t);
+    const myProfiles = await base44.entities.Profile.filter({ created_by_id: user.id });
+    if (myProfiles[0]) setMyUsername(myProfiles[0].username);
     const msgs = await base44.entities.Message.filter({ thread_id: threadId }, 'created_date');
     setMessages(msgs);
     await markThreadRead(threadId, user.id);
@@ -74,7 +77,7 @@ export default function Conversation() {
     if (!text.trim()) return;
     const body = text;
     setText('');
-    const msgData = { thread_id: threadId, sender_name: user.full_name, body };
+    const msgData = { thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, body };
     if (replyTo) {
       msgData.reply_to_id = replyTo.id;
       msgData.reply_to_sender = replyTo.sender_name;
@@ -84,7 +87,7 @@ export default function Conversation() {
     await base44.entities.Message.create(msgData);
     await base44.entities.Thread.update(threadId, { last_message: body, last_message_at: new Date().toISOString() });
     await markThreadRead(threadId, user.id);
-    await notifyMessageParticipants(thread, user.full_name, user.id, body);
+    await notifyMessageParticipants(thread, user.full_name, user.id, body, myUsername);
   };
 
   const sendMedia = async (e) => {
@@ -93,10 +96,10 @@ export default function Conversation() {
     if (!file) return;
     setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    await base44.entities.Message.create({ thread_id: threadId, sender_name: user.full_name, media_url: file_url });
+    await base44.entities.Message.create({ thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, media_url: file_url });
     await base44.entities.Thread.update(threadId, { last_message: '📷 Photo', last_message_at: new Date().toISOString() });
     await markThreadRead(threadId, user.id);
-    await notifyMessageParticipants(thread, user.full_name, user.id, '📷 Photo');
+    await notifyMessageParticipants(thread, user.full_name, user.id, '📷 Photo', myUsername);
     setUploading(false);
   };
 
@@ -117,7 +120,7 @@ export default function Conversation() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-[calc(100vh-8rem)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex-1 min-w-0">
           <h2 className="font-heading text-lg truncate">{otherName}</h2>

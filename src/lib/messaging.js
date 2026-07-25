@@ -28,7 +28,7 @@ export function hasRead(threadRead, messageDate) {
   return new Date(threadRead.last_read_at).getTime() >= new Date(messageDate).getTime();
 }
 
-export async function notifyMessageParticipants(thread, senderName, senderId, body) {
+export async function notifyMessageParticipants(thread, senderName, senderId, body, senderUsername) {
   const otherIds = (thread.participant_ids || []).filter((id) => id !== senderId);
   const isGroup = thread.type === 'group';
   await Promise.all(
@@ -37,6 +37,7 @@ export async function notifyMessageParticipants(thread, senderName, senderId, bo
         userId: id,
         type: 'message',
         actorName: senderName,
+        actorUsername: senderUsername,
         title: isGroup ? `${senderName} in ${thread.name || 'Group'}` : `New message from ${senderName}`,
         body: body || '📷 Photo',
         link: `/messages/${thread.id}`,
