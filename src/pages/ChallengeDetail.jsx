@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
 import { MapPin, Clock, Pencil, CalendarPlus } from 'lucide-react';
 import { format } from 'date-fns';
-import { SPORT_EMOJI } from '@/lib/constants';
+import { SPORT_EMOJI, getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
@@ -58,6 +58,7 @@ export default function ChallengeDetail() {
   const isOpponent = challenge.opponent_id === user.id;
   const isCreator = challenge.created_by_id === user.id;
   const isSeries = challenge.series_type !== 'single';
+  const sportDisplay = getSportDisplay(challenge);
   const creatorWins = challenge.creator_games_won || 0;
   const opponentWins = challenge.opponent_games_won || 0;
   const totalGames = challenge.games_to_win ? challenge.games_to_win * 2 - 1 : null;
@@ -72,13 +73,13 @@ export default function ChallengeDetail() {
               <Pencil className="w-4 h-4" />
             </button>
           )}
-          <span className="text-4xl">{SPORT_EMOJI[challenge.sport] || '🏆'}</span>
+          <span className="text-4xl">{sportDisplay.emoji}</span>
           {isSeries && challenge.series_name && (
             <p className="font-heading text-sm font-bold text-[hsl(var(--accent))] mt-2">{challenge.series_name}</p>
           )}
           <h1 className="font-heading text-xl font-bold mt-1"><Link to={`/profile/${creatorUsername || 'me'}`} className="hover:underline">{challenge.creator_name}</Link> vs <Link to={`/profile/${opponentUsername || 'me'}`} className="hover:underline">{challenge.opponent_name}</Link></h1>
           <p className="text-sm text-muted-foreground capitalize mt-1">
-            {challenge.sport?.replace('_', ' ')} · {challenge.series_type}
+            {sportDisplay.label} · {challenge.series_type}
           </p>
 
           <div className="flex justify-center gap-4 text-sm text-muted-foreground mt-3">

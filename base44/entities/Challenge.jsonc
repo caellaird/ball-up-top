@@ -17,6 +17,12 @@
       ],
       "default": "basketball"
     },
+    "custom_sport_name": {
+      "type": "string"
+    },
+    "custom_sport_emoji": {
+      "type": "string"
+    },
     "creator_name": {
       "type": "string"
     },

@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { getSportDisplay } from '@/lib/constants';
 
 export async function computeProfileStats(userId) {
   const [asCreator, asOpponent] = await Promise.all([
@@ -37,8 +38,9 @@ export async function computeProfileStats(userId) {
 
   const sportMap = {};
   sortedCompleted.forEach((c) => {
-    const sport = c.sport || 'custom';
-    if (!sportMap[sport]) sportMap[sport] = { sport, games: 0, wins: 0, losses: 0, results: [] };
+    const display = getSportDisplay(c);
+    const sport = display.label;
+    if (!sportMap[sport]) sportMap[sport] = { sport, emoji: display.emoji, games: 0, wins: 0, losses: 0, results: [] };
     sportMap[sport].games++;
     if (c.winner_id === userId) { sportMap[sport].wins++; sportMap[sport].results.push('W'); }
     else if (c.winner_id) { sportMap[sport].losses++; sportMap[sport].results.push('L'); }
@@ -52,6 +54,7 @@ export async function computeProfileStats(userId) {
     }
     return {
       sport: s.sport,
+      emoji: s.emoji,
       games: s.games,
       wins: s.wins,
       losses: s.losses,
@@ -87,8 +90,9 @@ export async function computeHeadToHead(currentUserId, profileOwnerId) {
 
   const sportMap = {};
   all.forEach((c) => {
-    const sport = c.sport || 'custom';
-    if (!sportMap[sport]) sportMap[sport] = { sport, myWins: 0, theirWins: 0, total: 0 };
+    const display = getSportDisplay(c);
+    const sport = display.label;
+    if (!sportMap[sport]) sportMap[sport] = { sport, emoji: display.emoji, myWins: 0, theirWins: 0, total: 0 };
     sportMap[sport].total++;
     if (c.winner_id === currentUserId) sportMap[sport].myWins++;
     else if (c.winner_id === profileOwnerId) sportMap[sport].theirWins++;

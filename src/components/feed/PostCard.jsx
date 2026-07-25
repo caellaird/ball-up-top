@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, MessageCircle, Share2, Swords } from 'lucide-react';
+import { Flame, MessageCircle, Share2, Swords, Pencil } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import MediaViewer from '@/components/feed/MediaViewer';
 import ChallengeVote from '@/components/feed/ChallengeVote';
+import PostEditSheet from '@/components/feed/PostEditSheet';
 
 export default function PostCard({ post, reactions, onReact, userId }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [viewerIndex, setViewerIndex] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editState, setEditState] = useState({});
 
   const loadComments = async () => {
     const data = await base44.entities.Comment.filter({ post_id: post.id }, '-created_date');
     setComments(data);
     setShowComments(true);
   };
+
+  const body = editState.body ?? post.body;
+  const scoreText = editState.score_text ?? post.score_text;
+  const mediaUrls = editState.media_urls ?? post.media_urls;
+  const isEdited = editState.is_edited ?? post.is_edited;
 
   const handleShare = async () => {
     const shareText = post.score_text || post.body;
@@ -56,19 +64,27 @@ export default function PostCard({ post, reactions, onReact, userId }) {
             {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
           </p>
         </div>
-        {post.game_emoji && <span className="text-2xl">{post.game_emoji}</span>}
+        <div className="flex items-center gap-2 shrink-0">
+          {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
+          {post.created_by_id === userId && (
+            <button onClick={() => setShowEdit(true)} className="p-1 text-muted-foreground hover:text-foreground">
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
+          {post.game_emoji && <span className="text-2xl">{post.game_emoji}</span>}
+        </div>
       </div>
 
-      {post.score_text && (
+      {scoreText && (
         <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-3 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
-          <span className="font-heading font-bold text-sm">{post.score_text}</span>
+          <span className="font-heading font-bold text-sm">{scoreText}</span>
           <Swords className="w-4 h-4 text-secondary" />
         </Link>
       )}
 
       {post.challenge_id && <ChallengeVote post={post} userId={userId} />}
 
-      <p className="text-sm whitespace-pre-wrap mb-3">{post.body}</p>
+      <p className="text-sm whitespace-pre-wrap mb-3">{body}</p>
 
       {post.tagged_user_names?.length > 0 && (
         <p className="text-xs text-muted-foreground mb-3">
@@ -87,9 +103,9 @@ export default function PostCard({ post, reactions, onReact, userId }) {
         </p>
       )}
 
-      {post.media_urls?.length > 0 && (
-        <div className={`grid gap-1.5 mb-3 ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          {post.media_urls.slice(0, 5).map((url, i) => (
+      {mediaUrls?.length > 0 && (
+        <div className={`grid gap-1.5 mb-3 ${mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {mediaUrls.slice(0, 5).map((url, i) => (
             <button key={url} onClick={() => setViewerIndex(i)} className="block">
               <img src={url} alt="" className="rounded-2xl object-cover w-full h-40" />
             </button>
@@ -98,7 +114,7 @@ export default function PostCard({ post, reactions, onReact, userId }) {
       )}
 
       {viewerIndex !== null && (
-        <MediaViewer urls={post.media_urls} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
+        <MediaViewer urls={mediaUrls} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
       )}
 
       <div className="flex items-center gap-5 text-muted-foreground text-sm pt-1">
@@ -116,6 +132,18 @@ export default function PostCard({ post, reactions, onReact, userId }) {
         </button>
         <button className="ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
       </div>
+
+      {showEdit && (
+        <PostEditSheet
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          post={post}
+          onSaved={(updated) => {
+            setEditState(updated);
+            setShowEdit(false);
+          }}
+        />
+      )}
 
       {showComments && (
         <div className="mt-3 pt-3 border-t border-border space-y-2">

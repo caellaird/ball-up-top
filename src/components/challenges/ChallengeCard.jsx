@@ -2,10 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { SPORT_EMOJI } from '@/lib/constants';
+import { getSportDisplay } from '@/lib/constants';
 
 export default function ChallengeCard({ challenge }) {
   const isSeries = challenge.series_type !== 'single';
+  const sportDisplay = getSportDisplay(challenge);
 
   if (isSeries) {
     const creatorWins = challenge.creator_games_won || 0;
@@ -22,7 +23,7 @@ export default function ChallengeCard({ challenge }) {
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{SPORT_EMOJI[challenge.sport] || '🏆'}</span>
+            <span className="text-2xl">{sportDisplay.emoji}</span>
             <h3 className="font-heading font-bold text-[hsl(var(--accent))]">{challenge.series_name || 'Series'}</h3>
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide">Series</span>
@@ -55,7 +56,7 @@ export default function ChallengeCard({ challenge }) {
     <Link to={`/challenges/${challenge.id}`} className="block bg-card rounded-3xl shadow-sm p-4 mb-3 mx-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{SPORT_EMOJI[challenge.sport] || '🏆'}</span>
+          <span className="text-2xl">{sportDisplay.emoji}</span>
           <h3 className="font-heading font-bold">vs {challenge.opponent_name}</h3>
         </div>
         {challenge.status === 'completed' && (

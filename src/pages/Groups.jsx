@@ -94,8 +94,9 @@ export default function Groups() {
           <EmptyState title="No chats yet" description="Start a conversation from your friends list!" />
         ) : (
           threads.map((t) => {
+            const isGroup = t.type === 'group';
             const idx = t.participant_ids?.findIndex((pid) => pid !== user.id);
-            const name = t.participant_names?.[idx] || t.name || 'Chat';
+            const name = isGroup ? (t.name || 'Group') : (t.participant_names?.[idx] || 'Chat');
             return (
               <Link key={t.id} to={`/messages/${t.id}`} className="flex items-center gap-3 bg-card rounded-2xl shadow-sm p-3 mb-2 mx-4">
                 <Avatar className="w-11 h-11"><AvatarFallback>{name[0]}</AvatarFallback></Avatar>

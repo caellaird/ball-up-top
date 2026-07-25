@@ -4,7 +4,7 @@ import { X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
-import { SPORTS, SERIES_TYPES, GAMES_TO_WIN } from '@/lib/constants';
+import { SPORTS, SERIES_TYPES, GAMES_TO_WIN, CUSTOM_SPORT_EMOJIS, getSportDisplay } from '@/lib/constants';
 import { sendNotification } from '@/lib/notify';
 import { enrichFriends } from '@/lib/friendsHelpers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,6 +23,8 @@ export default function BallUp() {
   const [date, setDate] = useState('');
   const [seriesType, setSeriesType] = useState('single');
   const [seriesName, setSeriesName] = useState('');
+  const [customSportName, setCustomSportName] = useState('');
+  const [customSportEmoji, setCustomSportEmoji] = useState('');
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -48,8 +50,11 @@ export default function BallUp() {
 
   const send = async () => {
     setSending(true);
+    const sportDisplay = getSportDisplay({ sport, custom_sport_name: customSportName, custom_sport_emoji: customSportEmoji });
     const challenge = await base44.entities.Challenge.create({
       sport,
+      custom_sport_name: sport === 'custom' ? customSportName : undefined,
+      custom_sport_emoji: sport === 'custom' ? (customSportEmoji || '🏆') : undefined,
       creator_name: user.full_name,
       opponent_id: opponent.id,
       opponent_name: opponent.name,
@@ -68,9 +73,9 @@ export default function BallUp() {
     });
     await base44.entities.Post.create({
       author_name: user.full_name,
-      body: `Challenged ${opponent.name} to ${SPORTS.find((s) => s.key === sport)?.label || sport}!`,
+      body: `Challenged ${opponent.name} to ${sportDisplay.label}!`,
       challenge_id: challenge.id,
-      game_emoji: SPORT_EMOJI[sport] || '🏆',
+      game_emoji: sportDisplay.emoji,
       location_name: location,
       tagged_user_ids: [opponent.id],
       tagged_user_names: [opponent.name],
@@ -97,7 +102,7 @@ export default function BallUp() {
               {SPORTS.map((s) => (
                 <button
                   key={s.key}
-                  onClick={() => { setSport(s.key); setStep(2); }}
+                  onClick={() => { setSport(s.key); if (s.key !== 'custom') setStep(2); }}
                   className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 ${sport === s.key ? 'border-accent bg-accent/10' : 'border-border bg-card'}`}
                 >
                   <span className="text-3xl">{s.emoji}</span>
@@ -105,6 +110,37 @@ export default function BallUp() {
                 </button>
               ))}
             </div>
+            {sport === 'custom' && (
+              <div className="mt-4 space-y-3">
+                <Input
+                  placeholder="What are you playing? (e.g. Ping Pong, Spikeball)"
+                  value={customSportName}
+                  onChange={(e) => setCustomSportName(e.target.value)}
+                  className="h-12 rounded-2xl"
+                />
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Pick an emoji</p>
+                  <div className="flex flex-wrap gap-2">
+                    {CUSTOM_SPORT_EMOJIS.map((e) => (
+                      <button
+                        key={e}
+                        onClick={() => setCustomSportEmoji(e)}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl border-2 ${customSportEmoji === e ? 'border-accent bg-accent/10' : 'border-border'}`}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setStep(2)}
+                  disabled={!customSportName.trim()}
+                  className="w-full rounded-full h-12"
+                >
+                  Continue
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -192,7 +228,7 @@ export default function BallUp() {
           <div>
             <h1 className="font-heading text-2xl font-extrabold mb-6">Review Challenge</h1>
             <div className="bg-card rounded-3xl shadow-sm p-5 space-y-3 mb-6">
-              <Row label="Sport" value={SPORTS.find((s) => s.key === sport)?.label} />
+              <Row label="Sport" value={sport === 'custom' ? (customSportName || 'Custom') : SPORTS.find((s) => s.key === sport)?.label} />
               <Row label="Opponent" value={opponent?.name} />
               <Row label="Location" value={location} />
               <Row label="Date" value={date ? new Date(date).toLocaleString() : '—'} />

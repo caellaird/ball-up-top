@@ -68,6 +68,10 @@
     "comment_count": {
       "type": "number",
       "default": 0
+    },
+    "is_edited": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

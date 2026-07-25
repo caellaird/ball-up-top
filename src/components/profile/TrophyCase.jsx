@@ -1,7 +1,5 @@
 import React from 'react';
-import { SPORT_EMOJI, SPORTS } from '@/lib/constants';
-
-const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
+// Sport display info (label + emoji) comes from profileStats via a.sport and a.emoji
 
 export default function TrophyCase({ topActivities }) {
   if (!topActivities || topActivities.length === 0) {
@@ -20,8 +18,8 @@ export default function TrophyCase({ topActivities }) {
         {topActivities.map((a) => (
           <div key={a.sport} className="bg-card rounded-2xl shadow-sm p-4">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-2xl">{SPORT_EMOJI[a.sport] || '🏆'}</span>
-              <span className="font-heading font-bold">{SPORT_LABEL[a.sport] || a.sport}</span>
+              <span className="text-2xl">{a.emoji || '🏆'}</span>
+              <span className="font-heading font-bold">{a.sport}</span>
             </div>
             <div className="grid grid-cols-4 gap-1 text-center">
               <div>

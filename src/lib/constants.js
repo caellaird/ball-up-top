@@ -14,6 +14,23 @@ export const SPORTS = [
 
 export const SPORT_EMOJI = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.emoji }), {});
 
+export const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
+
+export const CUSTOM_SPORT_EMOJIS = ['🏓', '🥏', '🎳', '🏸', '♟️', '🏐', '🎯', '🎱', '🏈', '⚽', '🎾', '🏏', '⛳', '🏆'];
+
+export function getSportDisplay(challenge) {
+  if (challenge.sport === 'custom') {
+    return {
+      label: challenge.custom_sport_name || 'Custom',
+      emoji: challenge.custom_sport_emoji || '🏆',
+    };
+  }
+  return {
+    label: SPORT_LABEL[challenge.sport] || challenge.sport,
+    emoji: SPORT_EMOJI[challenge.sport] || '🏆',
+  };
+}
+
 export const AWARD_TYPES = [
   'Clutch', 'Best Shooter', 'Lockdown Defender', 'Trash Talk King', 'Ice Cold',
   'Most Improved', 'Fastest', 'MVP', 'Sharpshooter', 'Comeback Player', 'Heart', 'Respect', 'Funny', 'Competitor',
@@ -27,5 +44,4 @@ export const SERIES_TYPES = [
   { key: 'open', label: 'Open Series' },
 ];
 
-// Number of game wins needed to clinch each series type (null = open-ended, ended manually)
 export const GAMES_TO_WIN = { single: 1, bo3: 2, bo5: 3, bo7: 4, open: null };

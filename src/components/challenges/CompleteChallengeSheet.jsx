@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
-import { AWARD_TYPES, SPORT_EMOJI } from '@/lib/constants';
+import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
 import { recordGameResult } from '@/lib/ensureProfile';
 
 export default function CompleteChallengeSheet({ open, onOpenChange, challenge, user, onCompleted }) {
@@ -19,6 +19,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const isSeries = challenge.series_type !== 'single';
   const gameNumber = (challenge.creator_games_won || 0) + (challenge.opponent_games_won || 0) + 1;
   const isOpenEnded = isSeries && !challenge.games_to_win;
+  const sportDisplay = getSportDisplay(challenge);
 
   const uploadPhotos = async (files) => {
     const uploads = await Promise.all(
@@ -27,13 +28,10 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     setPhotos([...photos, ...uploads.map((u) => u.file_url)]);
   };
 
-  const finalizeSeries = async (creatorWins, opponentWins) => {
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsername, myUsername) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const winnerName = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.creator_name : challenge.opponent_name;
     const winnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
-
-    const opponentProfiles = await base44.entities.Profile.filter({ created_by_id: challenge.opponent_id });
-    const opponentUsername = opponentProfiles[0]?.username || '';
 
     const updated = await base44.entities.Challenge.update(challenge.id, {
       status: 'completed',
@@ -58,12 +56,13 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     await base44.entities.Post.create({
       author_name: user.full_name,
+      author_username: myUsername,
       body: caption || (isSeries
-        ? `${challenge.series_name}: ${challenge.creator_name} vs ${challenge.opponent_name} — final`
-        : `${challenge.creator_name} vs ${challenge.opponent_name}`),
+        ? `${challenge.series_name || sportDisplay.label}: ${challenge.creator_name} vs ${challenge.opponent_name} — Final! ${winnerName ? winnerName + ' takes the series!' : 'Series complete!'}`
+        : `${challenge.creator_name} vs ${challenge.opponent_name} — ${winnerName ? winnerName + ' wins!' : 'Final'}`),
       media_urls: photos,
       challenge_id: challenge.id,
-      game_emoji: SPORT_EMOJI[challenge.sport] || '🏆',
+      game_emoji: sportDisplay.emoji,
       location_name: challenge.location_name,
       score_text: `${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}`,
       tagged_user_ids: [challenge.opponent_id],
@@ -86,14 +85,20 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     if (Number.isNaN(sc) || Number.isNaN(so)) return;
     setSaving(true);
 
+    const [opponentProfiles, myProfiles] = await Promise.all([
+      base44.entities.Profile.filter({ created_by_id: challenge.opponent_id }),
+      base44.entities.Profile.filter({ created_by_id: user.id }),
+    ]);
+    const opponentUsername = opponentProfiles[0]?.username || '';
+    const myUsername = myProfiles[0]?.username || '';
+
     if (!isSeries) {
-      const updated = await finalizeSeries(sc, so);
+      const updated = await finalizeSeries(sc, so, opponentUsername, myUsername);
       setSaving(false);
       onCompleted(updated);
       return;
     }
 
-    // Series: log this individual game first
     const isCreatorGameWinner = sc > so;
     const gameWinnerName = sc === so ? '' : isCreatorGameWinner ? challenge.creator_name : challenge.opponent_name;
     await base44.entities.SeriesGame.create({
@@ -114,10 +119,24 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       : finalGame;
 
     if (seriesClinched) {
-      const updated = await finalizeSeries(creatorWins, opponentWins);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsername, myUsername);
       setSaving(false);
       onCompleted(updated);
     } else {
+      await base44.entities.Post.create({
+        author_name: user.full_name,
+        author_username: myUsername,
+        body: caption || `${challenge.series_name || sportDisplay.label}: Game ${gameNumber} — ${gameWinnerName ? gameWinnerName + ' takes it!' : 'Tied!'} Series ${creatorWins}-${opponentWins}`,
+        media_urls: photos,
+        challenge_id: challenge.id,
+        game_emoji: sportDisplay.emoji,
+        location_name: challenge.location_name,
+        score_text: `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${challenge.opponent_name} · Series ${creatorWins}-${opponentWins}`,
+        tagged_user_ids: [challenge.opponent_id],
+        tagged_user_names: [challenge.opponent_name],
+        tagged_usernames: [opponentUsername],
+      });
+
       const updated = await base44.entities.Challenge.update(challenge.id, {
         creator_games_won: creatorWins,
         opponent_games_won: opponentWins,
