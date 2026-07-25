@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import Header from '@/components/layout/Header';
 import EmptyState from '@/components/shared/EmptyState';
+import CreateGroupSheet from '@/components/messages/CreateGroupSheet';
+import NewDmSheet from '@/components/messages/NewDmSheet';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
+import { MessageCircle, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Groups() {
   const { user } = useOutletContext();
+  const navigate = useNavigate();
   const [threads, setThreads] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [showDm, setShowDm] = useState(false);
+  const [showGroup, setShowGroup] = useState(false);
 
   useEffect(() => {
     load();
@@ -42,6 +48,43 @@ export default function Groups() {
           <Switch checked={!!profile?.ready_to_ball} onCheckedChange={toggleReady} />
         </div>
       </div>
+
+      <div className="px-4 mt-4 grid grid-cols-2 gap-3">
+        <button
+          onClick={() => setShowDm(true)}
+          className="flex flex-col items-center gap-2 bg-primary text-primary-foreground rounded-2xl py-4 shadow-sm hover:opacity-90 transition"
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-sm font-semibold">New DM</span>
+        </button>
+        <button
+          onClick={() => setShowGroup(true)}
+          className="flex flex-col items-center gap-2 bg-secondary text-secondary-foreground rounded-2xl py-4 shadow-sm hover:opacity-90 transition"
+        >
+          <Users className="w-5 h-5" />
+          <span className="text-sm font-semibold">New Group</span>
+        </button>
+      </div>
+
+      <NewDmSheet
+        open={showDm}
+        onOpenChange={setShowDm}
+        user={user}
+        onCreated={(thread) => {
+          setShowDm(false);
+          navigate(`/messages/${thread.id}`);
+        }}
+      />
+      <CreateGroupSheet
+        open={showGroup}
+        onOpenChange={setShowGroup}
+        user={user}
+        onCreated={(thread) => {
+          setShowGroup(false);
+          load();
+          navigate(`/messages/${thread.id}`);
+        }}
+      />
 
       <div className="mt-4">
         {threads === null ? (
