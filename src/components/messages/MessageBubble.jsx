@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '🔥', '😮', '😢'];
 
-export default function MessageBubble({ message, isMe, isGroup, userId, onReply }) {
+export default function MessageBubble({ message, isMe, isGroup, userId, onReply, seen }) {
   const [showActions, setShowActions] = useState(false);
   const [reactions, setReactions] = useState([]);
   const [editing, setEditing] = useState(false);
@@ -119,6 +119,10 @@ export default function MessageBubble({ message, isMe, isGroup, userId, onReply 
             );
           })}
         </div>
+      )}
+
+      {seen && (
+        <p className="text-[10px] text-muted-foreground mr-1 mt-0.5">Seen ✓</p>
       )}
 
       {showActions && (

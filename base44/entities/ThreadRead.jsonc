@@ -1,0 +1,20 @@
+{
+  "name": "ThreadRead",
+  "type": "object",
+  "properties": {
+    "thread_id": {
+      "type": "string"
+    },
+    "last_read_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "typing_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "thread_id"
+  ]
+}
