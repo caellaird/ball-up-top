@@ -9,10 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateProfile, getOrCreateStats } from '@/lib/ensureProfile';
 import { findOrCreateThread } from '@/lib/friendsHelpers';
-import { SPORT_EMOJI } from '@/lib/constants';
+import { computeProfileStats } from '@/lib/profileStats';
+import { SPORT_EMOJI, SPORTS } from '@/lib/constants';
 import FriendsListSheet from '@/components/friends/FriendsListSheet';
 import HeadToHead from '@/components/profile/HeadToHead';
 import ProfileQRCode from '@/components/profile/ProfileQRCode';
+import TrophyCase from '@/components/profile/TrophyCase';
+import CompletedChallenges from '@/components/profile/CompletedChallenges';
+
+const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
 export default function Profile() {
   const { username } = useParams();
@@ -20,17 +25,17 @@ export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
+  const [profileStats, setProfileStats] = useState(null);
   const [awards, setAwards] = useState([]);
   const [displayName, setDisplayName] = useState('');
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ bio: '', city: '', favorite_sport: '' });
+  const [form, setForm] = useState({ nickname: '', bio: '', city: '', favorite_sport: '' });
   const [friendRecords, setFriendRecords] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [showFriends, setShowFriends] = useState(false);
   const isSelf = username === 'me';
 
-  useEffect(() => {
-    load();
-  }, [username]);
+  useEffect(() => { load(); }, [username]);
 
   const load = async () => {
     let p, s, ownerId, name;
@@ -38,7 +43,7 @@ export default function Profile() {
       p = await getOrCreateProfile(user);
       s = await getOrCreateStats(user);
       ownerId = user.id;
-      name = user.full_name;
+      name = p.nickname || user.full_name;
     } else {
       const found = await base44.entities.Profile.filter({ username });
       p = found[0] || null;
@@ -46,24 +51,32 @@ export default function Profile() {
         ownerId = p.created_by_id;
         const statsList = await base44.entities.UserStats.filter({ created_by_id: ownerId });
         s = statsList[0] || null;
-        name = s?.user_name || p.username;
+        name = p.nickname || s?.user_name || p.username;
       }
     }
     setProfile(p);
     setStats(s);
     setDisplayName(name);
     if (p) {
-      setForm({ bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
+      setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
       setAwards(awardList);
       const allFriends = await base44.entities.Friend.filter({ status: 'accepted' });
       setFriendRecords(allFriends.filter((f) => f.created_by_id === ownerId || f.addressee_id === ownerId));
+      if (isSelf) {
+        const pending = await base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' });
+        setPendingCount(pending.length);
+      }
+    }
+    if (ownerId) {
+      setProfileStats(await computeProfileStats(ownerId));
     }
   };
 
   const save = async () => {
     const updated = await base44.entities.Profile.update(profile.id, form);
     setProfile(updated);
+    setDisplayName(form.nickname || user.full_name);
     setEditing(false);
   };
 
@@ -74,13 +87,19 @@ export default function Profile() {
 
   if (!profile) return <div className="text-center text-muted-foreground py-10">Loading profile...</div>;
 
-  const wins = stats?.games_won || 0;
-  const losses = stats?.losses || 0;
-  const winPct = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+  const wins = profileStats?.wins ?? stats?.games_won ?? 0;
+  const losses = profileStats?.losses ?? stats?.losses ?? 0;
+  const winPct = profileStats?.winPct ?? (wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0);
+  const currentStreak = profileStats?.currentStreak ?? stats?.current_streak ?? 0;
+  const longestStreak = profileStats?.longestStreak ?? stats?.longest_streak ?? 0;
+  const favoriteComp = profile.favorite_sport || profileStats?.favoriteCompetition;
 
   return (
     <div>
-      <div className="h-28 bg-gradient-to-r from-primary to-secondary" style={profile.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: 'cover' } : {}} />
+      <div
+        className="h-28 bg-gradient-to-r from-primary to-secondary"
+        style={profile.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: 'cover' } : {}}
+      />
       <div className="px-4 -mt-10">
         <div className="flex items-end justify-between mb-3">
           {isSelf ? (
@@ -96,22 +115,30 @@ export default function Profile() {
         </div>
         <h1 className="font-heading text-xl font-bold">{displayName}</h1>
         <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}</p>
-        {profile.favorite_sport && <p className="text-sm mt-1">{SPORT_EMOJI[profile.favorite_sport] || ''} {profile.favorite_sport}</p>}
+        {favoriteComp && <p className="text-sm mt-1">{SPORT_EMOJI[favoriteComp] || '🏆'} {SPORT_LABEL[favoriteComp] || favoriteComp}</p>}
         <p className="text-sm mt-2">{profile.bio || 'No bio yet.'}</p>
 
         <div className="grid grid-cols-4 gap-2 mt-5 text-center">
           <Stat label="Wins" value={wins} />
           <Stat label="Losses" value={losses} />
           <Stat label="Win %" value={`${winPct}%`} />
-          <Stat label="Streak" value={stats?.current_streak || 0} />
+          <Stat label="Streak" value={currentStreak} />
+          <Stat label="Best Streak" value={longestStreak} />
+          <Stat label="Created" value={profileStats?.challengesCreated ?? 0} />
+          <Stat label="Completed" value={profileStats?.challengesCompleted ?? 0} />
+          <Stat label="Friends" value={friendRecords.length} />
         </div>
 
         <button onClick={() => setShowFriends(true)} className="block w-full text-center mt-4 text-sm font-semibold text-primary">
           Friends ({friendRecords.length})
         </button>
         {isSelf && (
-          <Link to="/friends" className="block text-center mt-1 text-xs text-muted-foreground">Manage requests →</Link>
+          <Link to="/friends" className="block text-center mt-1 text-xs text-muted-foreground">
+            {pendingCount > 0 ? `${pendingCount} pending request${pendingCount > 1 ? 's' : ''} →` : 'Manage friends →'}
+          </Link>
         )}
+
+        <TrophyCase topActivities={profileStats?.topActivities} />
 
         {!isSelf && (
           <HeadToHead
@@ -122,20 +149,20 @@ export default function Profile() {
           />
         )}
 
+        <CompletedChallenges userId={profile.created_by_id || user.id} userName={displayName} />
+
         {isSelf && <ProfileQRCode username={profile.username} />}
 
-        <div className="mt-6">
-          <h3 className="font-heading font-bold mb-3">Trophy Case</h3>
-          {awards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No awards yet. Win a challenge to earn one!</p>
-          ) : (
+        {awards.length > 0 && (
+          <div className="mt-6">
+            <h3 className="font-heading font-bold mb-3">Awards</h3>
             <div className="flex flex-wrap gap-2">
               {awards.map((a) => (
                 <span key={a.id} className="text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/10 text-accent">{a.type}</span>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <FriendsListSheet
@@ -149,6 +176,10 @@ export default function Profile() {
         <SheetContent side="bottom" className="rounded-t-3xl">
           <SheetHeader><SheetTitle className="font-heading">Edit Profile</SheetTitle></SheetHeader>
           <div className="space-y-3 mt-4">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Nickname</label>
+              <Input placeholder="Nickname" value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} />
+            </div>
             <Textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
             <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             <Input placeholder="Favorite sport" value={form.favorite_sport} onChange={(e) => setForm({ ...form, favorite_sport: e.target.value })} />
