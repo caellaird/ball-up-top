@@ -30,8 +30,7 @@ export default function Conversation() {
       if (event.data.thread_id !== threadId) return;
       if (event.type === 'create') {
         setMessages((prev) => [...prev, event.data]);
-        markThreadRead(threadId, user.id);
-        loadThreadReads();
+        if (event.data.created_by_id === user.id) markThreadRead(threadId, user.id);
       } else if (event.type === 'update') {
         setMessages((prev) => prev.map((m) => (m.id === event.data.id ? event.data : m)));
       } else if (event.type === 'delete') {
@@ -39,7 +38,16 @@ export default function Conversation() {
       }
     });
     const unsubReads = base44.entities.ThreadRead.subscribe((event) => {
-      if (event.data.thread_id === threadId) loadThreadReads();
+      if (event.data.thread_id !== threadId) return;
+      setThreadReads((prev) => {
+        const idx = prev.findIndex((r) => r.id === event.data.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = event.data;
+          return copy;
+        }
+        return [...prev, event.data];
+      });
     });
     return () => { unsubscribe(); unsubReads(); };
   }, [threadId]);

@@ -21,19 +21,34 @@ export default function Messages() {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 5000);
-    return () => clearInterval(interval);
+    const interval = setInterval(load, 15000);
+    const unsubReads = base44.entities.ThreadRead.subscribe((event) => {
+      if (event.type === 'create' || event.type === 'update') {
+        setThreadReads((prev) => {
+          const tMap = { ...prev };
+          const arr = tMap[event.data.thread_id] ? [...tMap[event.data.thread_id]] : [];
+          const idx = arr.findIndex((r) => r.id === event.data.id);
+          if (idx >= 0) arr[idx] = event.data;
+          else arr.push(event.data);
+          tMap[event.data.thread_id] = arr;
+          return tMap;
+        });
+      }
+    });
+    return () => { clearInterval(interval); unsubReads(); };
   }, []);
 
   const load = async () => {
-    const all = await base44.entities.Thread.list('-last_message_at', 50);
+    const [all, myReads, allReads] = await Promise.all([
+      base44.entities.Thread.list('-last_message_at', 50),
+      base44.entities.ThreadRead.filter({ created_by_id: user.id }),
+      base44.entities.ThreadRead.list('-updated_date', 50),
+    ]);
     const myThreads = all.filter((t) => t.participant_ids?.includes(user.id));
-    const myReads = await base44.entities.ThreadRead.filter({ created_by_id: user.id });
     const rMap = {};
     myReads.forEach((r) => { rMap[r.thread_id] = r; });
     setThreads(myThreads);
     setReadMap(rMap);
-    const allReads = await base44.entities.ThreadRead.list('-updated_date', 200);
     const tMap = {};
     allReads.forEach((r) => {
       if (!tMap[r.thread_id]) tMap[r.thread_id] = [];

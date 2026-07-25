@@ -62,17 +62,16 @@ export default function Profile() {
     setDisplayName(name);
     if (p) {
       setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
-      const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
+      const [awardList, allFriends, profileStatsResult, pendingList] = await Promise.all([
+        base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20),
+        base44.entities.Friend.filter({ status: 'accepted' }),
+        computeProfileStats(ownerId),
+        isSelf ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : Promise.resolve([]),
+      ]);
       setAwards(awardList);
-      const allFriends = await base44.entities.Friend.filter({ status: 'accepted' });
       setFriendRecords(allFriends.filter((f) => f.created_by_id === ownerId || f.addressee_id === ownerId));
-      if (isSelf) {
-        const pending = await base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' });
-        setPendingCount(pending.length);
-      }
-    }
-    if (ownerId) {
-      setProfileStats(await computeProfileStats(ownerId));
+      setProfileStats(profileStatsResult);
+      if (isSelf) setPendingCount(pendingList.length);
     }
   };
 
