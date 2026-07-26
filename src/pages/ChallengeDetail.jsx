@@ -10,11 +10,14 @@ import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
+import WinnerSelector from '@/components/challenges/WinnerSelector';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [challenge, setChallenge] = useState(null);
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
@@ -65,7 +68,7 @@ export default function ChallengeDetail() {
 
   return (
     <div>
-      <Header title="Challenge" onBack={() => navigate(-1)} />
+      <Header title="Challenge" onBack={goBack} />
       <div className="p-4">
         <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center relative">
           {isCreator && challenge.status !== 'completed' && challenge.status !== 'declined' && (
@@ -77,7 +80,13 @@ export default function ChallengeDetail() {
           {isSeries && challenge.series_name && (
             <p className="font-heading text-sm font-bold text-[hsl(var(--accent))] mt-2">{challenge.series_name}</p>
           )}
-          <h1 className="font-heading text-xl font-bold mt-1"><Link to={`/profile/${creatorUsername || 'me'}`} className="hover:underline">{challenge.creator_name}</Link> vs <Link to={`/profile/${opponentUsername || 'me'}`} className="hover:underline">{challenge.opponent_name}</Link></h1>
+          <h1 className="font-heading text-xl font-bold mt-1">
+            {challenge.winner_id === challenge.created_by_id && <span className="mr-1">👑</span>}
+            <Link to={`/profile/${creatorUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.created_by_id ? 'text-accent' : ''}`}>{challenge.creator_name}</Link>
+            <span className="mx-2 text-muted-foreground">vs</span>
+            {challenge.winner_id === challenge.opponent_id && <span className="mr-1">👑</span>}
+            <Link to={`/profile/${opponentUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>{challenge.opponent_name}</Link>
+          </h1>
           <p className="text-sm text-muted-foreground capitalize mt-1">
             {sportDisplay.label} · {challenge.series_type}
           </p>
@@ -108,7 +117,7 @@ export default function ChallengeDetail() {
                   : totalGames ? `Game ${creatorWins + opponentWins + 1} of ${totalGames}` : `Game ${creatorWins + opponentWins + 1}`}
               </p>
               {challenge.status === 'completed' && challenge.winner_name && (
-                <p className="text-sm text-accent font-semibold mt-1">🏆 {challenge.winner_name} wins the series</p>
+                <p className="text-sm text-accent font-semibold mt-1">👑 {challenge.winner_name} wins the series</p>
               )}
             </div>
           )}
@@ -116,7 +125,7 @@ export default function ChallengeDetail() {
           {!isSeries && challenge.status === 'completed' && (
             <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
               <p className="font-heading font-bold text-lg">{challenge.score_creator} - {challenge.score_opponent}</p>
-              {challenge.winner_name && <p className="text-sm text-accent font-semibold">🏆 {challenge.winner_name} wins</p>}
+              {challenge.winner_name && <p className="text-sm text-accent font-semibold">👑 {challenge.winner_name} wins</p>}
               {challenge.caption && <p className="text-sm mt-2">{challenge.caption}</p>}
             </div>
           )}
@@ -136,7 +145,7 @@ export default function ChallengeDetail() {
                 <div key={g.id} className="bg-card rounded-2xl shadow-sm p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-muted-foreground">Game {g.game_number}</span>
-                    {g.winner_name && <span className="text-xs font-bold text-accent">🏆 {g.winner_name}</span>}
+                    {g.winner_name && <span className="text-xs font-bold text-accent">👑 {g.winner_name}</span>}
                   </div>
                   <p className="font-heading font-bold mt-1">{g.score_creator} - {g.score_opponent}</p>
                   {g.caption && <p className="text-sm text-muted-foreground mt-1">{g.caption}</p>}
@@ -160,6 +169,13 @@ export default function ChallengeDetail() {
         {challenge.status === 'pending' && isCreator && (
           <p className="text-center text-sm text-muted-foreground">Waiting for {challenge.opponent_name} to respond...</p>
         )}
+        {challenge.status === 'accepted' && (
+          <WinnerSelector
+            challenge={challenge}
+            onSaved={(updated) => setChallenge(updated)}
+          />
+        )}
+
         {challenge.status === 'accepted' && (
           <Button onClick={() => setShowComplete(true)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
             {isSeries ? `Log Game ${creatorWins + opponentWins + 1}` : 'Complete Challenge'}

@@ -9,10 +9,12 @@ import { sendNotification } from '@/lib/notify';
 import { enrichFriends } from '@/lib/friendsHelpers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SPORT_EMOJI } from '@/lib/constants';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function BallUp() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [step, setStep] = useState(1);
   const [sport, setSport] = useState(null);
   const [friends, setFriends] = useState(null);
@@ -38,7 +40,7 @@ export default function BallUp() {
     });
   }, []);
 
-  const back = () => (step > 1 ? setStep(step - 1) : navigate(-1));
+  const back = () => (step > 1 ? setStep(step - 1) : goBack());
 
   const filteredFriends = (friends || []).filter((f) => {
     const q = friendQuery.trim().toLowerCase();
@@ -90,7 +92,7 @@ export default function BallUp() {
       <div className="flex items-center justify-between p-4">
         <button onClick={back}><ChevronLeft className="w-6 h-6" /></button>
         <span className="font-heading font-bold">Step {step} of 5</span>
-        <button onClick={() => navigate(-1)}><X className="w-6 h-6" /></button>
+        <button onClick={goBack}><X className="w-6 h-6" /></button>
       </div>
 
       <div className="flex-1 px-5 pb-6">

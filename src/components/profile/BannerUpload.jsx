@@ -10,12 +10,30 @@ export default function BannerUpload({ profile, onUploaded }) {
   const [showSheet, setShowSheet] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
   const [lastFile, setLastFile] = useState(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  const validateFile = (file) => {
+    if (!file.type.startsWith('image/')) {
+      setError(true);
+      setErrorMsg('Please select an image file (JPEG, PNG, etc.)');
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError(true);
+      setErrorMsg('Image must be under 10MB');
+      return false;
+    }
+    return true;
+  };
 
   const upload = async (file) => {
     setUploading(true);
     setError(false);
+    setErrorMsg('');
     setSuccess(false);
     try {
       const processed = await cropBannerAndCompress(file);
@@ -26,6 +44,7 @@ export default function BannerUpload({ profile, onUploaded }) {
       setTimeout(() => setSuccess(false), 2000);
     } catch {
       setError(true);
+      setErrorMsg('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -43,6 +62,7 @@ export default function BannerUpload({ profile, onUploaded }) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    if (!validateFile(file)) return;
     setShowSheet(false);
     setLastFile(file);
     upload(file);
@@ -68,13 +88,18 @@ export default function BannerUpload({ profile, onUploaded }) {
           )}
         </button>
         {error && (
-          <button
-            type="button"
-            onClick={() => lastFile && upload(lastFile)}
-            className="absolute bottom-2 left-2 text-[10px] text-destructive font-semibold flex items-center gap-1 bg-background/80 rounded-full px-2 py-1"
-          >
-            <RotateCcw className="w-3 h-3" /> Retry
-          </button>
+          <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-background/90 rounded-full px-2 py-1">
+            <span className="text-[10px] text-destructive font-semibold">{errorMsg}</span>
+            {lastFile && (
+              <button
+                type="button"
+                onClick={() => upload(lastFile)}
+                className="text-[10px] text-destructive font-bold flex items-center gap-0.5"
+              >
+                <RotateCcw className="w-3 h-3" /> Retry
+              </button>
+            )}
+          </div>
         )}
       </div>
 

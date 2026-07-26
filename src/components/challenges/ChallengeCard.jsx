@@ -28,8 +28,14 @@ export default function ChallengeCard({ challenge }) {
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide">Series</span>
         </div>
-        <p className="text-sm font-semibold text-[hsl(var(--accent))] mb-2">
-          {challenge.creator_name} {creatorWins} — {opponentWins} {challenge.opponent_name}
+        <p className="text-sm font-semibold mb-2">
+          <span className={challenge.winner_id === challenge.created_by_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
+            {challenge.winner_id === challenge.created_by_id ? '👑 ' : ''}{challenge.creator_name}
+          </span>
+          {' '}{creatorWins} — {opponentWins}{' '}
+          <span className={challenge.winner_id === challenge.opponent_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
+            {challenge.winner_id === challenge.opponent_id ? '👑 ' : ''}{challenge.opponent_name}
+          </span>
         </p>
         {challenge.status !== 'completed' && (
           <p className="text-xs text-muted-foreground mb-2">
@@ -42,7 +48,7 @@ export default function ChallengeCard({ challenge }) {
           </div>
         )}
         {challenge.status === 'completed' && challenge.winner_name && (
-          <p className="text-xs font-bold text-accent">🏆 {challenge.winner_name} wins the series</p>
+          <p className="text-xs font-bold text-accent">👑 {challenge.winner_name} wins the series</p>
         )}
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-2">
           {challenge.location_name && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{challenge.location_name}</span>}
@@ -57,12 +63,19 @@ export default function ChallengeCard({ challenge }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{sportDisplay.emoji}</span>
-          <h3 className="font-heading font-bold">vs {challenge.opponent_name}</h3>
+          <h3 className={`font-heading font-bold ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
+            {challenge.status === 'completed' && challenge.winner_id === challenge.created_by_id && '👑 '}
+            vs {challenge.opponent_name}
+            {challenge.status === 'completed' && challenge.winner_id === challenge.opponent_id && ' 👑'}
+          </h3>
         </div>
         {challenge.status === 'completed' && (
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${challenge.winner_name ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'}`}>
-            {challenge.score_creator ?? 0}-{challenge.score_opponent ?? 0}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${challenge.winner_name ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'}`}>
+              {challenge.score_creator ?? 0}-{challenge.score_opponent ?? 0}
+            </span>
+            {challenge.winner_name && <span className="text-[10px] font-bold text-accent">👑 {challenge.winner_name}</span>}
+          </div>
         )}
       </div>
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">

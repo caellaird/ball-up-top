@@ -20,6 +20,8 @@ import CompletedChallenges from '@/components/profile/CompletedChallenges';
 import { ArrowLeft, Swords } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
+import FriendButton from '@/components/profile/FriendButton';
+import { useGoBack } from '@/hooks/useGoBack';
 
 const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
@@ -27,6 +29,7 @@ export default function Profile() {
   const { username } = useParams();
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [profileStats, setProfileStats] = useState(null);
@@ -117,7 +120,7 @@ export default function Profile() {
     <div>
       {!isSelf && (
         <div className="flex items-center px-4 pt-3 pb-1">
-          <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-foreground">
+          <button onClick={goBack} className="p-1 -ml-1 text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
         </div>
@@ -146,6 +149,12 @@ export default function Profile() {
               <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => setShowChallenge(true)}>
                 <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
               </Button>
+              <FriendButton
+                currentUserId={user.id}
+                currentUserName={user.full_name}
+                targetUserId={profile.created_by_id}
+                targetUserName={displayName}
+              />
               <Button size="sm" variant="secondary" className="rounded-full" onClick={message}>Message</Button>
             </div>
           )}

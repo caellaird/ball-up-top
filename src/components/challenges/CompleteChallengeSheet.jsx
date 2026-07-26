@@ -30,8 +30,10 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
   const finalizeSeries = async (creatorWins, opponentWins, opponentUsername, myUsername) => {
     const isCreatorWinner = creatorWins > opponentWins;
-    const winnerName = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.creator_name : challenge.opponent_name;
-    const winnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
+    const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
+    // Use pre-selected winner if set, otherwise derive from scores
+    const winnerId = challenge.winner_id || scoreWinnerId;
+    const winnerName = winnerId === challenge.created_by_id ? challenge.creator_name : winnerId === challenge.opponent_id ? challenge.opponent_name : '';
 
     const updated = await base44.entities.Challenge.update(challenge.id, {
       status: 'completed',
@@ -64,13 +66,13 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       challenge_id: challenge.id,
       game_emoji: sportDisplay.emoji,
       location_name: challenge.location_name,
-      score_text: `${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}`,
+      score_text: `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
       tagged_user_ids: [challenge.opponent_id],
       tagged_user_names: [challenge.opponent_name],
       tagged_usernames: [opponentUsername],
     });
 
-    const creatorWon = isCreatorWinner;
+    const creatorWon = winnerId === challenge.created_by_id;
     await Promise.all([
       recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
       recordGameResult(challenge.opponent_id, challenge.opponent_name, !creatorWon),
