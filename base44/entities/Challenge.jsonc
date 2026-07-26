@@ -32,6 +32,18 @@
     "opponent_name": {
       "type": "string"
     },
+    "opponent_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "opponent_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "location_name": {
       "type": "string"
     },

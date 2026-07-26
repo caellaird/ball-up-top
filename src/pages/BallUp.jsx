@@ -20,7 +20,7 @@ export default function BallUp() {
   const [friends, setFriends] = useState(null);
   const [friendQuery, setFriendQuery] = useState('');
   const [recentOpponentIds, setRecentOpponentIds] = useState([]);
-  const [opponent, setOpponent] = useState(null);
+  const [opponents, setOpponents] = useState([]);
   const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [seriesType, setSeriesType] = useState('single');
@@ -50,38 +50,53 @@ export default function BallUp() {
   const recentFriends = filteredFriends.filter((f) => recentOpponentIds.includes(f.userId));
   const otherFriends = filteredFriends.filter((f) => !recentOpponentIds.includes(f.userId));
 
+  const toggleOpponent = (f) => {
+    const exists = opponents.some((o) => o.id === f.userId);
+    if (exists) {
+      setOpponents(opponents.filter((o) => o.id !== f.userId));
+    } else {
+      setOpponents([...opponents, { id: f.userId, name: f.name, username: f.profile?.username }]);
+    }
+  };
+
   const send = async () => {
     setSending(true);
     const sportDisplay = getSportDisplay({ sport, custom_sport_name: customSportName, custom_sport_emoji: customSportEmoji });
+    const primary = opponents[0];
     const challenge = await base44.entities.Challenge.create({
       sport,
       custom_sport_name: sport === 'custom' ? customSportName : undefined,
       custom_sport_emoji: sport === 'custom' ? (customSportEmoji || '🏆') : undefined,
       creator_name: user.full_name,
-      opponent_id: opponent.id,
-      opponent_name: opponent.name,
+      opponent_id: primary.id,
+      opponent_name: primary.name,
+      opponent_ids: opponents.map((o) => o.id),
+      opponent_names: opponents.map((o) => o.name),
       location_name: location,
       scheduled_time: date ? new Date(date).toISOString() : undefined,
       series_type: seriesType,
       series_name: seriesType !== 'single' ? seriesName : undefined,
       games_to_win: GAMES_TO_WIN[seriesType],
     });
-    await sendNotification({
-      userId: opponent.id,
-      type: 'challenge_invite',
-      actorName: user.full_name,
-      title: `${user.full_name} challenged you to ${sport}!`,
-      link: `/challenges/${challenge.id}`,
-    });
+    await Promise.all(opponents.map((o) =>
+      sendNotification({
+        userId: o.id,
+        type: 'challenge_invite',
+        actorName: user.full_name,
+        title: `${user.full_name} challenged you to ${sport}!`,
+        link: `/challenges/${challenge.id}`,
+      })
+    ));
+    const namesText = opponents.map((o) => o.name).join(', ');
     await base44.entities.Post.create({
       author_name: user.full_name,
-      body: `Challenged ${opponent.name} to ${sportDisplay.label}!`,
+      body: `Challenged ${namesText} to ${sportDisplay.label}!`,
       challenge_id: challenge.id,
       game_emoji: sportDisplay.emoji,
       location_name: location,
-      tagged_user_ids: [opponent.id],
-      tagged_user_names: [opponent.name],
-      tagged_usernames: opponent.username ? [opponent.username] : [],
+      tagged_user_ids: opponents.map((o) => o.id),
+      tagged_user_names: opponents.map((o) => o.name),
+      tagged_usernames: opponents.map((o) => o.username).filter(Boolean),
     });
     setSending(false);
     navigate(`/challenges/${challenge.id}`);
@@ -148,7 +163,8 @@ export default function BallUp() {
 
         {step === 2 && (
           <div>
-            <h1 className="font-heading text-2xl font-extrabold mb-4">Who's Getting Cooked?</h1>
+            <h1 className="font-heading text-2xl font-extrabold mb-1">Who's Getting Cooked?</h1>
+            <p className="text-muted-foreground text-sm mb-4">Select one or more friends</p>
             <Input
               placeholder="Search friends..."
               value={friendQuery}
@@ -166,7 +182,7 @@ export default function BallUp() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Recently Challenged</p>
                     <div className="space-y-2">
                       {recentFriends.map((f) => (
-                        <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name, username: f.profile?.username }); setStep(3); }} />
+                        <FriendPickCard key={f.userId} f={f} selected={opponents.some((o) => o.id === f.userId)} onSelect={() => toggleOpponent(f)} />
                       ))}
                     </div>
                   </div>
@@ -175,12 +191,19 @@ export default function BallUp() {
                   {recentFriends.length > 0 && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">All Friends</p>}
                   <div className="space-y-2">
                     {otherFriends.map((f) => (
-                      <FriendPickCard key={f.userId} f={f} selected={opponent?.id === f.userId} onSelect={() => { setOpponent({ id: f.userId, name: f.name, username: f.profile?.username }); setStep(3); }} />
+                      <FriendPickCard key={f.userId} f={f} selected={opponents.some((o) => o.id === f.userId)} onSelect={() => toggleOpponent(f)} />
                     ))}
                   </div>
                 </div>
               </div>
             )}
+            <Button
+              onClick={() => setStep(3)}
+              disabled={opponents.length === 0}
+              className="w-full rounded-full h-12 mt-6"
+            >
+              {opponents.length === 0 ? 'Select friends' : `Continue${opponents.length > 1 ? ` (${opponents.length})` : ''}`}
+            </Button>
           </div>
         )}
 
@@ -231,7 +254,7 @@ export default function BallUp() {
             <h1 className="font-heading text-2xl font-extrabold mb-6">Review Challenge</h1>
             <div className="bg-card rounded-3xl shadow-sm p-5 space-y-3 mb-6">
               <Row label="Sport" value={sport === 'custom' ? (customSportName || 'Custom') : SPORTS.find((s) => s.key === sport)?.label} />
-              <Row label="Opponent" value={opponent?.name} />
+              <Row label="Opponent(s)" value={opponents.map((o) => o.name).join(', ')} />
               <Row label="Location" value={location} />
               <Row label="Date" value={date ? new Date(date).toLocaleString() : '—'} />
               <Row label="Series" value={SERIES_TYPES.find((s) => s.key === seriesType)?.label} />
@@ -276,6 +299,13 @@ function FriendPickCard({ f, selected, onSelect }) {
           {f.profile?.favorite_sport ? ` · ${SPORT_EMOJI[f.profile.favorite_sport] || ''} ${f.profile.favorite_sport}` : ''}
         </p>
       </div>
+      {selected && (
+        <span className="w-5 h-5 rounded-full bg-accent flex items-center justify-center shrink-0">
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+      )}
     </button>
   );
 }
