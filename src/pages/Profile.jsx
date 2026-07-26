@@ -17,8 +17,9 @@ import HeadToHead from '@/components/profile/HeadToHead';
 import ProfileQRCode from '@/components/profile/ProfileQRCode';
 import TrophyCase from '@/components/profile/TrophyCase';
 import CompletedChallenges from '@/components/profile/CompletedChallenges';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Swords } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
 
 const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
@@ -36,6 +37,7 @@ export default function Profile() {
   const [friendRecords, setFriendRecords] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [showFriends, setShowFriends] = useState(false);
+  const [showChallenge, setShowChallenge] = useState(false);
   const isSelf = username === 'me';
 
   useEffect(() => { load(); }, [username]);
@@ -139,7 +141,14 @@ export default function Profile() {
             </Avatar>
           )}
           {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-2" onClick={() => setEditing(true)}>Edit Profile</Button>}
-          {!isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-2" onClick={message}>Message</Button>}
+          {!isSelf && (
+            <div className="flex gap-2 mb-2">
+              <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => setShowChallenge(true)}>
+                <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
+              </Button>
+              <Button size="sm" variant="secondary" className="rounded-full" onClick={message}>Message</Button>
+            </div>
+          )}
         </div>
         <h1 className="font-heading text-xl font-bold">{displayName}</h1>
         <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}</p>
@@ -199,6 +208,16 @@ export default function Profile() {
         friendRecords={friendRecords}
         userId={profile.created_by_id || user.id}
       />
+
+      {!isSelf && (
+        <ChallengeFromProfileSheet
+          open={showChallenge}
+          onOpenChange={setShowChallenge}
+          opponentId={profile.created_by_id}
+          opponentName={displayName}
+          opponentUsername={profile.username}
+        />
+      )}
 
       <Sheet open={editing} onOpenChange={setEditing}>
         <SheetContent side="bottom" className="rounded-t-3xl">

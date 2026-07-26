@@ -15,7 +15,9 @@ export default function UserSearchResult({ result, onAdd, onCancel }) {
         </Avatar>
       </Link>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{targetUser.full_name}</p>
+        <Link to={profile?.username ? `/profile/${profile.username}` : '#'} className="block">
+          <p className="font-semibold text-sm truncate hover:underline">{targetUser.full_name}</p>
+        </Link>
         {profile?.username && <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>}
       </div>
       {relation === 'accepted' && (
