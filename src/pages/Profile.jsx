@@ -177,12 +177,18 @@ export default function Profile() {
           <Stat label="Friends" value={friendRecords.length} />
         </div>
 
-        <button onClick={() => setShowFriends(true)} className="block w-full text-center mt-4 text-sm font-semibold text-primary">
+        <button
+          onClick={() => setShowFriends(true)}
+          className="block w-full text-center mt-5 bg-primary text-primary-foreground font-heading font-bold text-base rounded-xl py-3.5 hover:bg-primary/90 transition"
+        >
           Friends ({friendRecords.length})
         </button>
         {isSelf && (
-          <Link to="/friends" className="block text-center mt-1 text-xs text-muted-foreground">
-            {pendingCount > 0 ? `${pendingCount} pending request${pendingCount > 1 ? 's' : ''} →` : 'Manage friends →'}
+          <Link
+            to="/friends"
+            className="block w-full text-center mt-2 bg-primary/10 text-primary font-heading font-bold text-sm rounded-xl py-3 hover:bg-primary/20 transition"
+          >
+            {pendingCount > 0 ? `${pendingCount} pending request${pendingCount > 1 ? 's' : ''}` : 'Manage Friends'}
           </Link>
         )}
 
