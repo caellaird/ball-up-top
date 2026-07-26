@@ -10,6 +10,8 @@ import EmptyState from '@/components/shared/EmptyState';
 import UserSearchResult from '@/components/friends/UserSearchResult';
 import { enrichFriends, findOrCreateThread } from '@/lib/friendsHelpers';
 import { sendNotification } from '@/lib/notify';
+import { UserPlus } from 'lucide-react';
+import AddFriendsDialog from '@/components/friends/AddFriendsDialog';
 
 export default function Friends() {
   const { user } = useOutletContext();
@@ -20,6 +22,7 @@ export default function Friends() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [searching, setSearching] = useState(false);
+  const [showAddFriends, setShowAddFriends] = useState(false);
 
   useEffect(() => {
     load();
@@ -114,6 +117,9 @@ export default function Friends() {
       <Header title="Friends" />
 
       <div className="px-4 pt-4">
+        <Button onClick={() => setShowAddFriends(true)} className="w-full rounded-full mb-4 bg-gradient-to-r from-primary to-accent">
+          <UserPlus className="w-4 h-4 mr-1.5" /> Add Friends
+        </Button>
         <div className="flex gap-2 mb-4">
           <Input
             placeholder="Search by name or @username..."
@@ -213,6 +219,8 @@ export default function Friends() {
           )
         )}
       </div>
+
+      <AddFriendsDialog open={showAddFriends} onOpenChange={setShowAddFriends} user={user} />
     </div>
   );
 }

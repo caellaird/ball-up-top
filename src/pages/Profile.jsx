@@ -14,10 +14,11 @@ import { computeProfileStats } from '@/lib/profileStats';
 import { SPORT_EMOJI, SPORTS } from '@/lib/constants';
 import FriendsListSheet from '@/components/friends/FriendsListSheet';
 import HeadToHead from '@/components/profile/HeadToHead';
-import ProfileQRCode from '@/components/profile/ProfileQRCode';
 import TrophyCase from '@/components/profile/TrophyCase';
+import QRCodeDialog from '@/components/friends/QRCodeDialog';
+import { buildFriendInviteUrl } from '@/lib/friendCodes';
 import CompletedChallenges from '@/components/profile/CompletedChallenges';
-import { ArrowLeft, Swords } from 'lucide-react';
+import { ArrowLeft, Swords, QrCode } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
 import FriendButton from '@/components/profile/FriendButton';
@@ -41,6 +42,7 @@ export default function Profile() {
   const [pendingCount, setPendingCount] = useState(0);
   const [showFriends, setShowFriends] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const isSelf = username === 'me';
 
   useEffect(() => { load(); }, [username]);
@@ -197,7 +199,14 @@ export default function Profile() {
 
         <CompletedChallenges userId={profile.created_by_id || user.id} userName={displayName} />
 
-        {isSelf && <ProfileQRCode username={profile.username} />}
+        {isSelf && (
+          <button
+            onClick={() => setShowQR(true)}
+            className="mt-6 w-full flex items-center justify-center gap-2 bg-card border border-border rounded-2xl py-3 text-sm font-semibold hover:bg-accent/5 transition"
+          >
+            <QrCode className="w-4 h-4 text-primary" /> Show My QR
+          </button>
+        )}
 
         {awards.length > 0 && (
           <div className="mt-6">
@@ -217,6 +226,16 @@ export default function Profile() {
         friendRecords={friendRecords}
         userId={profile.created_by_id || user.id}
       />
+
+      {isSelf && (
+        <QRCodeDialog
+          open={showQR}
+          onOpenChange={setShowQR}
+          value={buildFriendInviteUrl(user.id)}
+          title="My QR Code"
+          subtitle="Have a friend scan this to add you instantly."
+        />
+      )}
 
       {!isSelf && (
         <ChallengeFromProfileSheet

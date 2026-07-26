@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from 'sonner';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
@@ -23,6 +24,7 @@ import Profile from '@/pages/Profile';
 import Friends from '@/pages/Friends';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
+import AddFriend from '@/pages/AddFriend';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +69,7 @@ const AuthenticatedApp = () => {
           <Route path="/friends" element={<Friends />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/add-friend/:userId" element={<AddFriend />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
@@ -85,6 +88,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <SonnerToaster position="top-center" richColors />
       </QueryClientProvider>
     </AuthProvider>
   )
