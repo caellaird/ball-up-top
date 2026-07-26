@@ -7,8 +7,9 @@ import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 
-export default function Home() {
-  const { user } = useOutletContext();
+export default function Home({ user: userProp }) {
+  const outletCtx = useOutletContext();
+  const user = userProp || outletCtx?.user;
   const [tab, setTab] = useState('friends');
   const [posts, setPosts] = useState(null);
   const [myReactions, setMyReactions] = useState({});

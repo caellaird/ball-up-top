@@ -12,8 +12,9 @@ import { MessageCircle, Users } from 'lucide-react';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function Groups() {
-  const { user } = useOutletContext();
+export default function Groups({ user: userProp }) {
+  const outletCtx = useOutletContext();
+  const user = userProp || outletCtx?.user;
   const navigate = useNavigate();
   const [threads, setThreads] = useState(null);
   const [profile, setProfile] = useState(null);

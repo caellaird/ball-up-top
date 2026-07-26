@@ -7,8 +7,9 @@ import ChallengeCard from '@/components/challenges/ChallengeCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 
-export default function Challenges() {
-  const { user } = useOutletContext();
+export default function Challenges({ user: userProp }) {
+  const outletCtx = useOutletContext();
+  const user = userProp || outletCtx?.user;
   const [tab, setTab] = useState('pending');
   const [challenges, setChallenges] = useState(null);
 

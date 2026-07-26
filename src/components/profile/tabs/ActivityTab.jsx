@@ -1,0 +1,46 @@
+import React, { useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import PostCard from '@/components/feed/PostCard';
+import CompletedChallenges from '@/components/profile/CompletedChallenges';
+import EmptyState from '@/components/shared/EmptyState';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export default function ActivityTab({ ownerId, ownerName }) {
+  const [posts, setPosts] = useState(null);
+
+  useEffect(() => { load(); }, [ownerId]);
+
+  const load = async () => {
+    const data = await base44.entities.Post.filter({ created_by_id: ownerId }, '-created_date', 20);
+    setPosts(data);
+  };
+
+  const onReact = async (post, type) => {
+    const field = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count' }[type];
+    await base44.entities.Post.update(post.id, { [field]: (post[field] || 0) + 1 });
+    setPosts(posts.map((p) => (p.id === post.id ? { ...p, [field]: (p[field] || 0) + 1 } : p)));
+  };
+
+  return (
+    <div className="pt-4">
+      <div className="px-4">
+        <CompletedChallenges userId={ownerId} userName={ownerName} />
+      </div>
+      <h3 className="font-heading font-bold mt-6 mb-3 px-4">Posts</h3>
+      {posts === null ? (
+        <div className="px-4 space-y-3">
+          <Skeleton className="h-32 rounded-3xl" />
+          <Skeleton className="h-32 rounded-3xl" />
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="px-4">
+          <EmptyState title="No posts yet" description="Share a result to see it here!" />
+        </div>
+      ) : (
+        posts.map((post) => (
+          <PostCard key={post.id} post={post} reactions={{}} onReact={onReact} userId={ownerId} />
+        ))
+      )}
+    </div>
+  );
+}
