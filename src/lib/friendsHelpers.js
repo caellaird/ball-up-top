@@ -24,8 +24,26 @@ export async function enrichFriend(f, userId) {
   };
 }
 
+// Enriches all friend records with a single bulk fetch for profiles + stats instead of
+// firing two requests per friend (which can trip the API rate limit for large friend lists).
 export async function enrichFriends(records, userId) {
-  return Promise.all(records.map((f) => enrichFriend(f, userId)));
+  const otherIds = records.map((f) => otherPartyId(f, userId));
+  const [allProfiles, allStats] = await Promise.all([
+    base44.entities.Profile.list('-created_date', 500),
+    base44.entities.UserStats.list('-created_date', 500),
+  ]);
+  const profileMap = new Map(allProfiles.map((p) => [p.created_by_id, p]));
+  const statsMap = new Map(allStats.map((s) => [s.created_by_id, s]));
+  return records.map((f, i) => {
+    const otherId = otherIds[i];
+    return {
+      friendRecordId: f.id,
+      userId: otherId,
+      name: otherPartyName(f, userId),
+      profile: profileMap.get(otherId) || null,
+      stats: statsMap.get(otherId) || null,
+    };
+  });
 }
 
 // Finds an existing DM thread between two users, or creates one. Returns the Thread record.
