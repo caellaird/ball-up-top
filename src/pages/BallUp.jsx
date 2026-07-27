@@ -36,11 +36,16 @@ export default function BallUp() {
     });
     base44.entities.Challenge.list('-created_date', 30).then((all) => {
       const mine = all.filter((c) => c.created_by_id === user.id);
-      setRecentOpponentIds([...new Set(mine.map((c) => c.opponent_id))]);
+      const ids = mine.flatMap((c) => (c.opponent_ids?.length ? c.opponent_ids : [c.opponent_id]));
+      setRecentOpponentIds([...new Set(ids)]);
     });
   }, []);
 
-  const back = () => (step > 1 ? setStep(step - 1) : goBack());
+  const back = () => {
+    if (step === 1 && sport === 'custom') { setSport(null); return; }
+    if (step > 1) setStep(step - 1);
+    else goBack();
+  };
 
   const filteredFriends = (friends || []).filter((f) => {
     const q = friendQuery.trim().toLowerCase();
@@ -83,21 +88,10 @@ export default function BallUp() {
         userId: o.id,
         type: 'challenge_invite',
         actorName: user.full_name,
-        title: `${user.full_name} challenged you to ${sport}!`,
+        title: `${user.full_name} challenged you to ${sportDisplay.label}!`,
         link: `/challenges/${challenge.id}`,
       })
     ));
-    const namesText = opponents.map((o) => o.name).join(', ');
-    await base44.entities.Post.create({
-      author_name: user.full_name,
-      body: `Challenged ${namesText} to ${sportDisplay.label}!`,
-      challenge_id: challenge.id,
-      game_emoji: sportDisplay.emoji,
-      location_name: location,
-      tagged_user_ids: opponents.map((o) => o.id),
-      tagged_user_names: opponents.map((o) => o.name),
-      tagged_usernames: opponents.map((o) => o.username).filter(Boolean),
-    });
     setSending(false);
     navigate(`/challenges/${challenge.id}`);
   };
@@ -111,7 +105,7 @@ export default function BallUp() {
       </div>
 
       <div className="flex-1 px-5 pb-6">
-        {step === 1 && (
+        {step === 1 && sport !== 'custom' && (
           <div>
             <h1 className="font-heading text-2xl font-extrabold mb-1">BALL UP TOP</h1>
             <p className="text-muted-foreground mb-6">Pick Your Game</p>
@@ -127,37 +121,42 @@ export default function BallUp() {
                 </button>
               ))}
             </div>
-            {sport === 'custom' && (
-              <div className="mt-4 space-y-3">
-                <Input
-                  placeholder="What are you playing? (e.g. Ping Pong, Spikeball)"
-                  value={customSportName}
-                  onChange={(e) => setCustomSportName(e.target.value)}
-                  className="h-12 rounded-2xl"
-                />
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Pick an emoji</p>
-                  <div className="flex flex-wrap gap-2">
-                    {CUSTOM_SPORT_EMOJIS.map((e) => (
-                      <button
-                        key={e}
-                        onClick={() => setCustomSportEmoji(e)}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl border-2 ${customSportEmoji === e ? 'border-accent bg-accent/10' : 'border-border'}`}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
+          </div>
+        )}
+
+        {step === 1 && sport === 'custom' && (
+          <div>
+            <h1 className="font-heading text-2xl font-extrabold mb-1">Create Challenge Details</h1>
+            <p className="text-muted-foreground mb-6">Give your custom challenge a name and icon</p>
+            <div className="space-y-3">
+              <Input
+                placeholder="Challenge name (e.g. King of the Court)"
+                value={customSportName}
+                onChange={(e) => setCustomSportName(e.target.value)}
+                className="h-12 rounded-2xl"
+              />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Pick an emoji</p>
+                <div className="flex flex-wrap gap-2">
+                  {CUSTOM_SPORT_EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => setCustomSportEmoji(e)}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl border-2 ${customSportEmoji === e ? 'border-accent bg-accent/10' : 'border-border'}`}
+                    >
+                      {e}
+                    </button>
+                  ))}
                 </div>
-                <Button
-                  onClick={() => setStep(2)}
-                  disabled={!customSportName.trim()}
-                  className="w-full rounded-full h-12"
-                >
-                  Continue
-                </Button>
               </div>
-            )}
+              <Button
+                onClick={() => setStep(2)}
+                disabled={!customSportName.trim()}
+                className="w-full rounded-full h-12"
+              >
+                Continue
+              </Button>
+            </div>
           </div>
         )}
 

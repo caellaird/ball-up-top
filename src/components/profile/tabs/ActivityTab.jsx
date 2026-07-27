@@ -5,14 +5,19 @@ import CompletedChallenges from '@/components/profile/CompletedChallenges';
 import EmptyState from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ActivityTab({ ownerId, ownerName }) {
+export default function ActivityTab({ ownerId, ownerName, viewerId }) {
   const [posts, setPosts] = useState(null);
 
   useEffect(() => { load(); }, [ownerId]);
 
   const load = async () => {
-    const data = await base44.entities.Post.filter({ created_by_id: ownerId }, '-created_date', 20);
-    setPosts(data);
+    const [mine, tagged] = await Promise.all([
+      base44.entities.Post.filter({ created_by_id: ownerId }, '-created_date', 20),
+      base44.entities.Post.list('-created_date', 100),
+    ]);
+    const taggedPosts = tagged.filter((p) => p.created_by_id !== ownerId && p.tagged_user_ids?.includes(ownerId));
+    const combined = [...mine, ...taggedPosts].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    setPosts(combined);
   };
 
   const onReact = async (post, type) => {
@@ -38,7 +43,14 @@ export default function ActivityTab({ ownerId, ownerName }) {
         </div>
       ) : (
         posts.map((post) => (
-          <PostCard key={post.id} post={post} reactions={{}} onReact={onReact} userId={ownerId} />
+          <PostCard
+            key={post.id}
+            post={post}
+            reactions={{}}
+            onReact={onReact}
+            userId={viewerId || ownerId}
+            onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+          />
         ))
       )}
     </div>

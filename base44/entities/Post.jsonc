@@ -29,6 +29,16 @@
     "game_emoji": {
       "type": "string"
     },
+    "sport_label": {
+      "type": "string"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "single",
+        "series"
+      ]
+    },
     "location_name": {
       "type": "string"
     },

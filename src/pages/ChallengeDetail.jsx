@@ -3,14 +3,15 @@ import { useParams, useOutletContext, useNavigate, Link } from 'react-router-dom
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
-import { MapPin, Clock, Pencil, CalendarPlus } from 'lucide-react';
+import { MapPin, Clock, Pencil, CalendarPlus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { SPORT_EMOJI, getSportDisplay } from '@/lib/constants';
+import { getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
 import WinnerSelector from '@/components/challenges/WinnerSelector';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useGoBack } from '@/hooks/useGoBack';
 
 export default function ChallengeDetail() {
@@ -22,6 +23,8 @@ export default function ChallengeDetail() {
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [creatorUsername, setCreatorUsername] = useState('');
   const [opponentUsername, setOpponentUsername] = useState('');
 
@@ -56,10 +59,23 @@ export default function ChallengeDetail() {
     });
   };
 
+  const deleteChallenge = async () => {
+    setDeleting(true);
+    await Promise.all([
+      base44.entities.Post.deleteMany({ challenge_id: id }),
+      base44.entities.SeriesGame.deleteMany({ challenge_id: id }),
+      base44.entities.Notification.deleteMany({ link: `/challenges/${id}` }),
+    ]);
+    await base44.entities.Challenge.delete(id);
+    setDeleting(false);
+    navigate('/challenges');
+  };
+
   if (!challenge) return <div className="text-center text-muted-foreground py-10">Loading challenge...</div>;
 
-  const isOpponent = challenge.opponent_id === user.id;
+  const isOpponent = challenge.opponent_id === user.id || challenge.opponent_ids?.includes(user.id);
   const isCreator = challenge.created_by_id === user.id;
+  const isParticipant = isCreator || isOpponent;
   const isSeries = challenge.series_type !== 'single';
   const sportDisplay = getSportDisplay(challenge);
   const creatorWins = challenge.creator_games_won || 0;
@@ -71,10 +87,15 @@ export default function ChallengeDetail() {
       <Header title="Challenge" onBack={goBack} />
       <div className="p-4">
         <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center relative">
-          {isCreator && challenge.status !== 'completed' && challenge.status !== 'declined' && (
-            <button onClick={() => setShowEdit(true)} className="absolute top-4 right-4 text-muted-foreground">
-              <Pencil className="w-4 h-4" />
-            </button>
+          {isParticipant && challenge.status !== 'completed' && challenge.status !== 'declined' && (
+            <div className="absolute top-4 right-4 flex items-center gap-3">
+              <button onClick={() => setShowEdit(true)} className="text-muted-foreground">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           )}
           <span className="text-4xl">{sportDisplay.emoji}</span>
           {isSeries && challenge.series_name && (
@@ -169,19 +190,27 @@ export default function ChallengeDetail() {
         {challenge.status === 'pending' && isCreator && (
           <p className="text-center text-sm text-muted-foreground">Waiting for {challenge.opponent_name} to respond...</p>
         )}
-        {challenge.status === 'accepted' && (
+        {challenge.status === 'accepted' && isParticipant && (
           <WinnerSelector
             challenge={challenge}
             onSaved={(updated) => setChallenge(updated)}
           />
         )}
 
-        {challenge.status === 'accepted' && (
+        {challenge.status === 'accepted' && isParticipant && (
           <Button onClick={() => setShowComplete(true)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
             {isSeries ? `Log Game ${creatorWins + opponentWins + 1}` : 'Complete Challenge'}
           </Button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDelete}
+        onOpenChange={setShowDelete}
+        onConfirm={deleteChallenge}
+        title="Delete this challenge?"
+        description="Are you sure you want to delete this? This action cannot be undone."
+      />
 
       {challenge && (
         <>

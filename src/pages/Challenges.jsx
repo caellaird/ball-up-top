@@ -19,7 +19,7 @@ export default function Challenges({ user: userProp }) {
 
   const load = async () => {
     const all = await base44.entities.Challenge.list('-created_date', 100);
-    setChallenges(all.filter((c) => c.created_by_id === user.id || c.opponent_id === user.id));
+    setChallenges(all.filter((c) => c.created_by_id === user.id || c.opponent_id === user.id || c.opponent_ids?.includes(user.id)));
   };
 
   const grouped = {

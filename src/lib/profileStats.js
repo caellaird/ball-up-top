@@ -4,10 +4,16 @@ import { getSportDisplay } from '@/lib/constants';
 export async function computeProfileStats(userId) {
   const [asCreator, asOpponent] = await Promise.all([
     base44.entities.Challenge.filter({ created_by_id: userId }),
-    base44.entities.Challenge.filter({ opponent_id: userId }),
+    base44.entities.Challenge.list('-created_date', 300),
   ]);
 
-  const all = [...asCreator, ...asOpponent];
+  const asOpponentMine = asOpponent.filter((c) => c.opponent_id === userId || c.opponent_ids?.includes(userId));
+  const seen = new Set();
+  const all = [...asCreator, ...asOpponentMine].filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
   const completed = all.filter((c) => c.status === 'completed');
   const createdCount = all.filter((c) => c.created_by_id === userId).length;
 

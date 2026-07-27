@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, MessageCircle, Share2, Swords, Pencil } from 'lucide-react';
+import { Flame, MessageCircle, Share2, Swords, Pencil, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import MediaViewer from '@/components/feed/MediaViewer';
-import ChallengeVote from '@/components/feed/ChallengeVote';
 import PostEditSheet from '@/components/feed/PostEditSheet';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
-export default function PostCard({ post, reactions, onReact, userId }) {
+export default function PostCard({ post, reactions, onReact, userId, onDeleted }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [viewerIndex, setViewerIndex] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editState, setEditState] = useState({});
 
   const loadComments = async () => {
@@ -48,6 +50,16 @@ export default function PostCard({ post, reactions, onReact, userId }) {
     setCommentText('');
   };
 
+  const deletePost = async () => {
+    setDeleting(true);
+    await base44.entities.Post.delete(post.id);
+    setDeleting(false);
+    setShowDelete(false);
+    onDeleted?.(post.id);
+  };
+
+  const allNames = post.tagged_user_names?.length ? [post.author_name, ...post.tagged_user_names] : null;
+
   return (
     <article className="bg-card rounded-3xl shadow-sm p-4 mb-4 mx-4">
       <div className="flex items-center gap-3 mb-3">
@@ -67,22 +79,33 @@ export default function PostCard({ post, reactions, onReact, userId }) {
         <div className="flex items-center gap-2 shrink-0">
           {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
           {post.created_by_id === userId && (
-            <button onClick={() => setShowEdit(true)} className="p-1 text-muted-foreground hover:text-foreground">
-              <Pencil className="w-4 h-4" />
-            </button>
+            <>
+              <button onClick={() => setShowEdit(true)} className="p-1 text-muted-foreground hover:text-foreground">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowDelete(true)} className="p-1 text-muted-foreground hover:text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
           )}
           {post.game_emoji && <span className="text-2xl">{post.game_emoji}</span>}
         </div>
       </div>
 
       {scoreText && (
-        <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-3 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
+        <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-2 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
           <span className="font-heading font-bold text-sm">{scoreText}</span>
           <Swords className="w-4 h-4 text-secondary" />
         </Link>
       )}
 
-      {post.challenge_id && <ChallengeVote post={post} userId={userId} />}
+      {post.challenge_id && (post.sport_label || post.challenge_type) && (
+        <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 flex-wrap">
+          {post.sport_label && <span>{post.sport_label}</span>}
+          {post.challenge_type && <span>· {post.challenge_type === 'series' ? 'Series' : 'Single Game'}</span>}
+          <span>· {format(new Date(post.created_date), 'MMM d, yyyy')}</span>
+        </p>
+      )}
 
       <p className="text-sm whitespace-pre-wrap mb-3">{body}</p>
 
@@ -144,6 +167,14 @@ export default function PostCard({ post, reactions, onReact, userId }) {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={showDelete}
+        onOpenChange={setShowDelete}
+        onConfirm={deletePost}
+        title="Delete this post?"
+        description="Are you sure you want to delete this? This action cannot be undone."
+      />
 
       {showComments && (
         <div className="mt-3 pt-3 border-t border-border space-y-2">

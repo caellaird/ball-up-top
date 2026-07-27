@@ -28,7 +28,11 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     setPhotos([...photos, ...uploads.map((u) => u.file_url)]);
   };
 
-  const finalizeSeries = async (creatorWins, opponentWins, opponentUsername, myUsername) => {
+  const opponentIds = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
+  const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const opponentsLabel = opponentNames.join(', ');
+
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
     // Use pre-selected winner if set, otherwise derive from scores
@@ -60,22 +64,24 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       author_name: user.full_name,
       author_username: myUsername,
       body: caption || (isSeries
-        ? `${challenge.series_name || sportDisplay.label}: ${challenge.creator_name} vs ${challenge.opponent_name} — Final! ${winnerName ? winnerName + ' takes the series!' : 'Series complete!'}`
-        : `${challenge.creator_name} vs ${challenge.opponent_name} — ${winnerName ? winnerName + ' wins!' : 'Final'}`),
+        ? `${challenge.series_name || sportDisplay.label}: ${challenge.creator_name} vs ${opponentsLabel} — Final! ${winnerName ? winnerName + ' takes the series!' : 'Series complete!'}`
+        : `${challenge.creator_name} vs ${opponentsLabel} — ${winnerName ? winnerName + ' wins!' : 'Final'}`),
       media_urls: photos,
       challenge_id: challenge.id,
       game_emoji: sportDisplay.emoji,
+      sport_label: sportDisplay.label,
+      challenge_type: isSeries ? 'series' : 'single',
       location_name: challenge.location_name,
-      score_text: `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${challenge.opponent_name}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
-      tagged_user_ids: [challenge.opponent_id],
-      tagged_user_names: [challenge.opponent_name],
-      tagged_usernames: [opponentUsername],
+      score_text: `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${opponentsLabel}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
+      tagged_user_ids: opponentIds,
+      tagged_user_names: opponentNames,
+      tagged_usernames: opponentUsernames,
     });
 
     const creatorWon = winnerId === challenge.created_by_id;
     await Promise.all([
       recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
-      recordGameResult(challenge.opponent_id, challenge.opponent_name, !creatorWon),
+      ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], oid === winnerId)),
     ]);
 
     return updated;
@@ -87,15 +93,15 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     if (Number.isNaN(sc) || Number.isNaN(so)) return;
     setSaving(true);
 
-    const [opponentProfiles, myProfiles] = await Promise.all([
-      base44.entities.Profile.filter({ created_by_id: challenge.opponent_id }),
+    const [opponentProfileLists, myProfiles] = await Promise.all([
+      Promise.all(opponentIds.map((oid) => base44.entities.Profile.filter({ created_by_id: oid }))),
       base44.entities.Profile.filter({ created_by_id: user.id }),
     ]);
-    const opponentUsername = opponentProfiles[0]?.username || '';
+    const opponentUsernames = opponentProfileLists.map((list) => list[0]?.username || '');
     const myUsername = myProfiles[0]?.username || '';
 
     if (!isSeries) {
-      const updated = await finalizeSeries(sc, so, opponentUsername, myUsername);
+      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername);
       setSaving(false);
       onCompleted(updated);
       return;
@@ -121,7 +127,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       : finalGame;
 
     if (seriesClinched) {
-      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsername, myUsername);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername);
       setSaving(false);
       onCompleted(updated);
     } else {
@@ -132,11 +138,13 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         media_urls: photos,
         challenge_id: challenge.id,
         game_emoji: sportDisplay.emoji,
+        sport_label: sportDisplay.label,
+        challenge_type: 'series',
         location_name: challenge.location_name,
-        score_text: `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${challenge.opponent_name} · Series ${creatorWins}-${opponentWins}`,
-        tagged_user_ids: [challenge.opponent_id],
-        tagged_user_names: [challenge.opponent_name],
-        tagged_usernames: [opponentUsername],
+        score_text: `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${opponentsLabel} · Series ${creatorWins}-${opponentWins}`,
+        tagged_user_ids: opponentIds,
+        tagged_user_names: opponentNames,
+        tagged_usernames: opponentUsernames,
       });
 
       const updated = await base44.entities.Challenge.update(challenge.id, {
@@ -162,7 +170,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
             </div>
             <span className="font-heading font-bold text-muted-foreground pt-4">VS</span>
             <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">{challenge.opponent_name}</p>
+              <p className="text-xs text-muted-foreground mb-1 truncate">{opponentsLabel}</p>
               <Input type="number" value={scoreOpponent} onChange={(e) => setScoreOpponent(e.target.value)} placeholder="Score" />
             </div>
           </div>

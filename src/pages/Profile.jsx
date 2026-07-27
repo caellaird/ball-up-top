@@ -192,7 +192,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
 
       {/* Only the active tab's content scrolls */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
-        {activeTab === 'activity' && <ActivityTab ownerId={ownerId} ownerName={displayName} />}
+        {activeTab === 'activity' && <ActivityTab ownerId={ownerId} ownerName={displayName} viewerId={user.id} />}
         {activeTab === 'stats' && (
           <StatsTab
             wins={wins}

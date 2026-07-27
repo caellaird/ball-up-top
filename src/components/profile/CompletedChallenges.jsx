@@ -12,14 +12,11 @@ export default function CompletedChallenges({ userId, userName }) {
   useEffect(() => { load(); }, [userId]);
 
   const load = async () => {
-    const [asCreator, asOpponent] = await Promise.all([
-      base44.entities.Challenge.filter({ created_by_id: userId, status: 'completed' }, '-updated_date', 10),
-      base44.entities.Challenge.filter({ opponent_id: userId, status: 'completed' }, '-updated_date', 10),
-    ]);
-    const all = [...asCreator, ...asOpponent]
-      .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))
+    const all = await base44.entities.Challenge.filter({ status: 'completed' }, '-updated_date', 200);
+    const mine = all
+      .filter((c) => c.created_by_id === userId || c.opponent_id === userId || c.opponent_ids?.includes(userId))
       .slice(0, 10);
-    setChallenges(all);
+    setChallenges(mine);
   };
 
   if (!challenges || challenges.length === 0) return null;
@@ -32,7 +29,9 @@ export default function CompletedChallenges({ userId, userName }) {
           const isCreator = c.created_by_id === userId;
           const myScore = isCreator ? c.score_creator : c.score_opponent;
           const oppScore = isCreator ? c.score_opponent : c.score_creator;
-          const oppName = isCreator ? c.opponent_name : c.creator_name;
+          const oppName = isCreator
+            ? (c.opponent_names?.length > 1 ? c.opponent_names.join(', ') : c.opponent_name)
+            : c.creator_name;
           const won = c.winner_id === userId;
           return (
             <Link to={`/challenges/${c.id}`} key={c.id} className="block bg-card rounded-2xl shadow-sm p-4 active:scale-[0.98] transition">

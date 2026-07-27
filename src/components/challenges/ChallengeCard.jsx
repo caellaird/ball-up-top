@@ -7,6 +7,9 @@ import { getSportDisplay } from '@/lib/constants';
 export default function ChallengeCard({ challenge }) {
   const isSeries = challenge.series_type !== 'single';
   const sportDisplay = getSportDisplay(challenge);
+  const opponentsLabel = challenge.opponent_names?.length > 1
+    ? challenge.opponent_names.join(', ')
+    : challenge.opponent_name;
 
   if (isSeries) {
     const creatorWins = challenge.creator_games_won || 0;
@@ -34,7 +37,7 @@ export default function ChallengeCard({ challenge }) {
           </span>
           {' '}{creatorWins} — {opponentWins}{' '}
           <span className={challenge.winner_id === challenge.opponent_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
-            {challenge.winner_id === challenge.opponent_id ? '👑 ' : ''}{challenge.opponent_name}
+            {challenge.winner_id === challenge.opponent_id ? '👑 ' : ''}{opponentsLabel}
           </span>
         </p>
         {challenge.status !== 'completed' && (
@@ -65,7 +68,7 @@ export default function ChallengeCard({ challenge }) {
           <span className="text-2xl">{sportDisplay.emoji}</span>
           <h3 className={`font-heading font-bold ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
             {challenge.status === 'completed' && challenge.winner_id === challenge.created_by_id && '👑 '}
-            vs {challenge.opponent_name}
+            vs {opponentsLabel}
             {challenge.status === 'completed' && challenge.winner_id === challenge.opponent_id && ' 👑'}
           </h3>
         </div>
