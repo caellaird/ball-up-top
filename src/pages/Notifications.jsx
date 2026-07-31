@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
-import { MessageCircle, Trophy, UserPlus, Swords, Bell } from 'lucide-react';
+import { MessageCircle, Trophy, UserPlus, Swords, Bell, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const ICON_MAP = {
+  friend_request: UserPlus,
+  friend_response: UserPlus,
   message: MessageCircle,
-  friend: UserPlus,
+  challenge_invite: Swords,
+  challenge_response: Swords,
   challenge: Swords,
   award: Trophy,
 };
@@ -17,6 +20,7 @@ const ICON_MAP = {
 export default function Notifications() {
   const { user } = useOutletContext();
   const [notifications, setNotifications] = useState(null);
+  const [actingId, setActingId] = useState(null);
 
   useEffect(() => {
     load();
@@ -40,6 +44,20 @@ export default function Notifications() {
     }
   };
 
+  const respondToFriendRequest = async (n, accept) => {
+    setActingId(n.id);
+    try {
+      const records = await base44.entities.Friend.filter({ created_by_id: n.actor_id, addressee_id: user.id, status: 'pending' });
+      if (records[0]) {
+        await base44.entities.Friend.update(records[0].id, { status: accept ? 'accepted' : 'declined' });
+      }
+      const updated = await base44.entities.Notification.update(n.id, { read: true, handled: true });
+      setNotifications(notifications.map((x) => (x.id === n.id ? updated : x)));
+    } finally {
+      setActingId(null);
+    }
+  };
+
   if (notifications === null) return <div className="text-center text-muted-foreground py-10">Loading...</div>;
 
   return (
@@ -54,10 +72,12 @@ export default function Notifications() {
         <div className="space-y-2">
           {notifications.map((n) => {
             const Icon = ICON_MAP[n.type] || Bell;
-            const inner = (
-              <div className={`flex items-start gap-3 p-3 rounded-2xl border transition active:scale-[0.98] ${n.read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'}`}>
+            const isFriendRequest = n.type === 'friend_request' && !n.handled;
+            const card = (
+              <div className={`flex items-start gap-3 p-3 rounded-2xl border transition ${!isFriendRequest ? 'active:scale-[0.98]' : ''} ${n.read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'}`}>
                 <div className="relative shrink-0">
                   <Avatar className="w-10 h-10">
+                    <AvatarImage src={n.actor_avatar} />
                     <AvatarFallback>{n.actor_name?.[0] || 'B'}</AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-card">
@@ -68,14 +88,30 @@ export default function Notifications() {
                   <p className={`text-sm ${n.read ? 'font-medium' : 'font-bold'}`}>{n.title}</p>
                   {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
                   <p className="text-[11px] text-muted-foreground mt-1">{formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}</p>
+                  {isFriendRequest && (
+                    <div className="flex gap-2 mt-2" onClick={(e) => e.preventDefault()}>
+                      <Button size="sm" className="rounded-full h-8" disabled={actingId === n.id} onClick={() => respondToFriendRequest(n, true)}>
+                        <Check className="w-3.5 h-3.5 mr-1" /> Accept
+                      </Button>
+                      <Button size="sm" variant="secondary" className="rounded-full h-8" disabled={actingId === n.id} onClick={() => respondToFriendRequest(n, false)}>
+                        <X className="w-3.5 h-3.5 mr-1" /> Decline
+                      </Button>
+                    </div>
+                  )}
+                  {n.type === 'friend_request' && n.handled && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">Handled</p>
+                  )}
                 </div>
                 {!n.read && <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 mt-1.5" />}
               </div>
             );
+            if (isFriendRequest) {
+              return <div key={n.id} onClick={() => handleClick(n)}>{card}</div>;
+            }
             return n.link ? (
-              <Link key={n.id} to={n.link} onClick={() => handleClick(n)}>{inner}</Link>
+              <Link key={n.id} to={n.link} onClick={() => handleClick(n)}>{card}</Link>
             ) : (
-              <div key={n.id} onClick={() => handleClick(n)}>{inner}</div>
+              <div key={n.id} onClick={() => handleClick(n)}>{card}</div>
             );
           })}
         </div>

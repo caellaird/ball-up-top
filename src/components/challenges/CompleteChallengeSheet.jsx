@@ -6,10 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
 import { recordGameResult } from '@/lib/ensureProfile';
+import { Crown } from 'lucide-react';
 
 export default function CompleteChallengeSheet({ open, onOpenChange, challenge, user, onCompleted }) {
   const [scoreCreator, setScoreCreator] = useState('');
   const [scoreOpponent, setScoreOpponent] = useState('');
+  const [gameWinnerId, setGameWinnerId] = useState('');
   const [caption, setCaption] = useState('');
   const [award, setAward] = useState('');
   const [photos, setPhotos] = useState([]);
@@ -21,6 +23,15 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const isOpenEnded = isSeries && !challenge.games_to_win;
   const sportDisplay = getSportDisplay(challenge);
 
+  const opponentIds = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
+  const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const opponentsLabel = opponentNames.join(', ');
+  const participants = [
+    { id: challenge.created_by_id, name: challenge.creator_name },
+    ...opponentIds.map((id, i) => ({ id, name: opponentNames[i] })),
+  ].filter((p) => p.id && p.name);
+  const isMultiplayer = participants.length > 2;
+
   const uploadPhotos = async (files) => {
     const uploads = await Promise.all(
       Array.from(files).slice(0, 5 - photos.length).map((file) => base44.integrations.Core.UploadFile({ file }))
@@ -28,16 +39,14 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     setPhotos([...photos, ...uploads.map((u) => u.file_url)]);
   };
 
-  const opponentIds = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
-  const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
-  const opponentsLabel = opponentNames.join(', ');
-
-  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar) => {
+  // Every participant gets an individual result — the winner gets a win, everyone else a loss.
+  // For isMultiplayer challenges the winner is picked directly rather than derived from two scores.
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, overrideWinnerId) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
     // Use pre-selected winner if set, otherwise derive from scores
-    const winnerId = challenge.winner_id || scoreWinnerId;
-    const winnerName = winnerId === challenge.created_by_id ? challenge.creator_name : winnerId === challenge.opponent_id ? challenge.opponent_name : '';
+    const winnerId = overrideWinnerId || challenge.winner_id || scoreWinnerId;
+    const winnerName = participants.find((p) => p.id === winnerId)?.name || '';
 
     const updated = await base44.entities.Challenge.update(challenge.id, {
       status: 'completed',
@@ -73,7 +82,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       sport_label: sportDisplay.label,
       challenge_type: isSeries ? 'series' : 'single',
       location_name: challenge.location_name,
-      score_text: `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${opponentsLabel}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
+      score_text: isMultiplayer
+        ? `🏆 ${winnerName || 'No winner set'}`
+        : `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${opponentsLabel}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
       tagged_user_ids: opponentIds,
       tagged_user_names: opponentNames,
       tagged_usernames: opponentUsernames,
@@ -81,21 +92,23 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     // For series, each individual game already recorded its own result as it was logged —
     // only record here for single (non-series) challenges to avoid double counting.
-    if (!isSeries) {
-      const creatorWon = winnerId === challenge.created_by_id;
-      await Promise.all([
-        recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
-        ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], oid === winnerId)),
-      ]);
+    if (!isSeries && winnerId) {
+      await Promise.all(participants.map((p) => recordGameResult(p.id, p.name, p.id === winnerId)));
     }
 
     return updated;
   };
 
   const submit = async () => {
-    const sc = Number(scoreCreator);
-    const so = Number(scoreOpponent);
-    if (Number.isNaN(sc) || Number.isNaN(so)) return;
+    let sc = Number(scoreCreator);
+    let so = Number(scoreOpponent);
+    if (isMultiplayer) {
+      if (!gameWinnerId) return;
+      sc = 0;
+      so = 0;
+    } else if (Number.isNaN(sc) || Number.isNaN(so)) {
+      return;
+    }
     setSaving(true);
 
     const [opponentProfileLists, myProfiles] = await Promise.all([
@@ -107,14 +120,17 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     const myAvatar = myProfiles[0]?.avatar_url || '';
 
     if (!isSeries) {
-      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar);
+      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar, isMultiplayer ? gameWinnerId : undefined);
       setSaving(false);
       onCompleted(updated);
       return;
     }
 
-    const isCreatorGameWinner = sc > so;
-    const gameWinnerName = sc === so ? '' : isCreatorGameWinner ? challenge.creator_name : challenge.opponent_name;
+    // Determine this game's winner: picked directly for multiplayer, otherwise from the two scores.
+    const winnerIdThisGame = isMultiplayer ? gameWinnerId : (sc === so ? '' : sc > so ? challenge.created_by_id : challenge.opponent_id);
+    const gameWinnerName = participants.find((p) => p.id === winnerIdThisGame)?.name || '';
+    const isCreatorGameWinner = winnerIdThisGame === challenge.created_by_id;
+
     await base44.entities.SeriesGame.create({
       challenge_id: challenge.id,
       game_number: gameNumber,
@@ -127,22 +143,19 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     // Record this individual game's result toward every participant's record immediately —
     // each game in a series counts on its own, not just the series' final outcome.
-    if (sc !== so) {
-      await Promise.all([
-        recordGameResult(challenge.created_by_id, challenge.creator_name, isCreatorGameWinner),
-        ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], !isCreatorGameWinner)),
-      ]);
+    if (winnerIdThisGame) {
+      await Promise.all(participants.map((p) => recordGameResult(p.id, p.name, p.id === winnerIdThisGame)));
     }
 
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
-    const opponentWins = (challenge.opponent_games_won || 0) + (!isCreatorGameWinner && sc !== so ? 1 : 0);
+    const opponentWins = (challenge.opponent_games_won || 0) + (winnerIdThisGame && !isCreatorGameWinner ? 1 : 0);
 
     const seriesClinched = challenge.games_to_win
       ? creatorWins >= challenge.games_to_win || opponentWins >= challenge.games_to_win
       : finalGame;
 
     if (seriesClinched) {
-      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer ? winnerIdThisGame : undefined);
       setSaving(false);
       onCompleted(updated);
     } else {
@@ -150,14 +163,16 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         author_name: user.full_name,
         author_username: myUsername,
         author_avatar: myAvatar,
-        body: caption || `${challenge.series_name || sportDisplay.label}: Game ${gameNumber} — ${gameWinnerName ? gameWinnerName + ' takes it!' : 'Tied!'} Series ${creatorWins}-${opponentWins}`,
+        body: caption || `${challenge.series_name || sportDisplay.label}: Game ${gameNumber} — ${gameWinnerName ? gameWinnerName + ' takes it!' : 'Tied!'}${!isMultiplayer ? ` Series ${creatorWins}-${opponentWins}` : ''}`,
         media_urls: photos,
         challenge_id: challenge.id,
         game_emoji: sportDisplay.emoji,
         sport_label: sportDisplay.label,
         challenge_type: 'series',
         location_name: challenge.location_name,
-        score_text: `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${opponentsLabel} · Series ${creatorWins}-${opponentWins}`,
+        score_text: isMultiplayer
+          ? `Game ${gameNumber}: 🏆 ${gameWinnerName || 'No winner set'}`
+          : `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${opponentsLabel} · Series ${creatorWins}-${opponentWins}`,
         tagged_user_ids: opponentIds,
         tagged_user_names: opponentNames,
         tagged_usernames: opponentUsernames,
@@ -179,17 +194,34 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
           <SheetTitle className="font-heading">{isSeries ? `Log Game ${gameNumber}` : 'Complete Challenge'}</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 mt-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1">{challenge.creator_name}</p>
-              <Input type="number" value={scoreCreator} onChange={(e) => setScoreCreator(e.target.value)} placeholder="Score" />
+          {isMultiplayer ? (
+            <div>
+              <p className="text-sm font-bold mb-2 flex items-center gap-1.5"><Crown className="w-4 h-4 text-accent" /> Who won?</p>
+              <div className="flex gap-2 flex-wrap">
+                {participants.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setGameWinnerId(p.id)}
+                    className={`flex-1 min-w-[90px] rounded-2xl p-3 border-2 text-sm font-bold transition ${gameWinnerId === p.id ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted-foreground'}`}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
             </div>
-            <span className="font-heading font-bold text-muted-foreground pt-4">VS</span>
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground mb-1 truncate">{opponentsLabel}</p>
-              <Input type="number" value={scoreOpponent} onChange={(e) => setScoreOpponent(e.target.value)} placeholder="Score" />
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1">{challenge.creator_name}</p>
+                <Input type="number" value={scoreCreator} onChange={(e) => setScoreCreator(e.target.value)} placeholder="Score" />
+              </div>
+              <span className="font-heading font-bold text-muted-foreground pt-4">VS</span>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1 truncate">{opponentsLabel}</p>
+                <Input type="number" value={scoreOpponent} onChange={(e) => setScoreOpponent(e.target.value)} placeholder="Score" />
+              </div>
             </div>
-          </div>
+          )}
 
           <Textarea placeholder="Caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
 
@@ -213,22 +245,24 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
             </label>
           )}
 
-          <div>
-            <p className="text-sm font-medium mb-2">Give {challenge.opponent_name} an award</p>
-            <div className="flex flex-wrap gap-2">
-              {AWARD_TYPES.map((a) => (
-                <button
-                  key={a}
-                  onClick={() => setAward(award === a ? '' : a)}
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${award === a ? 'bg-accent text-white border-accent' : 'border-border text-muted-foreground'}`}
-                >
-                  {a}
-                </button>
-              ))}
+          {!isMultiplayer && (
+            <div>
+              <p className="text-sm font-medium mb-2">Give {challenge.opponent_name} an award</p>
+              <div className="flex flex-wrap gap-2">
+                {AWARD_TYPES.map((a) => (
+                  <button
+                    key={a}
+                    onClick={() => setAward(award === a ? '' : a)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${award === a ? 'bg-accent text-white border-accent' : 'border-border text-muted-foreground'}`}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <Button onClick={submit} disabled={saving} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
+          <Button onClick={submit} disabled={saving || (isMultiplayer && !gameWinnerId)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
             {saving ? 'Publishing...' : isSeries ? 'Save Game Result' : 'Publish Result'}
           </Button>
         </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, ArrowLeft } from 'lucide-react';
 import { LOGO_URL } from '@/lib/constants';
+import NotificationBadge from '@/components/layout/NotificationBadge';
 
 export default function Header({ title, onBack }) {
   return (
@@ -17,8 +18,9 @@ export default function Header({ title, onBack }) {
           <span className="font-heading font-extrabold text-lg truncate">{title || 'Ball Up Top'}</span>
         </Link>
       </div>
-      <Link to="/notifications" className="p-2 rounded-full hover:bg-muted shrink-0">
+      <Link to="/notifications" className="relative p-2 rounded-full hover:bg-muted shrink-0">
         <Bell className="w-5 h-5" />
+        <NotificationBadge />
       </Link>
     </header>
   );

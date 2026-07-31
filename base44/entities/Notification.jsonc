@@ -8,10 +8,16 @@
     "type": {
       "type": "string"
     },
+    "actor_id": {
+      "type": "string"
+    },
     "actor_name": {
       "type": "string"
     },
     "actor_username": {
+      "type": "string"
+    },
+    "actor_avatar": {
       "type": "string"
     },
     "title": {
@@ -24,6 +30,10 @@
       "type": "string"
     },
     "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "handled": {
       "type": "boolean",
       "default": false
     }

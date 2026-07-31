@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Check, Clock, Loader2 } from 'lucide-react';
+import { UserPlus, Check, X, Clock, Loader2 } from 'lucide-react';
 import { sendNotification } from '@/lib/notify';
 
-export default function FriendButton({ currentUserId, currentUserName, targetUserId, targetUserName }) {
+export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName }) {
   const [relation, setRelation] = useState(null);
   const [friendRecord, setFriendRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,9 @@ export default function FriendButton({ currentUserId, currentUserName, targetUse
       await sendNotification({
         userId: targetUserId,
         type: 'friend_request',
+        actorId: currentUserId,
         actorName: currentUserName,
+        actorAvatar: currentUserAvatar,
         title: `${currentUserName} sent you a friend request`,
         link: '/friends',
       });
@@ -72,10 +74,24 @@ export default function FriendButton({ currentUserId, currentUserName, targetUse
       await sendNotification({
         userId: targetUserId,
         type: 'friend_response',
+        actorId: currentUserId,
         actorName: currentUserName,
+        actorAvatar: currentUserAvatar,
         title: `${currentUserName} accepted your friend request`,
         link: '/friends',
       });
+      load();
+    } catch {
+      // Error handled by load
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const declineRequest = async () => {
+    setSending(true);
+    try {
+      await base44.entities.Friend.update(friendRecord.id, { status: 'declined' });
       load();
     } catch {
       // Error handled by load
@@ -93,7 +109,11 @@ export default function FriendButton({ currentUserId, currentUserName, targetUse
   }
 
   if (relation === 'accepted') {
-    return null;
+    return (
+      <Button size="sm" variant="secondary" className="rounded-full" disabled>
+        <Check className="w-3.5 h-3.5 mr-1" /> Friends
+      </Button>
+    );
   }
 
   if (relation === 'pending_outgoing') {
@@ -106,10 +126,15 @@ export default function FriendButton({ currentUserId, currentUserName, targetUse
 
   if (relation === 'pending_incoming') {
     return (
-      <Button size="sm" className="rounded-full" onClick={acceptRequest} disabled={sending}>
-        {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 mr-1" />}
-        Accept
-      </Button>
+      <div className="flex gap-1.5">
+        <Button size="sm" className="rounded-full" onClick={acceptRequest} disabled={sending}>
+          {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5 mr-1" />}
+          Accept
+        </Button>
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={declineRequest} disabled={sending}>
+          <X className="w-3.5 h-3.5" />
+        </Button>
+      </div>
     );
   }
 

@@ -6,6 +6,13 @@ export default function WinnerSelector({ challenge, onSaved }) {
   const [selectedWinner, setSelectedWinner] = useState(challenge.winner_id || '');
   const [saving, setSaving] = useState(false);
 
+  const opponentIds = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
+  const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const participants = [
+    { id: challenge.created_by_id, name: challenge.creator_name },
+    ...opponentIds.map((id, i) => ({ id, name: opponentNames[i] })),
+  ].filter((p) => p.id && p.name);
+
   const selectWinner = async (winnerId, winnerName) => {
     if (selectedWinner === winnerId || saving) return;
     setSaving(true);
@@ -24,14 +31,11 @@ export default function WinnerSelector({ challenge, onSaved }) {
     }
   };
 
-  const creatorSelected = selectedWinner === challenge.created_by_id;
-  const opponentSelected = selectedWinner === challenge.opponent_id;
-
   const PlayerButton = ({ name, isWinner, onClick }) => (
     <button
       onClick={onClick}
       disabled={saving}
-      className={`flex-1 relative rounded-2xl p-4 border-2 transition active:scale-[0.97] ${
+      className={`flex-1 min-w-[90px] relative rounded-2xl p-4 border-2 transition active:scale-[0.97] ${
         isWinner
           ? 'border-accent bg-accent/10 shadow-md'
           : 'border-border bg-card hover:border-muted-foreground/40'
@@ -54,17 +58,15 @@ export default function WinnerSelector({ challenge, onSaved }) {
       <p className="text-sm font-bold mb-3 flex items-center gap-1.5">
         <Crown className="w-4 h-4 text-accent" /> Select Winner
       </p>
-      <div className="flex gap-3">
-        <PlayerButton
-          name={challenge.creator_name}
-          isWinner={creatorSelected}
-          onClick={() => selectWinner(challenge.created_by_id, challenge.creator_name)}
-        />
-        <PlayerButton
-          name={challenge.opponent_name}
-          isWinner={opponentSelected}
-          onClick={() => selectWinner(challenge.opponent_id, challenge.opponent_name)}
-        />
+      <div className="flex gap-3 flex-wrap">
+        {participants.map((p) => (
+          <PlayerButton
+            key={p.id}
+            name={p.name}
+            isWinner={selectedWinner === p.id}
+            onClick={() => selectWinner(p.id, p.name)}
+          />
+        ))}
       </div>
     </div>
   );
