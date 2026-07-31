@@ -48,7 +48,16 @@ export default function ChallengeDetail() {
   };
 
   const respond = async (status) => {
-    const updated = await base44.entities.Challenge.update(id, { status });
+    const updatedStatuses = participantStatuses.map((p) =>
+      p.user_id === user.id ? { ...p, status } : p
+    );
+    const allAccepted = updatedStatuses.every((p) => p.status === 'accepted');
+    const nonePending = updatedStatuses.every((p) => p.status !== 'pending');
+    const newStatus = allAccepted ? 'accepted' : nonePending ? 'declined' : 'pending';
+    const updated = await base44.entities.Challenge.update(id, {
+      participant_statuses: updatedStatuses,
+      status: newStatus,
+    });
     setChallenge(updated);
     await sendNotification({
       userId: challenge.created_by_id,
@@ -81,6 +90,19 @@ export default function ChallengeDetail() {
   const creatorWins = challenge.creator_games_won || 0;
   const opponentWins = challenge.opponent_games_won || 0;
   const totalGames = challenge.games_to_win ? challenge.games_to_win * 2 - 1 : null;
+
+  const opponentIdList = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
+  const opponentNameList = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const participantStatuses = challenge.participant_statuses?.length
+    ? challenge.participant_statuses
+    : opponentIdList.map((oid, i) => ({
+        user_id: oid,
+        name: opponentNameList[i],
+        status: challenge.status === 'pending' ? 'pending' : challenge.status === 'declined' ? 'declined' : 'accepted',
+      }));
+  const acceptedCount = participantStatuses.filter((p) => p.status === 'accepted').length;
+  const myParticipantStatus = participantStatuses.find((p) => p.user_id === user.id)?.status;
+  const showMultiStatus = participantStatuses.length > 1;
 
   return (
     <div>
@@ -181,14 +203,36 @@ export default function ChallengeDetail() {
           </div>
         )}
 
-        {challenge.status === 'pending' && isOpponent && (
+        {showMultiStatus && challenge.status !== 'completed' && (
+          <div className="bg-card rounded-2xl shadow-sm p-4 mb-4">
+            <p className="text-sm font-semibold mb-2">{acceptedCount}/{participantStatuses.length} Players Accepted</p>
+            <div className="space-y-1.5">
+              {participantStatuses.map((p) => (
+                <div key={p.user_id} className="flex items-center gap-2 text-sm">
+                  <span>{p.status === 'accepted' ? '✓' : p.status === 'declined' ? '✕' : '⏳'}</span>
+                  <span className={p.status === 'declined' ? 'text-muted-foreground line-through' : ''}>{p.name}</span>
+                  <span className="text-xs text-muted-foreground capitalize">— {p.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {challenge.status === 'pending' && isOpponent && myParticipantStatus === 'pending' && (
           <div className="flex gap-3">
             <Button onClick={() => respond('accepted')} className="flex-1 rounded-full h-12">Accept</Button>
             <Button onClick={() => respond('declined')} variant="secondary" className="flex-1 rounded-full h-12">Decline</Button>
           </div>
         )}
+        {challenge.status === 'pending' && isOpponent && myParticipantStatus !== 'pending' && (
+          <p className="text-center text-sm text-muted-foreground">
+            Waiting for other players to respond...
+          </p>
+        )}
         {challenge.status === 'pending' && isCreator && (
-          <p className="text-center text-sm text-muted-foreground">Waiting for {challenge.opponent_name} to respond...</p>
+          <p className="text-center text-sm text-muted-foreground">
+            {showMultiStatus ? 'Waiting for players to respond...' : `Waiting for ${challenge.opponent_name} to respond...`}
+          </p>
         )}
         {challenge.status === 'accepted' && isParticipant && (
           <WinnerSelector

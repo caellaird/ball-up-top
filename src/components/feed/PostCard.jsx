@@ -8,8 +8,9 @@ import { getOrCreateProfile } from '@/lib/ensureProfile';
 import MediaViewer from '@/components/feed/MediaViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import FriendButton from '@/components/profile/FriendButton';
 
-export default function PostCard({ post, reactions, onReact, userId, onDeleted }) {
+export default function PostCard({ post, reactions, onReact, userId, currentUserName, onDeleted }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -78,6 +79,14 @@ export default function PostCard({ post, reactions, onReact, userId, onDeleted }
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
+          {post.created_by_id && post.created_by_id !== userId && (
+            <FriendButton
+              currentUserId={userId}
+              currentUserName={currentUserName}
+              targetUserId={post.created_by_id}
+              targetUserName={post.author_name}
+            />
+          )}
           {post.created_by_id === userId && (
             <>
               <button onClick={() => setShowEdit(true)} className="p-1 text-muted-foreground hover:text-foreground">

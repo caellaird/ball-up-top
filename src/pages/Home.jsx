@@ -91,6 +91,7 @@ export default function Home({ user: userProp }) {
               }}
               onReact={onReact}
               userId={user.id}
+              currentUserName={user.full_name}
               onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
             />
           ))}

@@ -32,7 +32,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
   const opponentsLabel = opponentNames.join(', ');
 
-  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername) => {
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
     // Use pre-selected winner if set, otherwise derive from scores
@@ -63,6 +63,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     await base44.entities.Post.create({
       author_name: user.full_name,
       author_username: myUsername,
+      author_avatar: myAvatar,
       body: caption || (isSeries
         ? `${challenge.series_name || sportDisplay.label}: ${challenge.creator_name} vs ${opponentsLabel} — Final! ${winnerName ? winnerName + ' takes the series!' : 'Series complete!'}`
         : `${challenge.creator_name} vs ${opponentsLabel} — ${winnerName ? winnerName + ' wins!' : 'Final'}`),
@@ -78,11 +79,15 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       tagged_usernames: opponentUsernames,
     });
 
-    const creatorWon = winnerId === challenge.created_by_id;
-    await Promise.all([
-      recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
-      ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], oid === winnerId)),
-    ]);
+    // For series, each individual game already recorded its own result as it was logged —
+    // only record here for single (non-series) challenges to avoid double counting.
+    if (!isSeries) {
+      const creatorWon = winnerId === challenge.created_by_id;
+      await Promise.all([
+        recordGameResult(challenge.created_by_id, challenge.creator_name, creatorWon),
+        ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], oid === winnerId)),
+      ]);
+    }
 
     return updated;
   };
@@ -99,9 +104,10 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     ]);
     const opponentUsernames = opponentProfileLists.map((list) => list[0]?.username || '');
     const myUsername = myProfiles[0]?.username || '';
+    const myAvatar = myProfiles[0]?.avatar_url || '';
 
     if (!isSeries) {
-      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername);
+      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar);
       setSaving(false);
       onCompleted(updated);
       return;
@@ -119,6 +125,15 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       photos,
     });
 
+    // Record this individual game's result toward every participant's record immediately —
+    // each game in a series counts on its own, not just the series' final outcome.
+    if (sc !== so) {
+      await Promise.all([
+        recordGameResult(challenge.created_by_id, challenge.creator_name, isCreatorGameWinner),
+        ...opponentIds.map((oid, i) => recordGameResult(oid, opponentNames[i], !isCreatorGameWinner)),
+      ]);
+    }
+
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
     const opponentWins = (challenge.opponent_games_won || 0) + (!isCreatorGameWinner && sc !== so ? 1 : 0);
 
@@ -127,13 +142,14 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       : finalGame;
 
     if (seriesClinched) {
-      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar);
       setSaving(false);
       onCompleted(updated);
     } else {
       await base44.entities.Post.create({
         author_name: user.full_name,
         author_username: myUsername,
+        author_avatar: myAvatar,
         body: caption || `${challenge.series_name || sportDisplay.label}: Game ${gameNumber} — ${gameWinnerName ? gameWinnerName + ' takes it!' : 'Tied!'} Series ${creatorWins}-${opponentWins}`,
         media_urls: photos,
         challenge_id: challenge.id,

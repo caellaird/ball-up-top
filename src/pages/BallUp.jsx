@@ -77,6 +77,7 @@ export default function BallUp() {
       opponent_name: primary.name,
       opponent_ids: opponents.map((o) => o.id),
       opponent_names: opponents.map((o) => o.name),
+      participant_statuses: opponents.map((o) => ({ user_id: o.id, name: o.name, status: 'pending' })),
       location_name: location,
       scheduled_time: date ? new Date(date).toISOString() : undefined,
       series_type: seriesType,

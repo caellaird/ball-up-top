@@ -1,6 +1,16 @@
 import { base44 } from '@/api/base44Client';
 import { getSportDisplay } from '@/lib/constants';
 
+// Resolves the display name this user played under in a given challenge (creator name,
+// or their entry in opponent_names/opponent_ids).
+function myNameInChallenge(c, userId) {
+  if (c.created_by_id === userId) return c.creator_name;
+  const ids = c.opponent_ids?.length ? c.opponent_ids : [c.opponent_id];
+  const names = c.opponent_names?.length ? c.opponent_names : [c.opponent_name];
+  const idx = ids.indexOf(userId);
+  return idx >= 0 ? names[idx] : null;
+}
+
 export async function computeProfileStats(userId) {
   const [asCreator, asOpponent] = await Promise.all([
     base44.entities.Challenge.filter({ created_by_id: userId }),
@@ -17,39 +27,77 @@ export async function computeProfileStats(userId) {
   const completed = all.filter((c) => c.status === 'completed');
   const createdCount = all.filter((c) => c.created_by_id === userId).length;
 
-  const wins = completed.filter((c) => c.winner_id === userId).length;
-  const losses = completed.filter((c) => c.winner_id && c.winner_id !== userId).length;
-  const winPct = completed.length > 0 ? Math.round((wins / completed.length) * 100) : 0;
+  const seriesCompleted = completed.filter((c) => c.series_type !== 'single');
+  const singleCompleted = completed.filter((c) => c.series_type === 'single');
 
-  const sortedCompleted = [...completed].sort(
-    (a, b) => new Date(b.updated_date) - new Date(a.updated_date)
-  );
+  // Series are made up of individual games — each game counts on its own toward the record,
+  // not just the series' final outcome.
+  let seriesGames = [];
+  if (seriesCompleted.length > 0) {
+    const challengeIds = new Set(seriesCompleted.map((c) => c.id));
+    const allGames = await base44.entities.SeriesGame.list('-created_date', 500);
+    seriesGames = allGames.filter((g) => challengeIds.has(g.challenge_id));
+  }
+
+  // Build a flat list of individual game results: { sport, emoji, date, won }
+  const results = [];
+
+  seriesCompleted.forEach((c) => {
+    const myName = myNameInChallenge(c, userId);
+    if (!myName) return;
+    const display = getSportDisplay(c);
+    seriesGames
+      .filter((g) => g.challenge_id === c.id && g.winner_name)
+      .forEach((g) => {
+        results.push({
+          sport: display.label,
+          emoji: display.emoji,
+          date: g.created_date,
+          won: g.winner_name === myName,
+        });
+      });
+  });
+
+  singleCompleted.forEach((c) => {
+    if (!c.winner_id) return;
+    const display = getSportDisplay(c);
+    results.push({
+      sport: display.label,
+      emoji: display.emoji,
+      date: c.updated_date,
+      won: c.winner_id === userId,
+    });
+  });
+
+  results.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const wins = results.filter((r) => r.won).length;
+  const losses = results.filter((r) => !r.won).length;
+  const winPct = results.length > 0 ? Math.round((wins / results.length) * 100) : 0;
 
   let currentStreak = 0;
-  for (const c of sortedCompleted) {
-    if (c.winner_id === userId) currentStreak++;
-    else if (c.winner_id) break;
+  for (const r of results) {
+    if (r.won) currentStreak++;
+    else break;
   }
 
   let longestStreak = 0;
   let tempStreak = 0;
-  [...sortedCompleted].reverse().forEach((c) => {
-    if (c.winner_id === userId) {
+  [...results].reverse().forEach((r) => {
+    if (r.won) {
       tempStreak++;
       longestStreak = Math.max(longestStreak, tempStreak);
-    } else if (c.winner_id) {
+    } else {
       tempStreak = 0;
     }
   });
 
   const sportMap = {};
-  sortedCompleted.forEach((c) => {
-    const display = getSportDisplay(c);
-    const sport = display.label;
-    if (!sportMap[sport]) sportMap[sport] = { sport, emoji: display.emoji, games: 0, wins: 0, losses: 0, results: [] };
-    sportMap[sport].games++;
-    if (c.winner_id === userId) { sportMap[sport].wins++; sportMap[sport].results.push('W'); }
-    else if (c.winner_id) { sportMap[sport].losses++; sportMap[sport].results.push('L'); }
+  [...results].reverse().forEach((r) => {
+    if (!sportMap[r.sport]) sportMap[r.sport] = { sport: r.sport, emoji: r.emoji, games: 0, wins: 0, losses: 0, results: [] };
+    sportMap[r.sport].games++;
+    if (r.won) { sportMap[r.sport].wins++; sportMap[r.sport].results.push('W'); }
+    else { sportMap[r.sport].losses++; sportMap[r.sport].results.push('L'); }
   });
 
   const sportBreakdown = Object.values(sportMap).map((s) => {

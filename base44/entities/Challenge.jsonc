@@ -44,6 +44,29 @@
         "type": "string"
       }
     },
+    "participant_statuses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "declined"
+            ],
+            "default": "pending"
+          }
+        }
+      }
+    },
     "location_name": {
       "type": "string"
     },
