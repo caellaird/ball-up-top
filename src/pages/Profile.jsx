@@ -70,14 +70,15 @@ export default function Profile({ user: userProp, usernameOverride }) {
     setDisplayName(name);
     if (p) {
       setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
-      const [awardList, allFriends, profileStatsResult, pendingList] = await Promise.all([
+      const [awardList, friendsAsCreator, friendsAsAddressee, profileStatsResult, pendingList] = await Promise.all([
         base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20),
-        base44.entities.Friend.filter({ status: 'accepted' }),
+        base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' }),
+        base44.entities.Friend.filter({ addressee_id: ownerId, status: 'accepted' }),
         computeProfileStats(ownerId),
         isSelf ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : Promise.resolve([]),
       ]);
       setAwards(awardList);
-      setFriendRecords(allFriends.filter((f) => f.created_by_id === ownerId || f.addressee_id === ownerId));
+      setFriendRecords([...friendsAsCreator, ...friendsAsAddressee]);
       setProfileStats(profileStatsResult);
       if (isSelf) setPendingCount(pendingList.length);
     }

@@ -24,7 +24,9 @@ export default function Notifications() {
 
   useEffect(() => {
     load();
-    const unsub = base44.entities.Notification.subscribe(() => load());
+    const unsub = base44.entities.Notification.subscribe((event) => {
+      if (event?.data?.user_id === user.id) load();
+    });
     return unsub;
   }, []);
 
