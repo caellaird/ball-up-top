@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Users } from 'lucide-react';
 
@@ -45,13 +44,9 @@ export default function RecommendedFriends({ allRecords, userId, relations, onAd
     });
 
     const ranked = Object.values(mutual).sort((a, b) => b.mutualCount - a.mutualCount).slice(0, 5);
-    if (ranked.length === 0) { setSuggestions([]); return; }
-
-    // Fetch only the suggested users' profiles (max 5), not the whole list.
-    const profileResults = await Promise.all(
-      ranked.map((s) => base44.entities.Profile.filter({ created_by_id: s.id }))
-    );
-    setSuggestions(ranked.map((s, i) => ({ ...s, profile: profileResults[i]?.[0] || null })));
+    // No extra API calls — derive suggestions purely from the already-fetched
+    // Friend records (name + mutual count). Avatar shows initials via fallback.
+    setSuggestions(ranked);
   };
 
   const handleAdd = (s) => {
@@ -70,7 +65,6 @@ export default function RecommendedFriends({ allRecords, userId, relations, onAd
         {suggestions.map((s) => (
           <div key={s.id} className="flex flex-col items-center bg-card rounded-2xl shadow-sm p-3 w-32 shrink-0">
             <Avatar className="w-14 h-14 mb-2">
-              <AvatarImage src={s.profile?.avatar_url} />
               <AvatarFallback>{s.name?.[0] || 'U'}</AvatarFallback>
             </Avatar>
             <p className="font-semibold text-xs text-center truncate w-full">{s.name}</p>
