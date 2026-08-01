@@ -12,12 +12,14 @@ import { enrichFriends, findOrCreateThread } from '@/lib/friendsHelpers';
 import { sendNotification } from '@/lib/notify';
 import { UserPlus } from 'lucide-react';
 import AddFriendsDialog from '@/components/friends/AddFriendsDialog';
+import RecommendedFriends from '@/components/friends/RecommendedFriends';
 
 export default function Friends() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
   const [tab, setTab] = useState('friends');
   const [allRelations, setAllRelations] = useState([]);
+  const [allRecords, setAllRecords] = useState([]);
   const [friends, setFriends] = useState(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
@@ -26,12 +28,16 @@ export default function Friends() {
 
   useEffect(() => {
     load();
-    const unsub = base44.entities.Friend.subscribe(() => load());
+    const unsub = base44.entities.Friend.subscribe((event) => {
+      const d = event?.data;
+      if (d && (d.created_by_id === user.id || d.addressee_id === user.id)) load();
+    });
     return unsub;
   }, []);
 
   const load = async () => {
     const all = await base44.entities.Friend.list('-created_date', 500);
+    setAllRecords(all);
     const mine = all.filter((f) => f.created_by_id === user.id || f.addressee_id === user.id);
     setAllRelations(mine);
     const accepted = mine.filter((f) => f.status === 'accepted');
@@ -112,6 +118,12 @@ export default function Friends() {
     navigate(`/messages/${thread.id}`);
   };
 
+  const addSuggestion = async (id, name) => {
+    await base44.entities.Friend.create({ requester_name: user.full_name, addressee_id: id, addressee_name: name });
+    await sendNotification({ userId: id, type: 'friend_request', actorName: user.full_name, title: `${user.full_name} sent you a friend request`, link: '/friends' });
+    load();
+  };
+
   return (
     <div>
       <Header title="Friends" />
@@ -164,23 +176,27 @@ export default function Friends() {
         {tab === 'friends' && (
           friends === null ? (
             <div className="text-center text-muted-foreground py-10">Loading friends...</div>
-          ) : friends.length === 0 ? (
-            <EmptyState title="No friends yet" description="Search for players to connect with!" />
           ) : (
-            friends.map((f) => (
-              <div key={f.friendRecordId} className="flex items-center gap-3 bg-card rounded-2xl shadow-sm p-3 mb-2 mx-4">
-                <Avatar className="w-11 h-11">
-                  <AvatarImage src={f.profile?.avatar_url} />
-                  <AvatarFallback>{f.name?.[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{f.name}</p>
-                  {f.profile?.username && <p className="text-xs text-muted-foreground truncate">@{f.profile.username}</p>}
+            <>
+              <RecommendedFriends allRecords={allRecords} userId={user.id} relations={allRelations} onAdd={addSuggestion} />
+              {friends.length === 0 && <EmptyState title="No friends yet" description="Search for players to connect with!" />}
+              {friends.length > 0 && (
+              friends.map((f) => (
+                <div key={f.friendRecordId} className="flex items-center gap-3 bg-card rounded-2xl shadow-sm p-3 mb-2 mx-4">
+                  <Avatar className="w-11 h-11">
+                    <AvatarImage src={f.profile?.avatar_url} />
+                    <AvatarFallback>{f.name?.[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{f.name}</p>
+                    {f.profile?.username && <p className="text-xs text-muted-foreground truncate">@{f.profile.username}</p>}
+                  </div>
+                  <Button size="sm" variant="secondary" className="rounded-full" onClick={() => message(f)}>Message</Button>
+                  <Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => removeFriend(f)}>Remove</Button>
                 </div>
-                <Button size="sm" variant="secondary" className="rounded-full" onClick={() => message(f)}>Message</Button>
-                <Button size="sm" variant="ghost" className="rounded-full text-destructive" onClick={() => removeFriend(f)}>Remove</Button>
-              </div>
-            ))
+              ))
+            )}
+            </>
           )
         )}
 

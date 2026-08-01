@@ -27,6 +27,7 @@ export async function enrichFriend(f, userId) {
 // Enriches all friend records with a single bulk fetch for profiles + stats instead of
 // firing two requests per friend (which can trip the API rate limit for large friend lists).
 export async function enrichFriends(records, userId) {
+  if (!records || records.length === 0) return [];
   const otherIds = records.map((f) => otherPartyId(f, userId));
   const [allProfiles, allStats] = await Promise.all([
     base44.entities.Profile.list('-created_date', 500),

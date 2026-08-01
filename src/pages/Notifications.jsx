@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
 import { MessageCircle, Trophy, UserPlus, Swords, Bell, Check, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { sendNotification } from '@/lib/notify';
 
 const ICON_MAP = {
   friend_request: UserPlus,
@@ -52,6 +53,16 @@ export default function Notifications() {
       const records = await base44.entities.Friend.filter({ created_by_id: n.actor_id, addressee_id: user.id, status: 'pending' });
       if (records[0]) {
         await base44.entities.Friend.update(records[0].id, { status: accept ? 'accepted' : 'declined' });
+      }
+      if (accept && n.actor_id) {
+        await sendNotification({
+          userId: n.actor_id,
+          type: 'friend_response',
+          actorId: user.id,
+          actorName: user.full_name,
+          title: `${user.full_name} accepted your friend request`,
+          link: '/friends',
+        });
       }
       const updated = await base44.entities.Notification.update(n.id, { read: true, handled: true });
       setNotifications(notifications.map((x) => (x.id === n.id ? updated : x)));
