@@ -141,7 +141,7 @@ export default function Conversation() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-8rem)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 mb-3 bg-card rounded-2xl shadow-sm px-3 py-2.5">
         <button onClick={goBack} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-5 h-5" />

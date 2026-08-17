@@ -201,7 +201,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a comment..."
-              className="flex-1 text-sm bg-muted rounded-full px-3 py-1.5 outline-none"
+              className="flex-1 text-base bg-muted rounded-full px-3 py-1.5 outline-none"
               onKeyDown={(e) => e.key === 'Enter' && submitComment()}
             />
             <button onClick={submitComment} className="text-primary text-sm font-semibold px-2 py-1.5">Post</button>
