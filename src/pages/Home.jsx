@@ -19,18 +19,19 @@ export default function Home({ user: userProp }) {
   }, [tab]);
 
   const load = async () => {
-    const friendPromise = tab === 'friends'
-      ? base44.entities.Friend.filter({ status: 'accepted' })
-      : Promise.resolve(null);
-    const [data, myLikes, accepted] = await Promise.all([
+    const friendPromise = tab === 'friends';
+    const [data, myLikes, outgoing, incoming] = await Promise.all([
       base44.entities.Post.list('-created_date', 30),
       base44.entities.Like.filter({ created_by_id: user.id }),
-      friendPromise,
+      friendPromise ? base44.entities.Friend.filter({ created_by_id: user.id, status: 'accepted' }) : Promise.resolve([]),
+      friendPromise ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'accepted' }) : Promise.resolve([]),
     ]);
-    if (accepted) {
-      const mine = accepted.filter((f) => f.created_by_id === user.id || f.addressee_id === user.id);
-      const friendIds = new Set(mine.map((f) => (f.created_by_id === user.id ? f.addressee_id : f.created_by_id)));
-      friendIds.add(user.id);
+    if (friendPromise) {
+      const friendIds = new Set([
+        ...outgoing.map((f) => f.addressee_id),
+        ...incoming.map((f) => f.created_by_id),
+        user.id,
+      ]);
       setPosts(data.filter((p) => friendIds.has(p.created_by_id) || p.tagged_user_ids?.includes(user.id)));
     } else {
       setPosts(data);
