@@ -150,19 +150,19 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
       )}
 
       <div className="flex items-center gap-5 text-muted-foreground text-sm pt-1">
-        <button onClick={() => onReact(post, 'like')} className={`flex items-center gap-1.5 ${reactions.liked ? 'text-primary font-semibold' : ''}`}>
+        <button onClick={() => onReact(post, 'like')} className={`py-1.5 flex items-center gap-1.5 ${reactions.liked ? 'text-primary font-semibold' : ''}`}>
           ❤️ {post.like_count || 0}
         </button>
-        <button onClick={() => onReact(post, 'fire')} className={`flex items-center gap-1.5 ${reactions.fired ? 'text-accent font-semibold' : ''}`}>
+        <button onClick={() => onReact(post, 'fire')} className={`py-1.5 flex items-center gap-1.5 ${reactions.fired ? 'text-accent font-semibold' : ''}`}>
           <Flame className={`w-4 h-4 ${reactions.fired ? 'fill-accent text-accent' : ''}`} /> {post.fire_count || 0}
         </button>
-        <button onClick={() => onReact(post, 'trash_talk')} className={`flex items-center gap-1.5 ${reactions.trashed ? 'text-secondary font-semibold' : ''}`}>
+        <button onClick={() => onReact(post, 'trash_talk')} className={`py-1.5 flex items-center gap-1.5 ${reactions.trashed ? 'text-secondary font-semibold' : ''}`}>
           🗑️ {post.trash_count || 0}
         </button>
-        <button onClick={loadComments} className="flex items-center gap-1.5">
+        <button onClick={loadComments} className="py-1.5 flex items-center gap-1.5">
           <MessageCircle className="w-4 h-4" /> {post.comment_count || 0}
         </button>
-        <button className="ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
+        <button className="py-1.5 ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
       </div>
 
       {showEdit && (
@@ -204,7 +204,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
               className="flex-1 text-sm bg-muted rounded-full px-3 py-1.5 outline-none"
               onKeyDown={(e) => e.key === 'Enter' && submitComment()}
             />
-            <button onClick={submitComment} className="text-primary text-sm font-semibold">Post</button>
+            <button onClick={submitComment} className="text-primary text-sm font-semibold px-2 py-1.5">Post</button>
           </div>
         </div>
       )}

@@ -25,13 +25,13 @@ export default function ChallengeCard({ challenge }) {
         style={{ background: 'linear-gradient(135deg, #d8dbe0, #eef0f2)' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-2xl">{sportDisplay.emoji}</span>
             <h3 className="font-heading font-bold text-[hsl(var(--accent))]">{challenge.series_name || 'Series'}</h3>
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide">Series</span>
         </div>
-        <p className="text-sm font-semibold mb-2">
+        <p className="text-sm font-semibold mb-2 break-words">
           <span className={challenge.winner_id === challenge.created_by_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
             {challenge.winner_id === challenge.created_by_id ? '👑 ' : ''}{challenge.creator_name}
           </span>
@@ -64,9 +64,9 @@ export default function ChallengeCard({ challenge }) {
   return (
     <Link to={`/challenges/${challenge.id}`} className="block bg-card rounded-3xl shadow-sm p-4 mb-3 mx-4">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span className="text-2xl">{sportDisplay.emoji}</span>
-          <h3 className={`font-heading font-bold ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
+          <h3 className={`font-heading font-bold min-w-0 break-words ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
             {challenge.status === 'completed' && challenge.winner_id === challenge.created_by_id && '👑 '}
             vs {opponentsLabel}
             {challenge.status === 'completed' && challenge.winner_id === challenge.opponent_id && ' 👑'}

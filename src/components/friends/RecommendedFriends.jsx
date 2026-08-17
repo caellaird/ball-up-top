@@ -63,7 +63,7 @@ export default function RecommendedFriends({ allRecords, userId, relations, onAd
       </h3>
       <div className="flex gap-3 overflow-x-auto px-4 pb-2 no-scrollbar">
         {suggestions.map((s) => (
-          <div key={s.id} className="flex flex-col items-center bg-card rounded-2xl shadow-sm p-3 w-32 shrink-0">
+          <div key={s.id} className="flex flex-col items-center bg-card rounded-2xl shadow-sm p-3 w-28 shrink-0">
             <Avatar className="w-14 h-14 mb-2">
               <AvatarFallback>{s.name?.[0] || 'U'}</AvatarFallback>
             </Avatar>

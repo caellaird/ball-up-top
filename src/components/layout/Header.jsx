@@ -9,7 +9,7 @@ export default function Header({ title, onBack }) {
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 border-b border-border bg-background/90 backdrop-blur pt-[env(safe-area-inset-top)]">
       <div className="flex items-center gap-2 min-w-0">
         {onBack && (
-          <button onClick={onBack} className="p-1 -ml-1 text-foreground shrink-0">
+          <button onClick={onBack} className="p-2 -ml-2 text-foreground shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}

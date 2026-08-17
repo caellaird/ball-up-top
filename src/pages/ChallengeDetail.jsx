@@ -111,10 +111,10 @@ export default function ChallengeDetail() {
         <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center relative">
           {isParticipant && challenge.status !== 'completed' && challenge.status !== 'declined' && (
             <div className="absolute top-4 right-4 flex items-center gap-3">
-              <button onClick={() => setShowEdit(true)} className="text-muted-foreground">
+              <button onClick={() => setShowEdit(true)} className="p-1.5 text-muted-foreground">
                 <Pencil className="w-4 h-4" />
               </button>
-              <button onClick={() => setShowDelete(true)} className="text-muted-foreground hover:text-destructive">
+              <button onClick={() => setShowDelete(true)} className="p-1.5 text-muted-foreground hover:text-destructive">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -123,7 +123,7 @@ export default function ChallengeDetail() {
           {isSeries && challenge.series_name && (
             <p className="font-heading text-sm font-bold text-[hsl(var(--accent))] mt-2">{challenge.series_name}</p>
           )}
-          <h1 className="font-heading text-xl font-bold mt-1">
+          <h1 className="font-heading text-xl font-bold mt-1 break-words leading-tight">
             {challenge.winner_id === challenge.created_by_id && <span className="mr-1">👑</span>}
             <Link to={`/profile/${creatorUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.created_by_id ? 'text-accent' : ''}`}>{challenge.creator_name}</Link>
             <span className="mx-2 text-muted-foreground">vs</span>
@@ -134,7 +134,7 @@ export default function ChallengeDetail() {
             {sportDisplay.label} · {challenge.series_type}
           </p>
 
-          <div className="flex justify-center gap-4 text-sm text-muted-foreground mt-3">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-3">
             {challenge.location_name && <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{challenge.location_name}</span>}
             {challenge.scheduled_time && <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{format(new Date(challenge.scheduled_time), 'MMM d, h:mm a')}</span>}
           </div>
