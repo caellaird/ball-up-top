@@ -130,8 +130,9 @@ export default function BallUp() {
             <h1 className="font-heading text-2xl font-extrabold mb-1">Create Challenge Details</h1>
             <p className="text-muted-foreground mb-6">Give your custom challenge a name and icon</p>
             <div className="space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Challenge name</p>
               <Input
-                placeholder="Challenge name (e.g. King of the Court)"
+                placeholder="e.g. King of the Court"
                 value={customSportName}
                 onChange={(e) => setCustomSportName(e.target.value)}
                 className="h-12 rounded-2xl"
@@ -210,7 +211,8 @@ export default function BallUp() {
         {step === 3 && (
           <div>
             <h1 className="font-heading text-2xl font-extrabold mb-6">Where?</h1>
-            <Input placeholder="Search location..." value={location} onChange={(e) => setLocation(e.target.value)} className="h-12 rounded-2xl mb-4" />
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Location</p>
+            <Input placeholder="Where are you playing?" value={location} onChange={(e) => setLocation(e.target.value)} className="h-12 rounded-2xl mb-4" />
             <Button onClick={() => setStep(4)} disabled={!location} className="w-full rounded-full h-12">Next</Button>
           </div>
         )}
@@ -218,8 +220,9 @@ export default function BallUp() {
         {step === 4 && (
           <div>
             <h1 className="font-heading text-2xl font-extrabold mb-6">Pick a Time</h1>
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Date & time</p>
             <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="h-12 rounded-2xl mb-4" />
-            <p className="text-sm font-medium mb-2">Series</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Series</p>
             <div className="flex flex-wrap gap-2 mb-6">
               {SERIES_TYPES.map((s) => (
                 <button
@@ -232,12 +235,15 @@ export default function BallUp() {
               ))}
             </div>
             {seriesType !== 'single' && (
-              <Input
-                placeholder="Enter Series Name (e.g. Summer Basketball Series)"
-                value={seriesName}
-                onChange={(e) => setSeriesName(e.target.value)}
-                className="h-12 rounded-2xl mb-6"
-              />
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Series name</p>
+                <Input
+                  placeholder="e.g. Summer Basketball Series"
+                  value={seriesName}
+                  onChange={(e) => setSeriesName(e.target.value)}
+                  className="h-12 rounded-2xl"
+                />
+              </div>
             )}
             <Button
               onClick={() => setStep(5)}

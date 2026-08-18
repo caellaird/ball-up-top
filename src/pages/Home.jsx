@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
+import { Button } from '@/components/ui/button';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
@@ -78,7 +79,19 @@ export default function Home({ user: userProp }) {
       {posts === null ? (
         <ListSkeleton count={4} />
       ) : posts.length === 0 ? (
-        <EmptyState title="No posts yet" description="Complete a challenge to share your first result!" />
+        <EmptyState
+          title={tab === 'friends' ? 'No friend posts yet' : 'No posts yet'}
+          description={tab === 'friends' ? "When your friends post results or trash talk, it'll show up here." : 'Be the first to share a result or some trash talk.'}
+          action={tab === 'friends' ? (
+            <Button asChild variant="secondary" className="rounded-full">
+              <Link to="/friends">Find friends</Link>
+            </Button>
+          ) : (
+            <Button asChild className="rounded-full">
+              <Link to="/ball-up">Ball Up</Link>
+            </Button>
+          )}
+        />
       ) : (
         <div className="pt-2">
           {posts.map((post) => (

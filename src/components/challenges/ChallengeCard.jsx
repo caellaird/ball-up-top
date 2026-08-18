@@ -27,9 +27,9 @@ export default function ChallengeCard({ challenge }) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-2xl">{sportDisplay.emoji}</span>
-            <h3 className="font-heading font-bold text-[hsl(var(--accent))]">{challenge.series_name || 'Series'}</h3>
+            <h3 className="font-heading font-bold min-w-0 break-words text-[hsl(var(--accent))]">{challenge.series_name || 'Series'}</h3>
           </div>
-          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide">Series</span>
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide shrink-0">Series</span>
         </div>
         <p className="text-sm font-semibold mb-2 break-words">
           <span className={challenge.winner_id === challenge.created_by_id ? 'text-accent font-bold' : 'text-muted-foreground'}>

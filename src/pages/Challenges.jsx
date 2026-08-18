@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
+import { Button } from '@/components/ui/button';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import EmptyState from '@/components/shared/EmptyState';
@@ -28,6 +29,12 @@ export default function Challenges({ user: userProp }) {
     completed: challenges?.filter((c) => c.status === 'completed') || [],
   };
 
+  const emptyCopy = {
+    pending: { title: 'No pending challenges', description: 'Tap Ball Up to challenge a friend to a game.' },
+    accepted: { title: 'No active challenges', description: 'Once a challenge is accepted, it shows up here.' },
+    completed: { title: 'No completed challenges yet', description: 'Finish a challenge and log the result to see it here.' },
+  };
+
   return (
     <div>
       <Header title="Challenges" />
@@ -45,7 +52,15 @@ export default function Challenges({ user: userProp }) {
       {challenges === null ? (
         <ListSkeleton count={4} />
       ) : grouped[tab].length === 0 ? (
-        <EmptyState title="Nothing here" description="Tap BALL UP to challenge a friend!" />
+        <EmptyState
+          title={emptyCopy[tab].title}
+          description={emptyCopy[tab].description}
+          action={tab !== 'completed' ? (
+            <Button asChild className="rounded-full">
+              <Link to="/ball-up">Ball Up</Link>
+            </Button>
+          ) : undefined}
+        />
       ) : (
         <div className="pt-2">
           {grouped[tab].map((c) => <ChallengeCard key={c.id} challenge={c} />)}
