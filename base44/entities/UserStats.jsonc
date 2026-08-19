@@ -52,9 +52,7 @@
     "create": {
       "created_by_id": "{{user.id}}"
     },
-    "update": {
-      "created_by_id": "{{user.id}}"
-    },
+    "update": {},
     "delete": {
       "created_by_id": "{{user.id}}"
     }
