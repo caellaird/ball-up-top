@@ -139,5 +139,45 @@
     "sport",
     "opponent_id",
     "opponent_name"
-  ]
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.opponent_id": "{{user.id}}"
+        },
+        {
+          "data.opponent_ids": {
+            "$in": [
+              "{{user.id}}"
+            ]
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.opponent_id": "{{user.id}}"
+        },
+        {
+          "data.opponent_ids": {
+            "$in": [
+              "{{user.id}}"
+            ]
+          }
+        }
+      ]
+    }
+  }
 }

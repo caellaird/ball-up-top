@@ -4,7 +4,12 @@ import { sendNotification } from '@/lib/notify';
 export async function getOrCreateThreadRead(threadId, userId) {
   const existing = await base44.entities.ThreadRead.filter({ thread_id: threadId, created_by_id: userId });
   if (existing.length > 0) return existing[0];
-  return base44.entities.ThreadRead.create({ thread_id: threadId, last_read_at: new Date().toISOString() });
+  let participant_ids = [];
+  try {
+    const thread = await base44.entities.Thread.get(threadId);
+    participant_ids = thread?.participant_ids || [];
+  } catch (e) { /* ignore — participant_ids stays empty */ }
+  return base44.entities.ThreadRead.create({ thread_id: threadId, last_read_at: new Date().toISOString(), participant_ids });
 }
 
 export async function markThreadRead(threadId, userId) {

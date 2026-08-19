@@ -98,7 +98,7 @@ export default function Conversation() {
     if (!text.trim()) return;
     const body = text;
     setText('');
-    const msgData = { thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, body };
+    const msgData = { thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, body, participant_ids: thread.participant_ids };
     if (replyTo) {
       msgData.reply_to_id = replyTo.id;
       msgData.reply_to_sender = replyTo.sender_name;
@@ -117,7 +117,7 @@ export default function Conversation() {
     if (!file) return;
     setUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    await base44.entities.Message.create({ thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, media_url: file_url });
+    await base44.entities.Message.create({ thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, media_url: file_url, participant_ids: thread.participant_ids });
     await base44.entities.Thread.update(threadId, { last_message: '📷 Photo', last_message_at: new Date().toISOString() });
     await markThreadRead(threadId, user.id);
     await notifyMessageParticipants(thread, user.full_name, user.id, '📷 Photo', myUsername);
