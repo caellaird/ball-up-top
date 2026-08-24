@@ -13,7 +13,7 @@ import { findOrCreateThread } from '@/lib/friendsHelpers';
 import { computeProfileStats } from '@/lib/profileStats';
 import QRCodeDialog from '@/components/friends/QRCodeDialog';
 import { buildFriendInviteUrl } from '@/lib/friendCodes';
-import { ArrowLeft, Swords, QrCode } from 'lucide-react';
+import { ArrowLeft, Swords, QrCode, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
 import FriendButton from '@/components/profile/FriendButton';
@@ -126,6 +126,17 @@ export default function Profile({ user: userProp, usernameOverride }) {
         <div className="flex items-center px-4 pt-3 pb-1 shrink-0">
           <button onClick={goBack} className="p-1 -ml-1 text-foreground">
             <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+      {isSelf && (
+        <div className="flex items-center justify-end px-4 pt-3 pb-1 shrink-0">
+          <button
+            onClick={() => navigate('/settings')}
+            className="p-2 -mr-1 rounded-full text-foreground hover:bg-muted"
+            aria-label="Settings"
+          >
+            <Settings className="w-5 h-5" />
           </button>
         </div>
       )}
