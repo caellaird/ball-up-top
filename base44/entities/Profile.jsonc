@@ -56,6 +56,31 @@
         "private"
       ],
       "default": "public"
+    },
+    "last_lat": {
+      "type": "number"
+    },
+    "last_lng": {
+      "type": "number"
+    },
+    "notify_nearby": {
+      "type": "boolean",
+      "default": false
+    },
+    "notify_nearby_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notify_nearby_timing": {
+      "type": "string",
+      "enum": [
+        "new",
+        "approaching",
+        "both"
+      ],
+      "default": "new"
     }
   },
   "required": [
