@@ -8,6 +8,7 @@ import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { SPORT_EMOJI, SPORT_LABEL, SPORT_PIN_COLOR } from '@/lib/constants';
 import { haversineMiles } from '@/lib/geo';
 import EventDetailsSheet from './EventDetailsSheet';
+import SportFilterBar from './SportFilterBar';
 
 const userIcon = L.divIcon({
   className: 'user-loc-icon',
@@ -40,6 +41,7 @@ export default function ExploreMap({ user, onOpenChat, initialEventId }) {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [map, setMap] = useState(null);
+  const [activeSports, setActiveSports] = useState(new Set());
   const lastFetchRef = useRef(null);
 
   const fetchEvents = async (lat, lng) => {
@@ -104,6 +106,10 @@ export default function ExploreMap({ user, onOpenChat, initialEventId }) {
     if (e) setSelected(e);
   }, [initialEventId, events]);
 
+  const visibleEvents = activeSports.size === 0
+    ? events
+    : events.filter((e) => activeSports.has(e.competition_type));
+
   const recenter = () => {
     if (userPos && map) map.flyTo([userPos.lat, userPos.lng], 13);
   };
@@ -138,14 +144,16 @@ export default function ExploreMap({ user, onOpenChat, initialEventId }) {
       <MapContainer center={[userPos.lat, userPos.lng]} zoom={13} zoomControl={false} ref={setMap} className="h-full w-full">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap" />
         <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />
-        {events.map((e) => (
+        {visibleEvents.map((e) => (
           <Marker key={e.id} position={[e.latitude, e.longitude]} icon={eventIcon(e)} eventHandlers={{ click: () => setSelected(e) }} />
         ))}
       </MapContainer>
 
+      <SportFilterBar active={activeSports} onToggle={setActiveSports} />
+
       <button
         onClick={recenter}
-        className="absolute right-4 top-4 z-[1000] w-11 h-11 rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-md flex items-center justify-center"
+        className="absolute right-4 top-20 z-[1000] w-11 h-11 rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-md flex items-center justify-center"
         aria-label="Recenter map"
       >
         <LocateFixed className="w-5 h-5 text-primary" />
