@@ -1,0 +1,30 @@
+{
+  "name": "EventFavorite",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "event_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "event_id"
+  ],
+  "rls": {
+    "read": {
+      "data.user_id": "{{user.id}}"
+    },
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.user_id": "{{user.id}}"
+    }
+  }
+}

@@ -5,8 +5,10 @@ import { SPORTS } from '@/lib/constants';
 
 // Nearby-competition notification preferences, persisted on the user's Profile.
 // notify_nearby (on/off), notify_nearby_types (competition interests),
-// notify_nearby_timing (newly posted / approaching / both).
-export default function NearbyNotificationsSettings({ profile, setProfile }) {
+// notify_nearby_timing (newly posted / approaching / both). When `embed` is set
+// the component renders without its own card wrapper so it can sit inside a
+// SettingsSection group.
+export default function NearbyNotificationsSettings({ profile, setProfile, embed }) {
   const [saving, setSaving] = useState(false);
 
   const update = async (patch) => {
@@ -27,8 +29,8 @@ export default function NearbyNotificationsSettings({ profile, setProfile }) {
 
   const timing = profile.notify_nearby_timing || 'new';
 
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 mb-4">
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-1">
         <div>
           <p className="font-medium text-sm">Nearby Competition Alerts</p>
@@ -75,6 +77,9 @@ export default function NearbyNotificationsSettings({ profile, setProfile }) {
           {saving && <p className="text-xs text-muted-foreground">Saving…</p>}
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (embed) return inner;
+  return <div className="bg-card border border-border rounded-xl p-4 mb-4">{inner}</div>;
 }

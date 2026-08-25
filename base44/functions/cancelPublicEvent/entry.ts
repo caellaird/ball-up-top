@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { waitUntil } from 'base44:runtime';
+import { sendIfAllowed } from '../../shared/notifPrefs.ts';
 
 // Creator-only cancellation. Marks the event cancelled (removes it from Explore,
 // blocks new acceptances) and notifies accepted participants. Chat/history is
@@ -28,13 +29,28 @@ export default async function(req) {
         const participants = await admin.entities.EventParticipant.filter({ event_id, status: 'accepted' });
         const others = participants.filter((p) => p.user_id !== user.id);
         await Promise.all(others.map((p) =>
-          admin.entities.Notification.create({
+          sendIfAllowed(admin, {
             user_id: p.user_id,
             type: 'event_cancelled',
             actor_name: user.full_name,
             title: `Event cancelled: ${event.title || ''}`,
             body: `${event.location_name || ''} — the creator cancelled this event.`,
             link: `/messages/${event.chat_id}`,
+          })
+        ));
+        // Also notify users who saved (favorited) this event, gated by their
+        // Explore Map Favorites preference. Excludes already-notified participants.
+        const favs = await admin.entities.EventFavorite.filter({ event_id });
+        const notified = new Set([user.id, ...others.map((p) => p.user_id)]);
+        const favoriters = favs.filter((f) => !notified.has(f.user_id));
+        await Promise.all(favoriters.map((f) =>
+          sendIfAllowed(admin, {
+            user_id: f.user_id,
+            type: 'favorite_event_update',
+            actor_name: user.full_name,
+            title: `Saved event cancelled: ${event.title || ''}`,
+            body: `${event.location_name || ''} — the creator cancelled this event.`,
+            link: `/explore?event=${event.id}`,
           })
         ));
       } catch (e) { /* best-effort */ }

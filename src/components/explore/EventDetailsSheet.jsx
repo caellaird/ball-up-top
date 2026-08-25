@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SPORT_EMOJI, SPORT_LABEL } from '@/lib/constants';
-import { Loader2, MapPin, Clock, Users } from 'lucide-react';
+import { Loader2, MapPin, Clock, Users, Heart } from 'lucide-react';
 
 function fmtStart(iso, now) {
   const d = new Date(iso);
@@ -30,6 +30,32 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
   useEffect(() => {
     setJoined(participants.some((p) => p.user_id === user.id));
   }, [participants, user]);
+
+  // Explore map favorite (saved event). Persisted per user/event; deduped by
+  // delete-before-create. Gating notifications for favorited-event changes is
+  // handled server-side via the notif_explore_favorites preference.
+  const [fav, setFav] = useState(false);
+  const [favBusy, setFavBusy] = useState(false);
+  useEffect(() => {
+    if (!event) return;
+    base44.entities.EventFavorite.filter({ user_id: user.id, event_id: event.id })
+      .then((rows) => setFav(rows.length > 0))
+      .catch(() => setFav(false));
+  }, [event]);
+  const toggleFav = async () => {
+    setFavBusy(true);
+    try {
+      if (fav) {
+        const rows = await base44.entities.EventFavorite.filter({ user_id: user.id, event_id: event.id });
+        await Promise.all(rows.map((r) => base44.entities.EventFavorite.delete(r.id)));
+        setFav(false);
+      } else {
+        await base44.entities.EventFavorite.create({ user_id: user.id, event_id: event.id });
+        setFav(true);
+      }
+    } catch (e) { /* ignore */ }
+    setFavBusy(false);
+  };
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 20000);
@@ -102,6 +128,14 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
               <h2 className="font-heading text-xl font-extrabold leading-tight">{sportLabel}</h2>
               <p className="text-sm text-muted-foreground">{event.title && event.title !== `${emoji} ${sportLabel} – ${event.location_name}` ? event.title : null}</p>
             </div>
+            <button
+              onClick={toggleFav}
+              disabled={favBusy}
+              aria-label={fav ? 'Unsave event' : 'Save event'}
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center shrink-0"
+            >
+              <Heart className={`w-5 h-5 ${fav ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
+            </button>
           </div>
 
           <div className="space-y-2.5 mb-4">

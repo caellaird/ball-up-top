@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { waitUntil } from 'base44:runtime';
+import { sendIfAllowed } from '../../shared/notifPrefs.ts';
 
 // Idempotently accepts a public event: creates the accepted participant record,
 // bumps the event's accepted_count, and adds the user to the event's dedicated
@@ -68,7 +69,7 @@ export default async function(req) {
         const participants = await admin.entities.EventParticipant.filter({ event_id, status: 'accepted' });
         const others = participants.filter((p) => p.user_id !== user.id);
         await Promise.all(others.map((p) =>
-          admin.entities.Notification.create({
+          sendIfAllowed(admin, {
             user_id: p.user_id,
             type: 'event_join',
             actor_name: user.full_name,

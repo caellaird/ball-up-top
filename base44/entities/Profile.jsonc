@@ -81,6 +81,26 @@
         "both"
       ],
       "default": "new"
+    },
+    "notif_challenge_invites": {
+      "type": "boolean",
+      "default": true
+    },
+    "notif_direct_messages": {
+      "type": "boolean",
+      "default": true
+    },
+    "notif_challenge_results": {
+      "type": "boolean",
+      "default": true
+    },
+    "notif_public_reminders": {
+      "type": "boolean",
+      "default": true
+    },
+    "notif_explore_favorites": {
+      "type": "boolean",
+      "default": true
     }
   },
   "required": [

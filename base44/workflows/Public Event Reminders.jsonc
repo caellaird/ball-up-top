@@ -1,0 +1,45 @@
+{
+  "description": "Sends a 30-minute-before-start reminder to accepted participants of upcoming public events. Runs every 5 minutes; the backend function dedups so each user gets at most one reminder per event.",
+  "name": "Public Event Reminders",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "public_event_reminders",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "send_reminders": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendEventReminders",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Send event reminders",
+            "description": "30-min reminder for upcoming public events"
+          }
+        }
+      }
+    ]
+  }
+}
