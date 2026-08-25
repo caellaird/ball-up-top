@@ -6,6 +6,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
 import { Crown } from 'lucide-react';
+import { sendNotification } from '@/lib/notify';
+
+// Notifies every other participant that a result was published, gated by each
+// recipient's "Challenge Results" notification preference.
+const notifyResult = (challenge, participants, actingUser, winnerName) => {
+  const others = participants.filter((p) => p.id !== actingUser.id);
+  return Promise.all(
+    others.map((p) =>
+      sendNotification({
+        userId: p.id,
+        type: 'challenge_result',
+        actorName: actingUser.full_name,
+        title: `${actingUser.full_name} logged a result`,
+        body: winnerName ? `${winnerName} won — ${sportLabel(challenge)}` : `Result posted — ${sportLabel(challenge)}`,
+        link: `/challenges/${challenge.id}`,
+      })
+    )
+  );
+};
+const sportLabel = (c) => getSportDisplay(c).label;
 
 export default function CompleteChallengeSheet({ open, onOpenChange, challenge, user, onCompleted }) {
   const [scoreCreator, setScoreCreator] = useState('');
@@ -121,6 +141,8 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     if (!isSeries) {
       const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar, isMultiplayer ? gameWinnerId : undefined);
+      const winnerName = participants.find((p) => p.id === updated.winner_id)?.name || '';
+      await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
       onCompleted(updated);
       return;
@@ -157,6 +179,8 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     if (seriesClinched) {
       const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer ? winnerIdThisGame : undefined);
+      const winnerName = participants.find((p) => p.id === updated.winner_id)?.name || '';
+      await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
       onCompleted(updated);
     } else {
@@ -183,6 +207,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         creator_games_won: creatorWins,
         opponent_games_won: opponentWins,
       });
+      await notifyResult(challenge, participants, user, gameWinnerName);
       setSaving(false);
       onCompleted(updated);
     }

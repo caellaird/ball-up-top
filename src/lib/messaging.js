@@ -40,7 +40,7 @@ export async function notifyMessageParticipants(thread, senderName, senderId, bo
     otherIds.map((id) =>
       sendNotification({
         userId: id,
-        type: 'message',
+        type: 'direct_message',
         actorName: senderName,
         actorUsername: senderUsername,
         title: isGroup ? `${senderName} in ${thread.name || 'Group'}` : `New message from ${senderName}`,
