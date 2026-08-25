@@ -3,7 +3,7 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AvatarUpload from '@/components/profile/AvatarUpload';
-import BannerUpload from '@/components/profile/BannerUpload';
+import ProfileBanner from '@/components/profile/ProfileBanner';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -137,7 +137,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
       <div className="shrink-0">
         {isSelf ? (
           <div className="relative">
-            <BannerUpload profile={profile} onUploaded={setProfile} />
+            <ProfileBanner profile={profile} />
             <button
               onClick={() => navigate('/settings')}
               className="absolute right-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
@@ -148,10 +148,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             </button>
           </div>
         ) : (
-          <div
-            className="h-24 bg-gradient-to-r from-primary to-secondary"
-            style={profile.banner_url ? { backgroundImage: `url(${profile.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-          />
+          <ProfileBanner profile={profile} />
         )}
         <div className="px-4 -mt-10 relative z-10">
           <div className="flex items-end justify-between mb-2">
