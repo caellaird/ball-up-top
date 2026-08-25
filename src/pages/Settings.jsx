@@ -7,6 +7,7 @@ import { Loader2, LogOut, Moon, Sun, Trash2 } from 'lucide-react';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useTheme } from '@/hooks/useTheme';
+import NearbyNotificationsSettings from '@/components/settings/NearbyNotificationsSettings';
 
 export default function Settings() {
   const { user } = useOutletContext();
@@ -67,6 +68,7 @@ export default function Settings() {
           <Switch checked={profile.privacy_level === 'private'} onCheckedChange={togglePrivacy} />
         </div>
       )}
+      {profile && <NearbyNotificationsSettings profile={profile} setProfile={setProfile} />}
       <Button variant="destructive" onClick={logout} className="w-full mb-4">
         <LogOut className="w-4 h-4 mr-2" /> Log Out
       </Button>

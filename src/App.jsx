@@ -28,6 +28,7 @@ import Friends from '@/pages/Friends';
 import Notifications from '@/pages/Notifications';
 import Settings from '@/pages/Settings';
 import AddFriend from '@/pages/AddFriend';
+import Explore from '@/pages/Explore';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/add-friend/:userId" element={<AddFriend />} />
+          <Route path="/explore" element={<Explore />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
