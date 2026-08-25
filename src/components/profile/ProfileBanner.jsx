@@ -1,32 +1,8 @@
 import React from 'react';
-import { SPORT_EMOJI, SPORT_LABEL, SPORT_PIN_COLOR } from '@/lib/constants';
+import { SPORT_EMOJI, SPORT_PIN_COLOR } from '@/lib/constants';
+import { resolveSportKey, sportGradient } from '@/lib/favoriteSport';
 
-// Matches a free-text "favorite sport" value to a known sport key
-// (case-insensitive; matches the key, label, or emoji). Returns the key, or
-// null when nothing matches — in which case the default brand gradient stays.
-const resolveSportKey = (raw) => {
-  if (!raw) return null;
-  const value = String(raw).trim().toLowerCase();
-  if (!value) return null;
-  for (const key of Object.keys(SPORT_EMOJI)) {
-    if (key.toLowerCase() === value) return key;
-    const label = (SPORT_LABEL[key] || '').toLowerCase();
-    if (label && (label === value || label.includes(value))) return key;
-  }
-  return null;
-};
-
-// Two-tone gradient built from the sport's map-pin color.
-const sportGradient = (sportKey) => {
-  const hsl = SPORT_PIN_COLOR[sportKey];
-  if (!hsl) return null;
-  const [h, s, l] = hsl.split(' ').map(Number);
-  const top = `hsl(${h} ${s}% ${Math.min(Math.round(l + 14), 60)}%)`;
-  const bottom = `hsl(${h} ${s}% ${Math.max(Math.round(l - 22), 14)}%)`;
-  return `linear-gradient(135deg, ${top} 0%, ${bottom} 100%)`;
-};
-
-// Display-only profile banner. It reflects the user's favorite sport as a
+// Display-only profile banner. Reflects the user's favorite sport as a
 // color-matched gradient with a layered "outline" medallion of the sport's
 // emoji. When no favorite sport is set (or it isn't recognized), the default
 // orange→navy brand gradient is shown. There is no photo upload — the banner

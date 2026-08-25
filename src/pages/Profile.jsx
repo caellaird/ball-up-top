@@ -27,6 +27,8 @@ import StatsTab from '@/components/profile/tabs/StatsTab';
 import FriendsTab from '@/components/profile/tabs/FriendsTab';
 import AwardsTab from '@/components/profile/tabs/AwardsTab';
 import HighlightsTab from '@/components/profile/tabs/HighlightsTab';
+import FavoriteSportPicker from '@/components/profile/FavoriteSportPicker';
+import { getSportDisplay } from '@/lib/favoriteSport';
 
 export default function Profile({ user: userProp, usernameOverride }) {
   const { username: paramUsername } = useParams();
@@ -123,6 +125,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const winPct = profileStats?.winPct ?? (wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0);
   const currentStreak = profileStats?.currentStreak ?? stats?.current_streak ?? 0;
   const longestStreak = profileStats?.longestStreak ?? stats?.longest_streak ?? 0;
+  const sportDisplay = getSportDisplay(profile.favorite_sport);
 
   return (
     <div className="h-full flex flex-col">
@@ -195,7 +198,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             )}
           </div>
           <h1 className="font-heading text-lg font-bold leading-tight">{displayName}</h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}</p>
+          <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}{sportDisplay ? ` · ${sportDisplay.emoji} ${sportDisplay.label}` : ''}</p>
           {profile.bio && <p className="text-sm mt-1.5">{profile.bio}</p>}
 
           <div className="flex items-center gap-5 mt-3 text-sm">
@@ -282,7 +285,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             </div>
             <Textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
             <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            <Input placeholder="Favorite sport" value={form.favorite_sport} onChange={(e) => setForm({ ...form, favorite_sport: e.target.value })} />
+            <FavoriteSportPicker value={form.favorite_sport} onChange={(v) => setForm({ ...form, favorite_sport: v })} />
             <Button onClick={save} className="w-full rounded-full h-12">Save</Button>
           </div>
         </SheetContent>
