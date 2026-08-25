@@ -129,22 +129,20 @@ export default function Profile({ user: userProp, usernameOverride }) {
           </button>
         </div>
       )}
-      {isSelf && (
-        <div className="flex items-center justify-end px-4 pt-3 pb-1 shrink-0">
-          <button
-            onClick={() => navigate('/settings')}
-            className="p-2 -mr-1 rounded-full text-foreground hover:bg-muted"
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-        </div>
-      )}
-
       {/* Pinned profile header — stays visible while the tab content below scrolls */}
       <div className="shrink-0">
         {isSelf ? (
-          <BannerUpload profile={profile} onUploaded={setProfile} />
+          <div className="relative">
+            <BannerUpload profile={profile} onUploaded={setProfile} />
+            <button
+              onClick={() => navigate('/settings')}
+              className="absolute right-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
+              style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+              aria-label="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
         ) : (
           <div
             className="h-24 bg-gradient-to-r from-primary to-secondary"
