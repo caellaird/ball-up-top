@@ -91,8 +91,8 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
   return (
     <>
       <div className="fixed inset-0 z-[1100] bg-black/50" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-[1101] bg-background rounded-t-3xl max-h-[82vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <div className="sticky top-0 bg-background pt-3 pb-1 flex justify-center">
+      <div className="fixed inset-x-0 bottom-0 z-[1101] bg-background/85 backdrop-blur-xl border-t border-border/60 shadow-2xl rounded-t-3xl max-h-[82vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="sticky top-0 bg-background/0 pt-3 pb-1 flex justify-center">
           <span className="w-10 h-1.5 rounded-full bg-muted" />
         </div>
         <div className="px-5 pt-2">

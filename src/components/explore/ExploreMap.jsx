@@ -141,19 +141,19 @@ export default function ExploreMap({ user, onOpenChat, initialEventId }) {
 
       <button
         onClick={recenter}
-        className="absolute right-4 top-4 z-[1000] w-11 h-11 rounded-full bg-card border border-border shadow-md flex items-center justify-center"
+        className="absolute right-4 top-4 z-[1000] w-11 h-11 rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-md flex items-center justify-center"
         aria-label="Recenter map"
       >
         <LocateFixed className="w-5 h-5 text-primary" />
       </button>
 
       {loading && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-5 z-[1000] px-4 py-2 rounded-full bg-card/90 shadow text-xs font-medium">
+        <div className="absolute left-1/2 -translate-x-1/2 top-5 z-[1000] px-4 py-2 rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-md text-xs font-medium">
           Finding nearby competitions…
         </div>
       )}
       {!loading && events.length === 0 && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-6 z-[1000] px-4 py-2.5 rounded-full bg-card/95 shadow-md text-xs font-medium text-center">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-6 z-[1000] px-4 py-2.5 rounded-full bg-background/80 backdrop-blur-xl border border-border/60 shadow-md text-xs font-medium text-center">
           No nearby competitions yet.<br />Check back or create a public event.
         </div>
       )}
