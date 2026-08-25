@@ -3,6 +3,20 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Camera, Loader2, RotateCcw, Check, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cropBannerAndCompress } from '@/lib/imageUtils';
+import { SPORT_EMOJI, SPORT_PIN_COLOR } from '@/lib/constants';
+
+// Builds a two-tone gradient from the user's favorite sport's pin color, used
+// as the auto-generated banner when no cover photo is uploaded. Returns null
+// when the sport has no pin color (or no favorite is set), so the default
+// brand gradient stays in place.
+const sportGradient = (sportKey) => {
+  const hsl = SPORT_PIN_COLOR[sportKey];
+  if (!hsl) return null;
+  const [h, s, l] = hsl.split(' ').map(Number);
+  const top = `hsl(${h} ${s}% ${Math.min(Math.round(l + 14), 62)}%)`;
+  const bottom = `hsl(${h} ${s}% ${Math.max(Math.round(l - 20), 16)}%)`;
+  return `linear-gradient(135deg, ${top} 0%, ${bottom} 100%)`;
+};
 
 export default function BannerUpload({ profile, onUploaded }) {
   const galleryRef = useRef(null);
@@ -71,9 +85,16 @@ export default function BannerUpload({ profile, onUploaded }) {
   return (
     <div className="relative">
       <div
-        className="h-32 bg-gradient-to-r from-primary to-secondary relative"
-        style={profile?.banner_url ? { backgroundImage: `url(${profile.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+        className="h-32 bg-gradient-to-r from-primary to-secondary relative overflow-hidden"
+        style={profile?.banner_url
+          ? { backgroundImage: `url(${profile.banner_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          : sportGradient(profile?.favorite_sport) ? { backgroundImage: sportGradient(profile?.favorite_sport) } : {}}
       >
+        {!profile?.banner_url && profile?.favorite_sport && SPORT_EMOJI[profile.favorite_sport] && (
+          <span className="absolute -right-1 -bottom-2 text-[6.5rem] leading-none opacity-20 select-none pointer-events-none">
+            {SPORT_EMOJI[profile.favorite_sport]}
+          </span>
+        )}
         <button
           onClick={() => setShowSheet(true)}
           className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-lg"
