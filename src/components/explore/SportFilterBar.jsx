@@ -24,14 +24,14 @@ export default function SportFilterBar({ active, onToggle }) {
               key={s.key}
               onClick={() => handle(s.key)}
               className={[
-                'shrink-0 inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-sm font-semibold border shadow-sm transition-colors whitespace-nowrap',
+                'shrink-0 inline-flex items-center gap-1.5 h-9 rounded-full font-semibold whitespace-nowrap transition-colors font-heading',
                 on
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background/80 backdrop-blur-xl text-foreground border-border/60',
+                  ? 'bg-white text-foreground ring-2 ring-primary shadow-sm pl-2.5 pr-3.5'
+                  : 'bg-[#111827] text-white px-2.5',
               ].join(' ')}
             >
               <span className="text-base leading-none">{s.emoji}</span>
-              {s.label}
+              {on && <span className="text-[13px]">{s.label}</span>}
             </button>
           );
         })}
