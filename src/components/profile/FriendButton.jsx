@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Check, X, Clock, Loader2 } from 'lucide-react';
+import { UserPlus, Check, X, Clock, Loader2, Ban } from 'lucide-react';
 import { sendNotification } from '@/lib/notify';
 
 export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName }) {
@@ -22,8 +22,10 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
     ]);
     const rec = outgoing[0] || incoming[0];
     setFriendRecord(rec || null);
-    if (!rec || rec.status === 'cancelled' || rec.status === 'declined' || rec.status === 'blocked') {
+    if (!rec || rec.status === 'cancelled' || rec.status === 'declined') {
       setRelation(null);
+    } else if (rec.status === 'blocked') {
+      setRelation('blocked');
     } else if (rec.status === 'accepted') {
       setRelation('accepted');
     } else if (rec.created_by_id === currentUserId) {
@@ -112,6 +114,14 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
     return (
       <Button size="sm" variant="secondary" className="rounded-full" disabled>
         <Check className="w-3.5 h-3.5 mr-1" /> Friends
+      </Button>
+    );
+  }
+
+  if (relation === 'blocked') {
+    return (
+      <Button size="sm" variant="secondary" className="rounded-full" disabled>
+        <Ban className="w-3.5 h-3.5 mr-1" /> Blocked
       </Button>
     );
   }

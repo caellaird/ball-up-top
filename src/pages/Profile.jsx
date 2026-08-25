@@ -13,10 +13,13 @@ import { findOrCreateThread } from '@/lib/friendsHelpers';
 import { computeProfileStats } from '@/lib/profileStats';
 import QRCodeDialog from '@/components/friends/QRCodeDialog';
 import { buildFriendInviteUrl } from '@/lib/friendCodes';
-import { ArrowLeft, Swords, QrCode, Settings } from 'lucide-react';
+import { ArrowLeft, Swords, QrCode, Settings, MoreVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
 import FriendButton from '@/components/profile/FriendButton';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import ReportSheet from '@/components/shared/ReportSheet';
+import BlockButton from '@/components/shared/BlockButton';
 import { useGoBack } from '@/hooks/useGoBack';
 import ProfileTabs from '@/components/profile/ProfileTabs';
 import ActivityTab from '@/components/profile/tabs/ActivityTab';
@@ -42,6 +45,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const [friendRecords, setFriendRecords] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [showChallenge, setShowChallenge] = useState(false);
+  const [showReportUser, setShowReportUser] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
   const isSelf = username === 'me';
@@ -172,6 +176,24 @@ export default function Profile({ user: userProp, usernameOverride }) {
                   targetUserName={displayName}
                 />
                 <Button size="sm" variant="secondary" className="rounded-full" onClick={message}>Message</Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="secondary" className="rounded-full px-2" aria-label="More options">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setShowReportUser(true)} className="text-destructive focus:text-destructive">
+                      Report user
+                    </DropdownMenuItem>
+                    <BlockButton
+                      currentUserId={user.id}
+                      currentUserName={user.full_name}
+                      targetUserId={profile.created_by_id}
+                      targetUserName={displayName}
+                    />
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>
@@ -240,6 +262,16 @@ export default function Profile({ user: userProp, usernameOverride }) {
           opponentId={profile.created_by_id}
           opponentName={displayName}
           opponentUsername={profile.username}
+        />
+      )}
+
+      {!isSelf && (
+        <ReportSheet
+          open={showReportUser}
+          onOpenChange={setShowReportUser}
+          targetType="user"
+          targetId={profile.created_by_id}
+          targetOwnerName={displayName}
         />
       )}
 

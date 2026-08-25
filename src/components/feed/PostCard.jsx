@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, MessageCircle, Share2, Swords, Pencil, Trash2 } from 'lucide-react';
+import { Flame, MessageCircle, Share2, Swords, Pencil, Trash2, Flag } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -8,6 +8,7 @@ import { getOrCreateProfile } from '@/lib/ensureProfile';
 import MediaViewer from '@/components/feed/MediaViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
 
 export default function PostCard({ post, reactions, onReact, userId, currentUserName, onDeleted }) {
@@ -17,6 +18,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
   const [viewerIndex, setViewerIndex] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editState, setEditState] = useState({});
 
@@ -80,12 +82,17 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
         <div className="flex items-center gap-2 shrink-0">
           {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
           {post.created_by_id && post.created_by_id !== userId && (
-            <FriendButton
-              currentUserId={userId}
-              currentUserName={currentUserName}
-              targetUserId={post.created_by_id}
-              targetUserName={post.author_name}
-            />
+            <>
+              <FriendButton
+                currentUserId={userId}
+                currentUserName={currentUserName}
+                targetUserId={post.created_by_id}
+                targetUserName={post.author_name}
+              />
+              <button onClick={() => setShowReport(true)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Report post">
+                <Flag className="w-4 h-4" />
+              </button>
+            </>
           )}
           {post.created_by_id === userId && (
             <>
@@ -183,6 +190,14 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
         onConfirm={deletePost}
         title="Delete this post?"
         description="Are you sure you want to delete this? This action cannot be undone."
+      />
+
+      <ReportSheet
+        open={showReport}
+        onOpenChange={setShowReport}
+        targetType="post"
+        targetId={post.id}
+        targetOwnerName={post.author_name}
       />
 
       {showComments && (

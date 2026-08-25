@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Checkbox } from "@/components/ui/checkbox";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import AppleIcon from "@/components/AppleIcon";
@@ -19,6 +20,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [confirmAge, setConfirmAge] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -230,7 +232,16 @@ export default function Register() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <label className="flex items-start gap-2.5 text-xs text-muted-foreground py-1">
+          <Checkbox checked={confirmAge} onCheckedChange={setConfirmAge} className="mt-0.5" />
+          <span>
+            I confirm I am at least 13 years old and agree to the{" "}
+            <Link to="/terms-of-service" className="text-primary font-medium hover:underline">Terms</Link>{" "}
+            and{" "}
+            <Link to="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</Link>.
+          </span>
+        </label>
+        <Button type="submit" className="w-full h-12 font-medium" disabled={loading || !confirmAge}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

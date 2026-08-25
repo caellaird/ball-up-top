@@ -1,0 +1,58 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "reporter_name": {
+      "type": "string"
+    },
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "post",
+        "comment",
+        "user"
+      ],
+      "default": "post"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "target_owner_name": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "spam",
+        "harassment",
+        "hate",
+        "nudity",
+        "violence",
+        "misinformation",
+        "other"
+      ]
+    },
+    "details": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "target_type",
+    "target_id",
+    "reason"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

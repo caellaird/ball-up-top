@@ -21,21 +21,24 @@ export default function Home({ user: userProp }) {
 
   const load = async () => {
     const friendPromise = tab === 'friends';
-    const [data, myLikes, outgoing, incoming] = await Promise.all([
+    const [data, myLikes, outgoing, incoming, blocked] = await Promise.all([
       base44.entities.Post.list('-created_date', 30),
       base44.entities.Like.filter({ created_by_id: user.id }),
       friendPromise ? base44.entities.Friend.filter({ created_by_id: user.id, status: 'accepted' }) : Promise.resolve([]),
       friendPromise ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'accepted' }) : Promise.resolve([]),
+      base44.entities.Friend.filter({ created_by_id: user.id, status: 'blocked' }),
     ]);
+    const blockedIds = new Set(blocked.map((b) => b.addressee_id));
+    const visible = data.filter((p) => !blockedIds.has(p.created_by_id));
     if (friendPromise) {
       const friendIds = new Set([
         ...outgoing.map((f) => f.addressee_id),
         ...incoming.map((f) => f.created_by_id),
         user.id,
       ]);
-      setPosts(data.filter((p) => friendIds.has(p.created_by_id) || p.tagged_user_ids?.includes(user.id)));
+      setPosts(visible.filter((p) => friendIds.has(p.created_by_id) || p.tagged_user_ids?.includes(user.id)));
     } else {
-      setPosts(data);
+      setPosts(visible);
     }
     const map = {};
     myLikes.forEach((l) => {
