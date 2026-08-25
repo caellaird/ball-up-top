@@ -12,6 +12,7 @@ function myNameInChallenge(c, userId) {
 }
 
 export async function computeProfileStats(userId) {
+  try {
   const [asCreator, asOpponent] = await Promise.all([
     base44.entities.Challenge.filter({ created_by_id: userId }),
     base44.entities.Challenge.list('-created_date', 300),
@@ -130,6 +131,9 @@ export async function computeProfileStats(userId) {
     topActivities: sportBreakdown.slice(0, 3),
     favoriteCompetition: sportBreakdown[0]?.sport || null,
   };
+  } catch (e) {
+    return null;
+  }
 }
 
 export async function computeHeadToHead(currentUserId, profileOwnerId) {

@@ -63,7 +63,13 @@ export default function Conversation() {
   }, [messages]);
 
   const load = async () => {
-    const t = await base44.entities.Thread.get(threadId);
+    let t;
+    try {
+      t = await base44.entities.Thread.get(threadId);
+    } catch (e) {
+      navigate('/messages', { replace: true });
+      return;
+    }
     setThread(t);
     const myProfiles = await base44.entities.Profile.filter({ created_by_id: user.id });
     if (myProfiles[0]) setMyUsername(myProfiles[0].username);
