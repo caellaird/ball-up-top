@@ -3,7 +3,7 @@ import { useParams, useOutletContext, useNavigate, Link } from 'react-router-dom
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/layout/Header';
-import { MapPin, Clock, Pencil, CalendarPlus, Trash2 } from 'lucide-react';
+import { MapPin, Clock, Pencil, CalendarPlus, Trash2, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
@@ -12,6 +12,7 @@ import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeShe
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
 import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import SocialShareSheet from '@/components/shared/SocialShareSheet';
 import { useGoBack } from '@/hooks/useGoBack';
 
 export default function ChallengeDetail() {
@@ -27,6 +28,7 @@ export default function ChallengeDetail() {
   const [deleting, setDeleting] = useState(false);
   const [creatorUsername, setCreatorUsername] = useState('');
   const [opponentUsername, setOpponentUsername] = useState('');
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     load();
@@ -245,6 +247,12 @@ export default function ChallengeDetail() {
             {isSeries ? `Log Game ${creatorWins + opponentWins + 1}` : 'Complete Challenge'}
           </Button>
         )}
+
+        {challenge.status === 'completed' && (
+          <Button onClick={() => setShareOpen(true)} variant="outline" className="w-full rounded-full h-12">
+            <Share2 className="w-4 h-4" /> Share Result
+          </Button>
+        )}
       </div>
 
       <ConfirmDialog
@@ -253,6 +261,18 @@ export default function ChallengeDetail() {
         onConfirm={deleteChallenge}
         title="Delete this challenge?"
         description="Are you sure you want to delete this? This action cannot be undone."
+      />
+
+      <SocialShareSheet
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title={`${sportDisplay.emoji} ${challenge.creator_name} vs ${opponentNameList.join(', ')}`}
+        text={
+          challenge.winner_name
+            ? `${challenge.winner_name} won ${sportDisplay.label}! ${challenge.series_type !== 'single' ? `${creatorWins}–${opponentWins}` : ''} #BallUpTop`
+            : `Result posted — ${sportDisplay.label} #BallUpTop`
+        }
+        url={`https://ball-up-pro.base44.app/challenges/${id}`}
       />
 
       {challenge && (

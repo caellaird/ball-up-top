@@ -3,7 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SPORT_EMOJI, SPORT_LABEL } from '@/lib/constants';
-import { Loader2, MapPin, Clock, Users, Heart } from 'lucide-react';
+import { Loader2, MapPin, Clock, Users, Heart, Share2 } from 'lucide-react';
+import SocialShareSheet from '@/components/shared/SocialShareSheet';
 
 function fmtStart(iso, now) {
   const d = new Date(iso);
@@ -18,6 +19,7 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
   const [joined, setJoined] = useState(false);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!event) return;
@@ -183,6 +185,13 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
             {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : ctaLabel}
           </Button>
 
+          <button
+            onClick={() => setShareOpen(true)}
+            className="w-full mt-2 h-10 rounded-full border border-border text-sm font-semibold inline-flex items-center justify-center gap-2"
+          >
+            <Share2 className="w-4 h-4" /> Share
+          </button>
+
           {isCreator && !cancelled && !ended && (
             <button onClick={cancel} disabled={busy} className="w-full mt-2 h-10 text-sm font-semibold text-destructive">
               Cancel event
@@ -190,6 +199,14 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
           )}
         </div>
       </div>
+
+      <SocialShareSheet
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title={`${emoji} ${sportLabel} at ${event.location_name}`}
+        text={`Join me at ${sportLabel} — ${event.location_name}, ${whenLabel}. #BallUpTop`}
+        url={`https://ball-up-pro.base44.app/explore?event=${event.id}`}
+      />
     </>
   );
 }
