@@ -26,13 +26,13 @@ export default function Challenges({ user: userProp }) {
   const grouped = {
     pending: challenges?.filter((c) => c.status === 'pending') || [],
     accepted: challenges?.filter((c) => c.status === 'accepted') || [],
-    completed: challenges?.filter((c) => c.status === 'completed') || [],
+    completed: challenges?.filter((c) => c.status === 'completed') || []
   };
 
   const emptyCopy = {
     pending: { title: 'No pending challenges', description: 'Tap Ball Up to challenge a friend to a game.' },
     accepted: { title: 'No active challenges', description: 'Once a challenge is accepted, it shows up here.' },
-    completed: { title: 'No completed challenges yet', description: 'Finish a challenge and log the result to see it here.' },
+    completed: { title: 'No completed challenges yet', description: 'Finish a challenge and log the result to see it here.' }
   };
 
   return (
@@ -41,31 +41,31 @@ export default function Challenges({ user: userProp }) {
       <div className="px-4 pt-4 pb-2 sticky top-14 z-20 bg-background">
         <SegmentedControl
           options={[
-            { value: 'pending', label: 'Pending' },
-            { value: 'accepted', label: 'Accepted' },
-            { value: 'completed', label: 'Completed' },
-          ]}
+          { value: 'pending', label: 'Pending' },
+          { value: 'accepted', label: 'Accepted' },
+          { value: 'completed', label: 'Completed' }]
+          }
           value={tab}
-          onChange={setTab}
-        />
+          onChange={setTab} />
+        
       </div>
-      {challenges === null ? (
-        <ListSkeleton count={4} />
-      ) : grouped[tab].length === 0 ? (
-        <EmptyState
-          title={emptyCopy[tab].title}
-          description={emptyCopy[tab].description}
-          action={tab !== 'completed' ? (
-            <Button asChild className="rounded-full">
-              <Link to="/ball-up">Ball Up</Link>
-            </Button>
-          ) : undefined}
-        />
-      ) : (
-        <div className="pt-2">
+      {challenges === null ?
+      <ListSkeleton count={4} /> :
+      grouped[tab].length === 0 ?
+      <EmptyState
+        title={emptyCopy[tab].title}
+        description={emptyCopy[tab].description}
+        action={tab !== 'completed' ?
+        <Button asChild className="rounded-full">
+              <Link to="/ball-up">Ball Up Top</Link>
+            </Button> :
+        undefined} /> :
+
+
+      <div className="pt-2">
           {grouped[tab].map((c) => <ChallengeCard key={c.id} challenge={c} />)}
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
