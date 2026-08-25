@@ -140,6 +140,11 @@ export default function Register() {
           <Link to="/login" className="text-primary font-medium hover:underline">
             Log in
           </Link>
+          <span className="block mt-3 text-xs">
+            <Link to="/privacy-policy" className="hover:underline">Privacy Policy</Link>
+            {" · "}
+            <Link to="/terms-of-service" className="hover:underline">Terms of Service</Link>
+          </span>
         </>
       }
     >

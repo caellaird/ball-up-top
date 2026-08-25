@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -67,9 +67,15 @@ export default function Settings() {
           <Switch checked={profile.privacy_level === 'private'} onCheckedChange={togglePrivacy} />
         </div>
       )}
-      <Button variant="destructive" onClick={logout} className="w-full mb-8">
+      <Button variant="destructive" onClick={logout} className="w-full mb-4">
         <LogOut className="w-4 h-4 mr-2" /> Log Out
       </Button>
+
+      <div className="text-center text-xs text-muted-foreground mb-8 space-x-1">
+        <Link to="/privacy-policy" className="hover:underline">Privacy Policy</Link>
+        <span>·</span>
+        <Link to="/terms-of-service" className="hover:underline">Terms of Service</Link>
+      </div>
 
       <div className="border-t border-border pt-6">
         <h2 className="font-heading text-sm font-bold text-muted-foreground uppercase tracking-wide mb-3">Danger Zone</h2>

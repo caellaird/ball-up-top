@@ -48,6 +48,11 @@ export default function Login() {
           <Link to="/register" className="text-primary font-medium hover:underline">
             Create one
           </Link>
+          <span className="block mt-3 text-xs">
+            <Link to="/privacy-policy" className="hover:underline">Privacy Policy</Link>
+            {" · "}
+            <Link to="/terms-of-service" className="hover:underline">Terms of Service</Link>
+          </span>
         </>
       }
     >
