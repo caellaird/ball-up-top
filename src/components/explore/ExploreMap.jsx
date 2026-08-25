@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { LocateFixed } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
-import { SPORT_EMOJI, SPORT_LABEL } from '@/lib/constants';
+import { SPORT_EMOJI, SPORT_LABEL, SPORT_PIN_COLOR } from '@/lib/constants';
 import { haversineMiles } from '@/lib/geo';
 import EventDetailsSheet from './EventDetailsSheet';
 
@@ -21,9 +21,13 @@ function eventIcon(event) {
     ? (event.custom_sport_emoji || '🏆')
     : (SPORT_EMOJI[event.competition_type] || '🏆');
   const count = event.accepted_count || 0;
+  const channels = SPORT_PIN_COLOR[event.competition_type] || SPORT_PIN_COLOR.custom;
+  const ring = `hsl(${channels})`;
+  const glow = `hsl(${channels} / .3)`;
+  const badge = `hsl(${channels})`;
   return L.divIcon({
     className: 'event-marker',
-    html: `<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid hsl(25 100% 50%);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:22px;line-height:1;">${emoji}<span style="position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 5px;background:hsl(216 67% 27%);color:#fff;font-size:11px;font-weight:700;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;">${count}</span></div>`,
+    html: `<div style="position:relative;width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid ${ring};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 5px ${glow};font-size:22px;line-height:1;">${emoji}<span style="position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 5px;background:${badge};color:#fff;font-size:11px;font-weight:700;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;">${count}</span></div>`,
     iconSize: [46, 46],
     iconAnchor: [23, 23],
   });

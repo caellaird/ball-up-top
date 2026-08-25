@@ -14,6 +14,20 @@ export const SPORTS = [
 
 export const SPORT_EMOJI = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.emoji }), {});
 
+// HSL channel strings (no hsl() wrapper) used by the Explore map pins to color
+// each marker's ring + count badge by competition type. Keep in sync with SPORTS.
+export const SPORT_PIN_COLOR = {
+  basketball: '25 100% 50%',
+  golf: '142 58% 42%',
+  pickleball: '45 93% 52%',
+  darts: '0 76% 55%',
+  disc_golf: '188 60% 42%',
+  cornhole: '265 60% 60%',
+  trivia: '216 70% 52%',
+  chugging: '330 72% 58%',
+  custom: '220 14% 50%',
+};
+
 export const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
 export const CUSTOM_SPORT_EMOJIS = ['🏓', '🥏', '🎳', '🏸', '♟️', '🏐', '🎯', '🎱', '🏈', '⚽', '🎾', '🏏', '⛳', '🏆'];
