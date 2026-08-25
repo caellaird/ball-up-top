@@ -31,39 +31,12 @@ export default function Settings() {
     setDeleting(true);
     setDeleteError('');
     try {
-      const uid = user.id;
-      // Purge all of the user's own data. These are owner-scoped deletes that the new
-      // row-level security rules allow the signed-in user to perform on their own records.
-      await Promise.all([
-        base44.entities.Post.deleteMany({ created_by_id: uid }),
-        base44.entities.Comment.deleteMany({ created_by_id: uid }),
-        base44.entities.Like.deleteMany({ created_by_id: uid }),
-        base44.entities.Vote.deleteMany({ created_by_id: uid }),
-        base44.entities.MessageReaction.deleteMany({ created_by_id: uid }),
-        base44.entities.UserStats.deleteMany({ created_by_id: uid }),
-        base44.entities.Profile.deleteMany({ created_by_id: uid }),
-        base44.entities.SeriesGame.deleteMany({ created_by_id: uid }),
-        base44.entities.ChallengeParticipant.deleteMany({ created_by_id: uid }),
-        base44.entities.DailyQuestionAnswer.deleteMany({ created_by_id: uid }),
-        base44.entities.Notification.deleteMany({ user_id: uid }),
-        base44.entities.Message.deleteMany({ created_by_id: uid }),
-        base44.entities.ThreadRead.deleteMany({ created_by_id: uid }),
-        base44.entities.Friend.deleteMany({ $or: [{ created_by_id: uid }, { addressee_id: uid }] }),
-        base44.entities.Award.deleteMany({ $or: [{ created_by_id: uid }, { recipient_id: uid }] }),
-        base44.entities.Challenge.deleteMany({ $or: [{ created_by_id: uid }, { opponent_id: uid }, { opponent_ids: uid }] }),
-      ]);
-      // Remove solo threads (where this user is the only participant).
-      const threads = await base44.entities.Thread.filter({ participant_ids: uid });
-      const solo = threads.filter((t) => (t.participant_ids || []).length <= 1);
-      if (solo.length) await base44.entities.Thread.deleteMany({ id: { $in: solo.map((t) => t.id) } });
-
-      // NOTE: removing the account record itself requires a Builder+ backend function
-      // (service-role User.delete). Until that's available this wipes all user data and
-      // ends the session — the login credential still exists until the record is removed.
+      // Service-role function purges all user data AND removes the account record itself.
+      await base44.functions.invoke('deleteAccount', {});
       try { await base44.auth.logout(); } catch (e) {}
       window.location.href = '/login';
     } catch (err) {
-      setDeleteError(err?.message || 'Something went wrong. Please try again.');
+      setDeleteError(err?.response?.data?.error || err?.message || 'Something went wrong. Please try again.');
       setDeleting(false);
     }
   };

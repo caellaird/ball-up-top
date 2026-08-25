@@ -70,14 +70,13 @@ export default function ChallengeDetail() {
 
   const deleteChallenge = async () => {
     setDeleting(true);
-    await Promise.all([
-      base44.entities.Post.deleteMany({ challenge_id: id }),
-      base44.entities.SeriesGame.deleteMany({ challenge_id: id }),
-      base44.entities.Notification.deleteMany({ link: `/challenges/${id}` }),
-    ]);
-    await base44.entities.Challenge.delete(id);
-    setDeleting(false);
-    navigate('/challenges');
+    try {
+      // Service-role function cascades the delete across ALL participants' records.
+      await base44.functions.invoke('deleteChallenge', { challengeId: id });
+      navigate('/challenges');
+    } catch (e) {
+      setDeleting(false);
+    }
   };
 
   if (!challenge) return <div className="text-center text-muted-foreground py-10">Loading challenge...</div>;

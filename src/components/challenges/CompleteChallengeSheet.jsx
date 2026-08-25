@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
-import { recordGameResult } from '@/lib/ensureProfile';
 import { Crown } from 'lucide-react';
 
 export default function CompleteChallengeSheet({ open, onOpenChange, challenge, user, onCompleted }) {
@@ -92,8 +91,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     // For series, each individual game already recorded its own result as it was logged —
     // only record here for single (non-series) challenges to avoid double counting.
+    // Runs through the service-role function so opponents' stats (locked to owner-only) update.
     if (!isSeries && winnerId) {
-      await Promise.all(participants.map((p) => recordGameResult(p.id, p.name, p.id === winnerId)));
+      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId });
     }
 
     return updated;
@@ -143,8 +143,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     // Record this individual game's result toward every participant's record immediately —
     // each game in a series counts on its own, not just the series' final outcome.
+    // Runs through the service-role function so opponents' stats (locked to owner-only) update.
     if (winnerIdThisGame) {
-      await Promise.all(participants.map((p) => recordGameResult(p.id, p.name, p.id === winnerIdThisGame)));
+      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
     }
 
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
