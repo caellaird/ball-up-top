@@ -238,7 +238,7 @@ export default function Conversation() {
           <Trophy className="w-4 h-4" />
         </button>
         <input type="file" accept="image/*" ref={fileInputRef} onChange={sendMedia} className="hidden" />
-        <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" disabled={uploading}>
+        <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" disabled={uploading} className="mx-1 px-1">
           <ImageIcon className="w-4 h-4" />
         </Button>
         <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} className="px-3 py-1" />
