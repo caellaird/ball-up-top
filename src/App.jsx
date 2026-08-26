@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from 'sonner';
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -9,26 +10,36 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import PrivacyPolicy from '@/pages/PrivacyPolicy';
-import TermsOfService from '@/pages/TermsOfService';
-import MobileShell from '@/components/layout/MobileShell';
-import Home from '@/pages/Home';
-import BallUp from '@/pages/BallUp';
-import Groups from '@/pages/Groups';
-import Challenges from '@/pages/Challenges';
-import ChallengeDetail from '@/pages/ChallengeDetail';
-import Messages from '@/pages/Messages';
-import Conversation from '@/pages/Conversation';
-import Profile from '@/pages/Profile';
-import Friends from '@/pages/Friends';
-import Notifications from '@/pages/Notifications';
-import Settings from '@/pages/Settings';
-import AddFriend from '@/pages/AddFriend';
-import Explore from '@/pages/Explore';
+
+// Eager: layout + platform scaffold. Lazy: all page components for code splitting.
+const MobileShell = lazy(() => import('@/components/layout/MobileShell'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
+const Home = lazy(() => import('@/pages/Home'));
+const BallUp = lazy(() => import('@/pages/BallUp'));
+const Groups = lazy(() => import('@/pages/Groups'));
+const Challenges = lazy(() => import('@/pages/Challenges'));
+const ChallengeDetail = lazy(() => import('@/pages/ChallengeDetail'));
+const Messages = lazy(() => import('@/pages/Messages'));
+const Conversation = lazy(() => import('@/pages/Conversation'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const Friends = lazy(() => import('@/pages/Friends'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const AddFriend = lazy(() => import('@/pages/AddFriend'));
+const Explore = lazy(() => import('@/pages/Explore'));
+
+function RouteFallback() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+    </div>
+  );
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,32 +66,34 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms-of-service" element={<TermsOfService />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<MobileShell />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/ball-up" element={<BallUp />} />
-          <Route path="/groups" element={<Groups />} />
-          <Route path="/challenges" element={<Challenges />} />
-          <Route path="/challenges/:id" element={<ChallengeDetail />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:threadId" element={<Conversation />} />
-          <Route path="/profile/:username" element={<Profile />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/add-friend/:userId" element={<AddFriend />} />
-          <Route path="/explore" element={<Explore />} />
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route element={<MobileShell />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/ball-up" element={<BallUp />} />
+            <Route path="/groups" element={<Groups />} />
+            <Route path="/challenges" element={<Challenges />} />
+            <Route path="/challenges/:id" element={<ChallengeDetail />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:threadId" element={<Conversation />} />
+            <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/add-friend/:userId" element={<AddFriend />} />
+            <Route path="/explore" element={<Explore />} />
+          </Route>
         </Route>
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
