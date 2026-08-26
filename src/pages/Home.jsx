@@ -7,6 +7,7 @@ import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import ExploreMap from '@/components/explore/ExploreMap';
 import PublicEventCard from '@/components/explore/PublicEventCard';
 
@@ -41,9 +42,9 @@ export default function Home({ user: userProp }) {
     return visible;
   };
 
-  const loadInitial = async () => {
-    if (tabRef.current === 'explore') { setPosts(null); return; }
-    setPosts(null);
+  const loadInitial = async (silent = false) => {
+    if (tabRef.current === 'explore') { if (!silent) setPosts(null); return; }
+    if (!silent) setPosts(null);
     const isFriends = tabRef.current === 'friends';
     const [data, myLikes, outgoing, incoming, blocked] = await Promise.all([
       fetchPage(0),
@@ -145,7 +146,7 @@ export default function Home({ user: userProp }) {
         {tab === 'explore' ? (
           <ExploreMap user={user} onOpenChat={(chatId) => navigate(`/messages/${chatId}`)} />
         ) : (
-          <div className="h-full overflow-y-auto overscroll-contain">
+          <PullToRefresh className="h-full overflow-y-auto overscroll-contain" onRefresh={() => loadInitial(true)}>
             {sharedEvents.length > 0 && (
               <div className="pt-2">
                 <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Shared Events</p>
@@ -178,7 +179,7 @@ export default function Home({ user: userProp }) {
                 {!hasMore && posts.length > 0 && <div className="py-6 text-center text-xs text-muted-foreground">You're all caught up</div>}
               </div>
             )}
-          </div>
+          </PullToRefresh>
         )}
       </div>
     </div>

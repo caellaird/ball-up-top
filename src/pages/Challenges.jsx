@@ -8,6 +8,7 @@ import ChallengeCard from '@/components/challenges/ChallengeCard';
 import PublicEventChallengeCard from '@/components/challenges/PublicEventChallengeCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 
 // Challenges lists the user's private challenges AND the public events they've
 // joined/created. Accepted public events appear under the "Accepted" tab
@@ -89,7 +90,7 @@ export default function Challenges({ user: userProp }) {
   };
 
   return (
-    <div>
+    <PullToRefresh className="h-full overflow-y-auto overscroll-contain" onRefresh={load}>
       <Header title="Challenges" />
       <div className="px-4 pt-4 pb-2 sticky top-14 z-20 bg-background">
         <SegmentedControl
@@ -120,6 +121,6 @@ export default function Challenges({ user: userProp }) {
               )}
             </div>
       }
-    </div>
+    </PullToRefresh>
   );
 }

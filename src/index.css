@@ -103,6 +103,19 @@
   /* iOS safe-area helpers for bottom sheets, sticky input bars, and FABs. */
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* Mobile chrome: suppress the text-selection caret on tappable controls and
+     icons. Post bodies and messages are not in this set, so they stay selectable. */
+  button, a, [role="tab"], nav, [role="navigation"], .lucide, svg, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Elastic overscroll on inner scroll regions; the body keeps
+     overscroll-behavior-y: none (above) so the page itself never bounces. */
+  .overflow-y-auto, .overflow-auto, .overflow-y-scroll {
+    overscroll-behavior-y: contain;
+  }
 }
 
 @layer utilities {
