@@ -123,7 +123,7 @@ export default function MessageBubble({ message, isMe, isGroup, userId, onReply,
         </Link> :
 
       <div
-        className={`max-w-[70%] py-2 rounded-2xl text-sm cursor-pointer shadow-sm px-2 ${isMe ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground' : 'bg-muted text-foreground'}`}
+        className={`max-w-[70%] py-2 rounded-2xl text-sm cursor-pointer shadow-sm px-4 mx-1 ${isMe ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground' : 'bg-muted text-foreground'}`}
         onClick={() => setShowActions(!showActions)}>
         
           {message.body}
