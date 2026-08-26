@@ -69,11 +69,12 @@ export default function Challenges({ user: userProp }) {
     completed: challenges?.filter((c) => c.status === 'completed') || [],
   };
 
-  // Merge accepted private challenges with accepted/active public events.
+  // Merge accepted private challenges with active public events. Ended and
+  // cancelled events leave the Accepted tab and surface under Completed.
   if (challenges && events) {
     const acceptedChallenges = challenges.filter((c) => c.status === 'accepted');
-    const activeEvents = events.filter((e) => e.status === 'active' || e.status === 'ended');
-    // Sort: active (upcoming/soon/live) first by soonest start, then ended.
+    const activeEvents = events.filter((e) => e.status === 'active');
+    // Sort: active (upcoming/soon/live) first by soonest start.
     const isActive = (e) => e.status === 'active' && new Date(e.start_datetime).getTime() > now;
     const sortedEvents = [...activeEvents].sort((a, b) => {
       const aActive = isActive(a), bActive = isActive(b);
@@ -81,6 +82,12 @@ export default function Challenges({ user: userProp }) {
       return new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime();
     });
     grouped.accepted = [...sortedEvents, ...acceptedChallenges];
+
+    // Finished events (auto-ended after 2h, or cancelled by the owner) move to Completed.
+    const finishedEvents = events
+      .filter((e) => e.status === 'ended' || e.status === 'cancelled')
+      .sort((a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime());
+    grouped.completed = [...finishedEvents, ...grouped.completed];
   }
 
   const emptyCopy = {

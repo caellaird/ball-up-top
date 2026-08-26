@@ -204,6 +204,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
           <div className="flex items-center gap-5 mt-3 text-sm">
             <span><strong className="font-heading">{wins}</strong> <span className="text-muted-foreground">Wins</span></span>
             <span><strong className="font-heading">{losses}</strong> <span className="text-muted-foreground">Losses</span></span>
+            <span><strong className="font-heading">{profileStats?.publicEvents ?? 0}</strong> <span className="text-muted-foreground">Public Events</span></span>
             <button onClick={() => setActiveTab('friends')} className="flex items-center gap-1">
               <strong className="font-heading">{friendRecords.length}</strong> <span className="text-muted-foreground">Friends</span>
             </button>
