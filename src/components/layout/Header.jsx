@@ -7,7 +7,7 @@ import NotificationBadge from '@/components/layout/NotificationBadge';
 export default function Header({ title, onBack }) {
   return (
     <header className="sticky top-0 z-30 px-4 pt-[env(safe-area-inset-top)] pb-2">
-      <div className="flex items-center justify-between h-12 px-3 rounded-full border border-border/60 bg-background/80 backdrop-blur-xl shadow-sm">
+      <div className="flex items-center justify-between h-12 px-3 rounded-full border border-border/60 bg-background/80 backdrop-blur-xl arena-shadow">
         <div className="flex items-center gap-2 min-w-0">
           {onBack && (
             <button onClick={onBack} className="p-1.5 -ml-1 text-foreground shrink-0">

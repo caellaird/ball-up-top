@@ -15,7 +15,7 @@ export default function ProfileBanner({ profile }) {
 
   return (
     <div
-      className="h-32 bg-gradient-to-r from-primary to-secondary relative overflow-hidden"
+      className="h-32 arena-gradient relative overflow-hidden arena-shadow"
       style={gradient ? { backgroundImage: gradient } : {}}
     >
       {emoji && (

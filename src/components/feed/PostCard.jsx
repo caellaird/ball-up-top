@@ -64,7 +64,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
   const allNames = post.tagged_user_names?.length ? [post.author_name, ...post.tagged_user_names] : null;
 
   return (
-    <article className="bg-card rounded-3xl shadow-sm p-4 mb-4 mx-4">
+    <article className="bg-card rounded-3xl arena-shadow border border-border/50 p-4 mb-4 mx-4">
       <div className="flex items-center gap-3 mb-3">
         <Link to={`/profile/${post.author_username || 'me'}`}>
           <Avatar className="w-11 h-11 border-2 border-primary/20">
