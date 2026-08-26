@@ -241,8 +241,8 @@ export default function Conversation() {
         <Button onClick={() => fileInputRef.current?.click()} size="icon" variant="outline" disabled={uploading}>
           <ImageIcon className="w-4 h-4" />
         </Button>
-        <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} />
-        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent px-6 mx-3"><Send className="w-4 h-4" /></Button>
+        <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} className="px-3" />
+        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent mx-2 px-4"><Send className="w-4 h-4" /></Button>
       </div>
 
       {isGroup &&
