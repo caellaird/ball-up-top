@@ -123,7 +123,7 @@ export default function AddFriend() {
   const displayName = profile.nickname || profile.username || 'Player';
 
   return (
-    <div className="flex flex-col items-center px-6 py-10">
+    <div className="flex flex-col items-center px-6 pb-10 safe-top">
       <h1 className="font-heading text-lg font-bold mb-6">Add Friend</h1>
       <div className="bg-card border border-border rounded-3xl p-6 flex flex-col items-center text-center max-w-[320px] w-full shadow-sm">
         <Avatar className="w-24 h-24 border-4 border-background shadow-md">

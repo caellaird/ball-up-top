@@ -35,7 +35,7 @@ export default function Conversation() {
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.data.thread_id !== threadId) return;
       if (event.type === 'create') {
-        setMessages((prev) => [...prev, event.data]);
+        setMessages((prev) => (prev.some((m) => m.id === event.data.id) ? prev : [...prev, event.data]));
         if (event.data.created_by_id === user.id) markThreadRead(threadId, user.id);
       } else if (event.type === 'update') {
         setMessages((prev) => prev.map((m) => (m.id === event.data.id ? event.data : m)));
@@ -104,6 +104,7 @@ export default function Conversation() {
     if (!text.trim()) return;
     const body = text;
     setText('');
+    const tempId = `temp-${Date.now()}`;
     const msgData = { thread_id: threadId, sender_name: user.full_name, sender_username: myUsername, body, participant_ids: thread.participant_ids };
     if (replyTo) {
       msgData.reply_to_id = replyTo.id;
@@ -111,10 +112,21 @@ export default function Conversation() {
       msgData.reply_to_body = replyTo.body || (replyTo.media_url ? '📷 Photo' : '');
       setReplyTo(null);
     }
-    await base44.entities.Message.create(msgData);
-    await base44.entities.Thread.update(threadId, { last_message: body, last_message_at: new Date().toISOString() });
-    await markThreadRead(threadId, user.id);
-    await notifyMessageParticipants(thread, user.full_name, user.id, body, myUsername);
+    const optimisticMsg = { id: tempId, ...msgData, created_date: new Date().toISOString(), created_by_id: user.id };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    try {
+      const created = await base44.entities.Message.create(msgData);
+      setMessages((prev) => {
+        const withoutTemp = prev.filter((m) => m.id !== tempId);
+        return withoutTemp.some((m) => m.id === created.id) ? withoutTemp : [...withoutTemp, created];
+      });
+      await base44.entities.Thread.update(threadId, { last_message: body, last_message_at: new Date().toISOString() });
+      await markThreadRead(threadId, user.id);
+      await notifyMessageParticipants(thread, user.full_name, user.id, body, myUsername);
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setText(body);
+    }
   };
 
   const sendMedia = async (e) => {
@@ -147,7 +159,7 @@ export default function Conversation() {
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full safe-top">
       <div className="flex items-center gap-3 mb-3 bg-card rounded-2xl shadow-sm px-3 py-2.5">
         <button onClick={goBack} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-5 h-5" />
