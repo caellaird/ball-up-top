@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Check, X, Clock, Loader2, Ban } from 'lucide-react';
 import { sendNotification } from '@/lib/notify';
 
+// Per-user-pair relation cache so feed cards don't refetch on every mount/re-render.
+const cache = new Map();
+const CACHE_TTL = 15000;
+
 export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName }) {
   const [relation, setRelation] = useState(null);
   const [friendRecord, setFriendRecord] = useState(null);
@@ -16,11 +20,25 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
 
   const load = async () => {
     setLoading(true);
-    const [outgoing, incoming] = await Promise.all([
-      base44.entities.Friend.filter({ addressee_id: targetUserId, created_by_id: currentUserId }),
-      base44.entities.Friend.filter({ addressee_id: currentUserId, created_by_id: targetUserId }),
-    ]);
-    const rec = outgoing[0] || incoming[0];
+    const key = `${currentUserId}:${targetUserId}`;
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.t < CACHE_TTL) {
+      applyRecord(cached.rec);
+      return;
+    }
+    // Single query covers both directions — halves the request count vs two parallel filters.
+    const rows = await base44.entities.Friend.filter({
+      $or: [
+        { addressee_id: targetUserId, created_by_id: currentUserId },
+        { addressee_id: currentUserId, created_by_id: targetUserId },
+      ],
+    });
+    const rec = rows[0] || null;
+    cache.set(key, { rec, t: Date.now() });
+    applyRecord(rec);
+  };
+
+  const applyRecord = (rec) => {
     setFriendRecord(rec || null);
     if (!rec || rec.status === 'cancelled' || rec.status === 'declined') {
       setRelation(null);
@@ -61,6 +79,7 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
         title: `${currentUserName} sent you a friend request`,
         link: '/friends',
       });
+      cache.delete(`${currentUserId}:${targetUserId}`);
       load();
     } catch {
       // Error handled by load
@@ -82,6 +101,7 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
         title: `${currentUserName} accepted your friend request`,
         link: '/friends',
       });
+      cache.delete(`${currentUserId}:${targetUserId}`);
       load();
     } catch {
       // Error handled by load
@@ -94,6 +114,7 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
     setSending(true);
     try {
       await base44.entities.Friend.update(friendRecord.id, { status: 'declined' });
+      cache.delete(`${currentUserId}:${targetUserId}`);
       load();
     } catch {
       // Error handled by load
