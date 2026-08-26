@@ -35,10 +35,10 @@ export default function Conversation() {
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.data.thread_id !== threadId) return;
       if (event.type === 'create') {
-        setMessages((prev) => (prev.some((m) => m.id === event.data.id) ? prev : [...prev, event.data]));
+        setMessages((prev) => prev.some((m) => m.id === event.data.id) ? prev : [...prev, event.data]);
         if (event.data.created_by_id === user.id) markThreadRead(threadId, user.id);
       } else if (event.type === 'update') {
-        setMessages((prev) => prev.map((m) => (m.id === event.data.id ? event.data : m)));
+        setMessages((prev) => prev.map((m) => m.id === event.data.id ? event.data : m));
       } else if (event.type === 'delete') {
         setMessages((prev) => prev.filter((m) => m.id !== event.data.id));
       }
@@ -55,7 +55,7 @@ export default function Conversation() {
         return [...prev, event.data];
       });
     });
-    return () => { unsubscribe(); unsubReads(); };
+    return () => {unsubscribe();unsubReads();};
   }, [threadId]);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function Conversation() {
 
   const isGroup = thread.type === 'group';
   const idx = thread.participant_ids?.findIndex((pid) => pid !== user.id);
-  const otherName = isGroup ? (thread.name || 'Group') : (thread.participant_names?.[idx] || thread.name);
+  const otherName = isGroup ? thread.name || 'Group' : thread.participant_names?.[idx] || thread.name;
 
   const myLastMessage = [...messages].reverse().find((m) => m.created_by_id === user.id && !m.is_deleted);
   const otherReadState = threadReads.find((tr) => tr.created_by_id !== user.id);
@@ -169,72 +169,72 @@ export default function Conversation() {
           <Avatar className="w-11 h-11">
             <AvatarImage src={isGroup ? thread.avatar_url : otherProfile?.avatar_url} />
             <AvatarFallback className={isGroup ? 'bg-secondary text-secondary-foreground' : ''}>
-              {isGroup ? <Users className="w-5 h-5" /> : (otherName?.[0] || 'U')}
+              {isGroup ? <Users className="w-5 h-5" /> : otherName?.[0] || 'U'}
             </AvatarFallback>
           </Avatar>
-          {!isGroup && otherProfile?.ready_to_ball && (
-            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
-          )}
+          {!isGroup && otherProfile?.ready_to_ball &&
+          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
+          }
         </div>
 
         <div className="flex-1 min-w-0">
           <h2 className="font-heading text-base font-bold truncate">{otherName}</h2>
           {isGroup && <p className="text-xs text-muted-foreground truncate">{thread.participant_ids?.length || 0} members</p>}
-          {typingNames.length > 0 ? (
-            <p className="text-xs text-primary font-medium truncate">{typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing…</p>
-          ) : !isGroup && otherProfile?.ready_to_ball ? (
-            <p className="text-xs text-primary font-medium">Ready to ball</p>
-          ) : null}
+          {typingNames.length > 0 ?
+          <p className="text-xs text-primary font-medium truncate">{typingNames.join(', ')} {typingNames.length === 1 ? 'is' : 'are'} typing…</p> :
+          !isGroup && otherProfile?.ready_to_ball ?
+          <p className="text-xs text-primary font-medium">Ready to ball</p> :
+          null}
         </div>
 
-        {isGroup && (
-          <div className="flex -space-x-2 mr-1 shrink-0">
-            {(thread.participant_names || []).slice(0, 3).map((name, i) => (
-              <Avatar key={i} className="w-6 h-6 border-2 border-card">
+        {isGroup &&
+        <div className="flex -space-x-2 mr-1 shrink-0">
+            {(thread.participant_names || []).slice(0, 3).map((name, i) =>
+          <Avatar key={i} className="w-6 h-6 border-2 border-card">
                 <AvatarFallback className="text-[9px]">{name?.[0]}</AvatarFallback>
               </Avatar>
-            ))}
+          )}
           </div>
-        )}
+        }
 
-        {isGroup && (
-          <Button size="icon" variant="ghost" className="shrink-0" onClick={() => setShowSettings(true)}>
+        {isGroup &&
+        <Button size="icon" variant="ghost" className="shrink-0" onClick={() => setShowSettings(true)}>
             <SettingsIcon className="w-5 h-5" />
           </Button>
-        )}
+        }
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1 mb-4 px-1">
-        {messages.map((m) => (
-          <MessageBubble
-            key={m.id}
-            message={m}
-            isMe={m.created_by_id === user.id}
-            isGroup={isGroup}
-            userId={user.id}
-            onReply={setReplyTo}
-            seen={m.id === myLastMessage?.id && lastMessageSeen && !isGroup}
-          />
-        ))}
+        {messages.map((m) =>
+        <MessageBubble
+          key={m.id}
+          message={m}
+          isMe={m.created_by_id === user.id}
+          isGroup={isGroup}
+          userId={user.id}
+          onReply={setReplyTo}
+          seen={m.id === myLastMessage?.id && lastMessageSeen && !isGroup} />
+
+        )}
         <div ref={bottomRef} />
       </div>
 
-      {replyTo && (
-        <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-muted/50 rounded-lg border-l-2 border-primary">
+      {replyTo &&
+      <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-muted/50 rounded-lg border-l-2 border-primary">
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-muted-foreground">Replying to {replyTo.sender_name}</p>
             <p className="text-xs text-muted-foreground truncate">{replyTo.body || '📷 Photo'}</p>
           </div>
           <button onClick={() => setReplyTo(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
         </div>
-      )}
+      }
 
       <div className="flex gap-2 items-center">
         <button
           onClick={() => setShowChallenge(true)}
           className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center shadow-md active:scale-95 transition"
-          aria-label="Start a Challenge"
-        >
+          aria-label="Start a Challenge">
+          
           <Trophy className="w-4 h-4" />
         </button>
         <input type="file" accept="image/*" ref={fileInputRef} onChange={sendMedia} className="hidden" />
@@ -242,27 +242,27 @@ export default function Conversation() {
           <ImageIcon className="w-4 h-4" />
         </Button>
         <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} />
-        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent"><Send className="w-4 h-4" /></Button>
+        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent mx-2"><Send className="w-4 h-4" /></Button>
       </div>
 
-      {isGroup && (
-        <GroupSettingsSheet
-          open={showSettings}
-          onOpenChange={setShowSettings}
-          thread={thread}
-          user={user}
-          onUpdated={setThread}
-          onLeave={() => navigate(-1)}
-        />
-      )}
+      {isGroup &&
+      <GroupSettingsSheet
+        open={showSettings}
+        onOpenChange={setShowSettings}
+        thread={thread}
+        user={user}
+        onUpdated={setThread}
+        onLeave={() => navigate(-1)} />
+
+      }
 
       <ChallengeButtonSheet
         open={showChallenge}
         onOpenChange={setShowChallenge}
         thread={thread}
         user={user}
-        onSent={() => setShowChallenge(false)}
-      />
-    </div>
-  );
+        onSent={() => setShowChallenge(false)} />
+      
+    </div>);
+
 }
