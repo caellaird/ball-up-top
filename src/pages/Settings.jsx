@@ -11,9 +11,12 @@ import NearbyNotificationsSettings from '@/components/settings/NearbyNotificatio
 import SettingsSection from '@/components/settings/SettingsSection';
 import ToggleRow from '@/components/settings/ToggleRow';
 import NotificationPreferences from '@/components/settings/NotificationPreferences';
+import Header from '@/components/layout/Header';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function Settings() {
   const { user } = useOutletContext();
+  const goBack = useGoBack();
   const [profile, setProfile] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -46,7 +49,7 @@ export default function Settings() {
 
   return (
     <div className="pb-10">
-      <h1 className="font-heading text-2xl px-4 pt-[max(1rem,env(safe-area-inset-top))] mb-4">Settings</h1>
+      <Header title="Settings" onBack={goBack} />
 
       {/* Notifications */}
       <SettingsSection title="Notifications" description="Control exactly which notifications you receive.">

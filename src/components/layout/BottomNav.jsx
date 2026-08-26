@@ -22,7 +22,12 @@ export default function BottomNav() {
     <nav className="sticky bottom-0 z-40 bg-card/95 backdrop-blur border-t border-border/70 arena-shadow pb-[env(safe-area-inset-bottom)]">
       <div className="relative flex items-end justify-around px-2 pt-2 pb-2">
         {items.map(({ to, icon: Icon, label }) => (
-          <Link key={to} to={to} className="flex flex-col items-center gap-1 px-2 py-1 flex-1 min-w-0">
+          <Link
+            key={to}
+            to={to}
+            onClick={(e) => { if (isActive(to)) { e.preventDefault(); window.dispatchEvent(new CustomEvent('scroll-to-top')); } }}
+            className="flex flex-col items-center gap-1 px-2 py-1 flex-1 min-w-0"
+          >
             <Icon className={`w-6 h-6 ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`} />
             <span className={`text-[10px] font-semibold ${isActive(to) ? 'text-primary' : 'text-muted-foreground'}`}>{label}</span>
           </Link>
@@ -36,7 +41,12 @@ export default function BottomNav() {
         </button>
 
         {rightItems.map(({ to, icon: Icon, label }) => (
-          <Link key={to} to={to} className="flex flex-col items-center gap-1 px-2 py-1 flex-1 min-w-0">
+          <Link
+            key={to}
+            to={to}
+            onClick={(e) => { if (isActive(to)) { e.preventDefault(); window.dispatchEvent(new CustomEvent('scroll-to-top')); } }}
+            className="flex flex-col items-center gap-1 px-2 py-1 flex-1 min-w-0"
+          >
             <Icon className={`w-6 h-6 ${isActive(to) ? 'text-accent' : 'text-muted-foreground'}`} />
             <span className={`text-[10px] font-semibold ${isActive(to) ? 'text-accent' : 'text-muted-foreground'}`}>{label}</span>
           </Link>
