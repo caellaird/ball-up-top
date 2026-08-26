@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, MessageCircle, Share2, Swords, Pencil, Trash2, Flag } from 'lucide-react';
+import { MessageCircle, Share2, Swords, Pencil, Trash2, Flag } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -156,12 +156,15 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
         <MediaViewer urls={mediaUrls} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
       )}
 
-      <div className="flex items-center gap-5 text-muted-foreground text-sm pt-1">
+      <div className="flex items-center gap-4 text-muted-foreground text-sm pt-1">
         <button onClick={() => onReact(post, 'like')} className={`py-1.5 flex items-center gap-1.5 ${reactions.liked ? 'text-primary font-semibold' : ''}`}>
           ❤️ {post.like_count || 0}
         </button>
         <button onClick={() => onReact(post, 'fire')} className={`py-1.5 flex items-center gap-1.5 ${reactions.fired ? 'text-accent font-semibold' : ''}`}>
-          <Flame className={`w-4 h-4 ${reactions.fired ? 'fill-accent text-accent' : ''}`} /> {post.fire_count || 0}
+          🔥 {post.fire_count || 0}
+        </button>
+        <button onClick={() => onReact(post, 'trophy')} className={`py-1.5 flex items-center gap-1.5 ${reactions.trophied ? 'text-accent font-semibold' : ''}`}>
+          🏆 {post.trophy_count || 0}
         </button>
         <button onClick={() => onReact(post, 'trash_talk')} className={`py-1.5 flex items-center gap-1.5 ${reactions.trashed ? 'text-secondary font-semibold' : ''}`}>
           🗑️ {post.trash_count || 0}

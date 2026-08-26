@@ -120,7 +120,7 @@ export default function Home({ user: userProp }) {
     return () => io.disconnect();
   }, [posts, hasMore, loadingMore]);
 
-  const countField = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count' };
+  const countField = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count', trophy: 'trophy_count' };
   const onReact = async (post, type) => {
     const already = myReactions[post.id]?.[type];
     const newMap = { ...myReactions, [post.id]: { ...myReactions[post.id], [type]: !already } };
@@ -167,7 +167,7 @@ export default function Home({ user: userProp }) {
                   <PostCard
                     key={post.id}
                     post={post}
-                    reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trashed: !!myReactions[post.id]?.trash_talk }}
+                    reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
                     onReact={onReact}
                     userId={user.id}
                     currentUserName={user.full_name}

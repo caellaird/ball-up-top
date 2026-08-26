@@ -10,7 +10,8 @@
       "enum": [
         "like",
         "fire",
-        "trash_talk"
+        "trash_talk",
+        "trophy"
       ],
       "default": "like"
     }
