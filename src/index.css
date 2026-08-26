@@ -6,80 +6,80 @@
 
 @layer base {
   :root {
-    /* Pro Arena — light */
-    --background: 220 38% 97%;
-    --foreground: 222 40% 12%;
+    /* Ball Up Top brand — light, duo-tone (light blue + red) */
+    --background: 210 50% 97%;
+    --foreground: 222 44% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222 40% 12%;
+    --card-foreground: 222 44% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 40% 12%;
-    --primary: 222 64% 15%;
-    --primary-foreground: 43 60% 95%;
-    --secondary: 222 50% 22%;
+    --popover-foreground: 222 44% 13%;
+    --primary: 205 90% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 40% 18%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 220 22% 93%;
-    --muted-foreground: 222 16% 42%;
-    --accent: 37 78% 57%;
-    --accent-foreground: 222 64% 12%;
-    --destructive: 5 81% 56%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 18% 88%;
-    --input: 220 18% 88%;
-    --ring: 37 78% 57%;
-    --chart-1: 222 64% 25%;
-    --chart-2: 37 78% 57%;
-    --chart-3: 199 60% 45%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --muted: 210 36% 93%;
+    --muted-foreground: 222 16% 44%;
+    --accent: 0 74% 56%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 22% 90%;
+    --input: 220 22% 90%;
+    --ring: 205 90% 52%;
+    --chart-1: 205 90% 52%;
+    --chart-2: 0 74% 56%;
+    --chart-3: 199 70% 48%;
+    --chart-4: 222 60% 30%;
+    --chart-5: 12 80% 58%;
     --radius: 1.1rem;
     --font-heading: 'Sora', sans-serif;
     --font-body: 'Inter', sans-serif;
     --font-display: 'Sora', sans-serif;
     --font-mono: 'Inter', sans-serif;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 222 40% 12%;
-    --sidebar-primary: 222 64% 15%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 220 22% 93%;
-    --sidebar-accent-foreground: 222 64% 15%;
-    --sidebar-border: 220 18% 88%;
-    --sidebar-ring: 37 78% 57%;
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222 44% 13%;
+    --sidebar-primary: 205 90% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 36% 93%;
+    --sidebar-accent-foreground: 222 44% 13%;
+    --sidebar-border: 220 22% 90%;
+    --sidebar-ring: 205 90% 52%;
   }
 
   .dark {
-    /* Pro Arena — dark */
-    --background: 224 50% 8%;
+    /* Ball Up Top brand — near-black charcoal dark, duo-tone preserved */
+    --background: 222 12% 9%;
     --foreground: 210 40% 96%;
-    --card: 222 44% 12%;
+    --card: 222 12% 13%;
     --card-foreground: 210 40% 96%;
-    --popover: 222 44% 14%;
+    --popover: 222 12% 15%;
     --popover-foreground: 210 40% 96%;
-    --primary: 207 60% 90%;
-    --primary-foreground: 222 64% 12%;
-    --secondary: 222 40% 22%;
+    --primary: 205 85% 60%;
+    --primary-foreground: 222 40% 9%;
+    --secondary: 222 12% 20%;
     --secondary-foreground: 210 40% 96%;
-    --muted: 222 38% 18%;
-    --muted-foreground: 218 16% 65%;
-    --accent: 37 82% 60%;
-    --accent-foreground: 222 64% 12%;
-    --destructive: 5 81% 56%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 222 30% 20%;
-    --input: 222 30% 20%;
-    --ring: 37 82% 60%;
-    --chart-1: 210 60% 65%;
-    --chart-2: 37 82% 60%;
-    --chart-3: 199 60% 55%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 222 44% 12%;
+    --muted: 222 10% 18%;
+    --muted-foreground: 218 14% 64%;
+    --accent: 0 72% 62%;
+    --accent-foreground: 222 40% 8%;
+    --destructive: 0 76% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 10% 20%;
+    --input: 222 10% 20%;
+    --ring: 205 85% 60%;
+    --chart-1: 205 85% 60%;
+    --chart-2: 0 72% 62%;
+    --chart-3: 199 70% 58%;
+    --chart-4: 215 60% 70%;
+    --chart-5: 12 80% 64%;
+    --sidebar-background: 222 12% 13%;
     --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 210 40% 96%;
-    --sidebar-primary-foreground: 222 64% 12%;
-    --sidebar-accent: 222 38% 18%;
+    --sidebar-primary: 205 85% 60%;
+    --sidebar-primary-foreground: 222 40% 9%;
+    --sidebar-accent: 222 10% 18%;
     --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 222 30% 20%;
-    --sidebar-ring: 37 82% 60%;
+    --sidebar-border: 222 10% 20%;
+    --sidebar-ring: 205 85% 60%;
   }
 }
 
@@ -100,43 +100,58 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* iOS safe-area helpers for bottom sheets, sticky input bars, and FABs. */
+  /* iOS safe-area helpers. */
   .safe-top { padding-top: env(safe-area-inset-top); }
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-  /* Mobile chrome: suppress the text-selection caret on tappable controls and
-     icons. Post bodies and messages are not in this set, so they stay selectable. */
+  /* Suppress the text-selection caret on tappable controls and icons.
+     Post bodies and messages stay selectable (not in this set). */
   button, a, [role="tab"], nav, [role="navigation"], .lucide, svg, .no-select {
     -webkit-user-select: none;
     user-select: none;
   }
 
-  /* Elastic overscroll on inner scroll regions; the body keeps
-     overscroll-behavior-y: none (above) so the page itself never bounces. */
+  /* Elastic overscroll on inner scroll regions; body never bounces. */
   .overflow-y-auto, .overflow-auto, .overflow-y-scroll {
     overscroll-behavior-y: contain;
   }
 }
 
 @layer components {
-  /* Pro Arena premium surface treatments */
+  /* Ball Up Top brand duo-tone: blue → red gradient. */
+  .brand-gradient,
   .arena-gradient {
-    background-image: linear-gradient(135deg, hsl(222 64% 18%) 0%, hsl(222 50% 24%) 55%, hsl(222 64% 15%) 100%);
+    background-image: linear-gradient(135deg, hsl(205 90% 52%) 0%, hsl(0 74% 56%) 100%);
   }
+  .dark .brand-gradient,
   .dark .arena-gradient {
-    background-image: linear-gradient(135deg, hsl(222 44% 16%) 0%, hsl(222 40% 22%) 55%, hsl(222 50% 12%) 100%);
+    background-image: linear-gradient(135deg, hsl(205 85% 60%) 0%, hsl(0 72% 62%) 100%);
   }
+  /* Legacy alias kept for any surface that still references gold-gradient. */
   .gold-gradient {
-    background-image: linear-gradient(135deg, hsl(37 82% 60%) 0%, hsl(37 70% 50%) 100%);
+    background-image: linear-gradient(135deg, hsl(205 90% 52%) 0%, hsl(0 74% 56%) 100%);
+  }
+  .dark .gold-gradient {
+    background-image: linear-gradient(135deg, hsl(205 85% 60%) 0%, hsl(0 72% 62%) 100%);
   }
   .arena-shadow {
-    box-shadow: 0 1px 2px hsl(222 40% 12% / 0.06), 0 8px 24px -8px hsl(222 40% 12% / 0.12);
+    box-shadow: 0 1px 2px hsl(222 40% 12% / 0.06), 0 8px 24px -8px hsl(205 60% 30% / 0.14);
   }
   .dark .arena-shadow {
-    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.3), 0 8px 24px -8px hsl(0 0% 0% / 0.5);
+    box-shadow: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -8px hsl(0 0% 0% / 0.55);
   }
   .arena-ring {
-    box-shadow: 0 0 0 1px hsl(37 78% 57% / 0.25);
+    box-shadow: 0 0 0 1px hsl(205 90% 52% / 0.25);
+  }
+  .dark .arena-ring {
+    box-shadow: 0 0 0 1px hsl(205 85% 60% / 0.3);
+  }
+  /* Subtle brand-tinted hairline used on premium cards. */
+  .brand-border {
+    border-color: hsl(205 60% 40% / 0.12);
+  }
+  .dark .brand-border {
+    border-color: hsl(205 60% 60% / 0.18);
   }
 }
 
