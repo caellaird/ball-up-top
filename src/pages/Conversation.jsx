@@ -242,7 +242,7 @@ export default function Conversation() {
           <ImageIcon className="w-4 h-4" />
         </Button>
         <Input value={text} onChange={handleTextChange} placeholder="Message..." onKeyDown={(e) => e.key === 'Enter' && send()} />
-        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent mx-2"><Send className="w-4 h-4" /></Button>
+        <Button onClick={send} size="icon" className="bg-gradient-to-br from-primary to-accent mx-2 px-4"><Send className="w-4 h-4" /></Button>
       </div>
 
       {isGroup &&
