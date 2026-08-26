@@ -15,6 +15,12 @@ export default function NotificationPreferences({ profile, setProfile }) {
   return (
     <>
       <ToggleRow
+        label="Push Notifications"
+        description="Lock-screen alerts for messages, challenges, and events. In-app notifications stay on."
+        checked={profile.push_enabled !== false}
+        onSave={(c) => save('push_enabled', c)}
+      />
+      <ToggleRow
         label="Challenge Invites"
         description="When someone invites you to a challenge"
         checked={profile.notif_challenge_invites !== false}

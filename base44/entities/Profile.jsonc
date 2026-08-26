@@ -101,6 +101,10 @@
     "notif_explore_favorites": {
       "type": "boolean",
       "default": true
+    },
+    "push_enabled": {
+      "type": "boolean",
+      "default": true
     }
   },
   "required": [

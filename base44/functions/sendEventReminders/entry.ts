@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { shouldSend } from '../../shared/notifPrefs.ts';
+import { shouldSend, sendPush } from '../../shared/notifPrefs.ts';
 
 // Scheduled by the "Public Event Reminders" workflow (every 5 minutes).
 // Finds active public events starting within the next ~30 minutes and sends
@@ -77,6 +77,16 @@ export default async function(req) {
           body: `${event.location_name || 'Location'} · ${time}`,
           link,
         });
+        // event_reminder is high-signal — also fire a native lock-screen push.
+        await sendPush(
+          admin,
+          p.user_id,
+          'event_reminder',
+          `${emoji} Your ${label} event starts in 30 minutes`,
+          `${event.location_name || 'Location'} · ${time}`,
+          link,
+          profile,
+        );
         sent++;
       }
     }
