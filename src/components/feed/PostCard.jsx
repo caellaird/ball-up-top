@@ -11,7 +11,7 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
 
-export default function PostCard({ post, reactions, onReact, userId, currentUserName, onDeleted }) {
+export default function PostCard({ post, reactions, onReact, userId, currentUserName, onDeleted, friendRecordByUserId }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -88,6 +88,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
                 currentUserName={currentUserName}
                 targetUserId={post.created_by_id}
                 targetUserName={post.author_name}
+                record={friendRecordByUserId ? (friendRecordByUserId[post.created_by_id] ?? null) : undefined}
               />
               <button onClick={() => setShowReport(true)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Report post">
                 <Flag className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { UserPlus, Check, X, Clock, Loader2, Ban } from 'lucide-react';
@@ -6,39 +6,42 @@ import { sendNotification } from '@/lib/notify';
 
 // Per-user-pair relation cache so feed cards don't refetch on every mount/re-render.
 const cache = new Map();
-const CACHE_TTL = 15000;
+// In-flight dedupe: concurrent mounts (or retries) for the same pair share ONE request.
+const inflight = new Map();
+const CACHE_TTL = 60000;
 
-export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName }) {
+async function fetchRelation(currentUserId, targetUserId) {
+  const key = `${currentUserId}:${targetUserId}`;
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.t < CACHE_TTL) return cached.rec;
+  if (inflight.has(key)) return inflight.get(key);
+  const promise = (async () => {
+    try {
+      // Single query covers both directions — halves the request count vs two filters.
+      const rows = await base44.entities.Friend.filter({
+        $or: [
+          { addressee_id: targetUserId, created_by_id: currentUserId },
+          { addressee_id: currentUserId, created_by_id: targetUserId },
+        ],
+      });
+      const rec = rows[0] || null;
+      cache.set(key, { rec, t: Date.now() });
+      return rec;
+    } finally {
+      inflight.delete(key);
+    }
+  })();
+  inflight.set(key, promise);
+  return promise;
+}
+
+export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName, record }) {
   const [relation, setRelation] = useState(null);
   const [friendRecord, setFriendRecord] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(record === undefined);
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    load();
-  }, [targetUserId]);
-
-  const load = async () => {
-    setLoading(true);
-    const key = `${currentUserId}:${targetUserId}`;
-    const cached = cache.get(key);
-    if (cached && Date.now() - cached.t < CACHE_TTL) {
-      applyRecord(cached.rec);
-      return;
-    }
-    // Single query covers both directions — halves the request count vs two parallel filters.
-    const rows = await base44.entities.Friend.filter({
-      $or: [
-        { addressee_id: targetUserId, created_by_id: currentUserId },
-        { addressee_id: currentUserId, created_by_id: targetUserId },
-      ],
-    });
-    const rec = rows[0] || null;
-    cache.set(key, { rec, t: Date.now() });
-    applyRecord(rec);
-  };
-
-  const applyRecord = (rec) => {
+  const applyRecord = useCallback((rec) => {
     setFriendRecord(rec || null);
     if (!rec || rec.status === 'cancelled' || rec.status === 'declined') {
       setRelation(null);
@@ -52,6 +55,33 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
       setRelation('pending_incoming');
     }
     setLoading(false);
+  }, [currentUserId]);
+
+  // When `record` is supplied by the parent (e.g. the feed's batched relation
+  // map), seed from it WITHOUT an extra request. Otherwise fetch (deduped).
+  useEffect(() => {
+    const key = `${currentUserId}:${targetUserId}`;
+    if (record !== undefined) {
+      cache.set(key, { rec: record, t: Date.now() });
+      applyRecord(record);
+      return;
+    }
+    setLoading(true);
+    let alive = true;
+    fetchRelation(currentUserId, targetUserId)
+      .then((rec) => { if (alive) applyRecord(rec); })
+      .catch(() => { if (alive) applyRecord(null); }); // rate-limited: show a safe state instead of hanging
+    return () => { alive = false; };
+  }, [targetUserId, record, currentUserId, applyRecord]);
+
+  const reload = async () => {
+    cache.delete(`${currentUserId}:${targetUserId}`);
+    try {
+      const rec = await fetchRelation(currentUserId, targetUserId);
+      applyRecord(rec);
+    } catch {
+      applyRecord(null);
+    }
   };
 
   const sendRequest = async () => {
@@ -79,10 +109,9 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
         title: `${currentUserName} sent you a friend request`,
         link: '/friends',
       });
-      cache.delete(`${currentUserId}:${targetUserId}`);
-      load();
+      await reload();
     } catch {
-      // Error handled by load
+      // Error handled by reload
     } finally {
       setSending(false);
     }
@@ -101,10 +130,9 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
         title: `${currentUserName} accepted your friend request`,
         link: '/friends',
       });
-      cache.delete(`${currentUserId}:${targetUserId}`);
-      load();
+      await reload();
     } catch {
-      // Error handled by load
+      // Error handled by reload
     } finally {
       setSending(false);
     }
@@ -114,10 +142,9 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
     setSending(true);
     try {
       await base44.entities.Friend.update(friendRecord.id, { status: 'declined' });
-      cache.delete(`${currentUserId}:${targetUserId}`);
-      load();
+      await reload();
     } catch {
-      // Error handled by load
+      // Error handled by reload
     } finally {
       setSending(false);
     }

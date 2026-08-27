@@ -24,6 +24,7 @@ export default function Home({ user: userProp }) {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [sharedEvents, setSharedEvents] = useState([]);
+  const [friendRecords, setFriendRecords] = useState({});
 
   const tabRef = useRef(tab);
   const pageRef = useRef(0);
@@ -46,21 +47,34 @@ export default function Home({ user: userProp }) {
     if (tabRef.current === 'explore') { if (!silent) setPosts(null); return; }
     if (!silent) setPosts(null);
     const isFriends = tabRef.current === 'friends';
-    const [data, myLikes, outgoing, incoming, blocked] = await Promise.all([
+    // Single combined friend query replaces the 3 per-status fetches and gives
+    // us a complete relation map for every feed author — one request for the
+    // whole feed instead of one per post card (which tripped the rate limit).
+    const [data, myLikes, myRelations] = await Promise.all([
       fetchPage(0),
       base44.entities.Like.filter({ created_by_id: user.id }),
-      isFriends ? base44.entities.Friend.filter({ created_by_id: user.id, status: 'accepted' }) : Promise.resolve([]),
-      isFriends ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'accepted' }) : Promise.resolve([]),
-      base44.entities.Friend.filter({ created_by_id: user.id, status: 'blocked' }),
+      base44.entities.Friend.filter({ $or: [{ created_by_id: user.id }, { addressee_id: user.id }] }),
     ]);
-    blockedIdsRef.current = new Set(blocked.map((b) => b.addressee_id));
+    const friendRecordByUserId = {};
+    const acceptedIds = new Set([user.id]);
+    const blockedSet = new Set();
+    for (const f of myRelations) {
+      const otherId = f.created_by_id === user.id ? f.addressee_id : f.created_by_id;
+      const prev = friendRecordByUserId[otherId];
+      if (!prev || (prev.status === 'cancelled' && f.status !== 'cancelled')) {
+        friendRecordByUserId[otherId] = f;
+      }
+      if (f.status === 'accepted') acceptedIds.add(otherId);
+      if (f.status === 'blocked' && f.created_by_id === user.id) blockedSet.add(otherId);
+    }
+    blockedIdsRef.current = blockedSet;
+    setFriendRecords(friendRecordByUserId);
     if (isFriends) {
-      const fids = new Set([...outgoing.map((f) => f.addressee_id), ...incoming.map((f) => f.created_by_id), user.id]);
-      friendIdsRef.current = fids;
+      friendIdsRef.current = acceptedIds;
       const now = Date.now();
       try {
         const evs = await base44.entities.PublicEvent.filter({ status: 'active', share_to_friends: true });
-        setSharedEvents(evs.filter((e) => fids.has(e.created_by_id) && new Date(e.start_datetime).getTime() > now && new Date(e.start_datetime).getTime() <= now + WINDOW_MS));
+        setSharedEvents(evs.filter((e) => acceptedIds.has(e.created_by_id) && new Date(e.start_datetime).getTime() > now && new Date(e.start_datetime).getTime() <= now + WINDOW_MS));
       } catch (e) { setSharedEvents([]); }
     } else {
       friendIdsRef.current = null;
@@ -171,6 +185,7 @@ export default function Home({ user: userProp }) {
                     onReact={onReact}
                     userId={user.id}
                     currentUserName={user.full_name}
+                    friendRecordByUserId={friendRecords}
                     onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
                   />
                 ))}
