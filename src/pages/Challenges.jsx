@@ -99,7 +99,7 @@ export default function Challenges({ user: userProp }) {
   return (
     <PullToRefresh className="h-full overflow-y-auto overscroll-contain" onRefresh={load}>
       <Header title="Challenges" />
-      <div className="px-4 pt-4 pb-2 sticky top-14 z-20 bg-background">
+      <div className="px-4 pt-4 pb-2 sticky z-20 bg-background" style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}>
         <SegmentedControl
           options={[
             { value: 'pending', label: 'Pending' },
