@@ -10,6 +10,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AgeGate from '@/components/AgeGate';
 
 // Eager: layout + platform scaffold. Lazy: all page components for code splitting.
 const MobileShell = lazy(() => import('@/components/layout/MobileShell'));
@@ -42,7 +43,7 @@ function RouteFallback() {
 }
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, user, checkUserAuth } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -62,6 +63,11 @@ const AuthenticatedApp = () => {
       navigateToLogin();
       return null;
     }
+  }
+
+  // First-time age confirmation: shown once per account until the user confirms 13+.
+  if (isAuthenticated && user && !user.age_verified) {
+    return <AgeGate onVerified={checkUserAuth} />;
   }
 
   // Render the main app
