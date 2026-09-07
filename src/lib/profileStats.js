@@ -48,33 +48,46 @@ export async function computeProfileStats(userId) {
     if (!myName) return;
     const display = getSportDisplay(c);
     seriesGames
-      .filter((g) => g.challenge_id === c.id && g.winner_name)
+      .filter((g) => g.challenge_id === c.id && (g.winner_name || g.is_draw))
       .forEach((g) => {
         results.push({
           sport: display.label,
           emoji: display.emoji,
           date: g.created_date,
           won: g.winner_name === myName,
+          draw: !!g.is_draw,
         });
       });
   });
 
   singleCompleted.forEach((c) => {
-    if (!c.winner_id) return;
     const display = getSportDisplay(c);
+    if (c.is_draw) {
+      results.push({
+        sport: display.label,
+        emoji: display.emoji,
+        date: c.updated_date,
+        won: false,
+        draw: true,
+      });
+      return;
+    }
+    if (!c.winner_id) return;
     results.push({
       sport: display.label,
       emoji: display.emoji,
       date: c.updated_date,
       won: c.winner_id === userId,
+      draw: false,
     });
   });
 
   results.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const wins = results.filter((r) => r.won).length;
-  const losses = results.filter((r) => !r.won).length;
-  const winPct = results.length > 0 ? Math.round((wins / results.length) * 100) : 0;
+  const draws = results.filter((r) => r.draw).length;
+  const losses = results.filter((r) => !r.won && !r.draw).length;
+  const winPct = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
 
   let currentStreak = 0;
   for (const r of results) {
@@ -95,9 +108,10 @@ export async function computeProfileStats(userId) {
 
   const sportMap = {};
   [...results].reverse().forEach((r) => {
-    if (!sportMap[r.sport]) sportMap[r.sport] = { sport: r.sport, emoji: r.emoji, games: 0, wins: 0, losses: 0, results: [] };
+    if (!sportMap[r.sport]) sportMap[r.sport] = { sport: r.sport, emoji: r.emoji, games: 0, wins: 0, losses: 0, draws: 0, results: [] };
     sportMap[r.sport].games++;
     if (r.won) { sportMap[r.sport].wins++; sportMap[r.sport].results.push('W'); }
+    else if (r.draw) { sportMap[r.sport].draws++; sportMap[r.sport].results.push('D'); }
     else { sportMap[r.sport].losses++; sportMap[r.sport].results.push('L'); }
   });
 
@@ -113,8 +127,9 @@ export async function computeProfileStats(userId) {
       games: s.games,
       wins: s.wins,
       losses: s.losses,
+      draws: s.draws,
       currentStreak: streak,
-      winPct: s.games > 0 ? Math.round((s.wins / s.games) * 100) : 0,
+      winPct: s.wins + s.losses > 0 ? Math.round((s.wins / (s.wins + s.losses)) * 100) : 0,
     };
   });
 
@@ -140,6 +155,7 @@ export async function computeProfileStats(userId) {
   return {
     wins,
     losses,
+    draws,
     publicEvents,
     winPct,
     currentStreak,
@@ -163,14 +179,16 @@ export async function computeHeadToHead(currentUserId, profileOwnerId) {
   const all = [...asCreator, ...asOpponent];
   const myWins = all.filter((c) => c.winner_id === currentUserId).length;
   const theirWins = all.filter((c) => c.winner_id === profileOwnerId).length;
+  const draws = all.filter((c) => c.is_draw).length;
 
   const sportMap = {};
   all.forEach((c) => {
     const display = getSportDisplay(c);
     const sport = display.label;
-    if (!sportMap[sport]) sportMap[sport] = { sport, emoji: display.emoji, myWins: 0, theirWins: 0, total: 0 };
+    if (!sportMap[sport]) sportMap[sport] = { sport, emoji: display.emoji, myWins: 0, theirWins: 0, draws: 0, total: 0 };
     sportMap[sport].total++;
-    if (c.winner_id === currentUserId) sportMap[sport].myWins++;
+    if (c.is_draw) sportMap[sport].draws++;
+    else if (c.winner_id === currentUserId) sportMap[sport].myWins++;
     else if (c.winner_id === profileOwnerId) sportMap[sport].theirWins++;
   });
 
@@ -178,6 +196,7 @@ export async function computeHeadToHead(currentUserId, profileOwnerId) {
     total: all.length,
     myWins,
     theirWins,
+    draws,
     bySport: Object.values(sportMap).sort((a, b) => b.total - a.total),
   };
 }

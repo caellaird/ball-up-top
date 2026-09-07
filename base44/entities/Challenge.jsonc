@@ -125,6 +125,10 @@
     "winner_name": {
       "type": "string"
     },
+    "is_draw": {
+      "type": "boolean",
+      "default": false
+    },
     "caption": {
       "type": "string"
     },

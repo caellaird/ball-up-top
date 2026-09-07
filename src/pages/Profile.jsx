@@ -230,6 +230,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
           <StatsTab
             wins={wins}
             losses={losses}
+            draws={profileStats?.draws ?? stats?.draws ?? 0}
             winPct={winPct}
             currentStreak={currentStreak}
             longestStreak={longestStreak}

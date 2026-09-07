@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Crown, Loader2 } from 'lucide-react';
+import { Crown, Loader2, Handshake } from 'lucide-react';
 
 export default function WinnerSelector({ challenge, onSaved }) {
   const [selectedWinner, setSelectedWinner] = useState(challenge.winner_id || '');
+  const [isDraw, setIsDraw] = useState(!!challenge.is_draw);
   const [saving, setSaving] = useState(false);
 
   const opponentIds = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
@@ -13,23 +14,29 @@ export default function WinnerSelector({ challenge, onSaved }) {
     ...opponentIds.map((id, i) => ({ id, name: opponentNames[i] })),
   ].filter((p) => p.id && p.name);
 
-  const selectWinner = async (winnerId, winnerName) => {
-    if (selectedWinner === winnerId || saving) return;
+  const persist = async (payload, optimistic) => {
+    if (saving) return;
     setSaving(true);
-    setSelectedWinner(winnerId);
+    const prevWinner = selectedWinner;
+    const prevDraw = isDraw;
+    setSelectedWinner(optimistic.winnerId);
+    setIsDraw(optimistic.isDraw);
     try {
-      const updated = await base44.entities.Challenge.update(challenge.id, {
-        winner_id: winnerId,
-        winner_name: winnerName,
-      });
+      const updated = await base44.entities.Challenge.update(challenge.id, payload);
       onSaved(updated);
     } catch {
-      // Revert on error
-      setSelectedWinner(challenge.winner_id || '');
+      setSelectedWinner(prevWinner);
+      setIsDraw(prevDraw);
     } finally {
       setSaving(false);
     }
   };
+
+  const selectWinner = (winnerId, winnerName) =>
+    persist({ winner_id: winnerId, winner_name: winnerName, is_draw: false }, { winnerId, isDraw: false });
+
+  const selectDraw = () =>
+    persist({ is_draw: true, winner_id: '', winner_name: '' }, { winnerId: '', isDraw: true });
 
   const PlayerButton = ({ name, isWinner, onClick }) => (
     <button
@@ -63,10 +70,29 @@ export default function WinnerSelector({ challenge, onSaved }) {
           <PlayerButton
             key={p.id}
             name={p.name}
-            isWinner={selectedWinner === p.id}
+            isWinner={!isDraw && selectedWinner === p.id}
             onClick={() => selectWinner(p.id, p.name)}
           />
         ))}
+        <button
+          onClick={selectDraw}
+          disabled={saving}
+          className={`flex-1 min-w-[90px] relative rounded-2xl p-4 border-2 transition active:scale-[0.97] ${
+            isDraw
+              ? 'border-secondary bg-secondary/10 shadow-md'
+              : 'border-border bg-card hover:border-muted-foreground/40'
+          }`}
+        >
+          {isDraw && (
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xl">
+              <Handshake className="w-5 h-5 text-secondary" />
+            </span>
+          )}
+          <p className={`text-sm font-bold truncate ${isDraw ? 'text-secondary' : 'text-muted-foreground'}`}>
+            Draw
+          </p>
+          {saving && isDraw && <Loader2 className="w-3 h-3 animate-spin mx-auto mt-1 text-secondary" />}
+        </button>
       </div>
     </div>
   );

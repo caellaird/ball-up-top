@@ -28,6 +28,12 @@ export default function HeadToHead({ currentUserId, currentUserName, profileOwne
             <p className="font-heading text-xl font-bold">{record.total}</p>
             <p className="text-[10px] text-muted-foreground uppercase">Played</p>
           </div>
+          {record.draws > 0 && (
+            <div>
+              <p className="font-heading text-xl font-bold text-muted-foreground">{record.draws}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Draws</p>
+            </div>
+          )}
           <div>
             <p className="font-heading text-xl font-bold text-secondary">{record.theirWins}</p>
             <p className="text-[10px] text-muted-foreground uppercase truncate max-w-[80px]">{profileOwnerName}</p>
@@ -44,6 +50,7 @@ export default function HeadToHead({ currentUserId, currentUserName, profileOwne
                 <span className={s.myWins >= s.theirWins && s.myWins > 0 ? 'text-accent' : ''}>{s.myWins}</span>
                 <span className="text-muted-foreground mx-1">–</span>
                 <span className={s.theirWins > s.myWins ? 'text-secondary' : ''}>{s.theirWins}</span>
+                {s.draws > 0 && <span className="text-muted-foreground ml-2 text-xs">🤝 {s.draws}</span>}
               </span>
             </div>
           ))}

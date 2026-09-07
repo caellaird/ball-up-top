@@ -6,9 +6,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 export default async function(req) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { challengeId, winnerId } = body || {};
-    if (!challengeId || !winnerId) {
-      return Response.json({ error: 'challengeId and winnerId are required' }, { status: 400 });
+    const { challengeId, winnerId, isDraw } = body || {};
+    if (!challengeId) {
+      return Response.json({ error: 'challengeId is required' }, { status: 400 });
+    }
+    if (!isDraw && !winnerId) {
+      return Response.json({ error: 'winnerId is required when not a draw' }, { status: 400 });
     }
 
     const base44 = createClientFromRequest(req);
@@ -36,7 +39,7 @@ export default async function(req) {
     ].filter((p) => p.id && p.name);
 
     for (const p of participants) {
-      const won = p.id === winnerId;
+      const won = !isDraw && p.id === winnerId;
       const existing = await admin.entities.UserStats.filter({ created_by_id: p.id });
       let stats = existing[0];
       if (!stats) {
@@ -45,6 +48,7 @@ export default async function(req) {
           games_played: 0,
           games_won: 0,
           losses: 0,
+          draws: 0,
           current_streak: 0,
           longest_streak: 0,
         });
@@ -52,7 +56,9 @@ export default async function(req) {
       await admin.entities.UserStats.update(stats.id, {
         games_played: (stats.games_played || 0) + 1,
         games_won: (stats.games_won || 0) + (won ? 1 : 0),
-        losses: (stats.losses || 0) + (won ? 0 : 1),
+        losses: (stats.losses || 0) + (!isDraw && !won ? 1 : 0),
+        draws: (stats.draws || 0) + (isDraw ? 1 : 0),
+        // A draw breaks a win streak the same way a loss does.
         current_streak: won ? (stats.current_streak || 0) + 1 : 0,
         longest_streak: won
           ? Math.max((stats.current_streak || 0) + 1, stats.longest_streak || 0)
@@ -60,7 +66,7 @@ export default async function(req) {
       });
     }
 
-    return Response.json({ success: true, recorded: participants.length });
+    return Response.json({ success: true, recorded: participants.length, draw: !!isDraw });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

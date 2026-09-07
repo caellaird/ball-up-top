@@ -160,7 +160,10 @@ export default function ChallengeDetail() {
                   ? 'Series complete'
                   : totalGames ? `Game ${creatorWins + opponentWins + 1} of ${totalGames}` : `Game ${creatorWins + opponentWins + 1}`}
               </p>
-              {challenge.status === 'completed' && challenge.winner_name && (
+              {challenge.status === 'completed' && challenge.is_draw && (
+                <p className="text-sm text-secondary font-semibold mt-1">🤝 Series drawn</p>
+              )}
+              {challenge.status === 'completed' && !challenge.is_draw && challenge.winner_name && (
                 <p className="text-sm text-accent font-semibold mt-1">👑 {challenge.winner_name} wins the series</p>
               )}
             </div>
@@ -169,7 +172,11 @@ export default function ChallengeDetail() {
           {!isSeries && challenge.status === 'completed' && (
             <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
               <p className="font-heading font-bold text-lg">{challenge.score_creator} - {challenge.score_opponent}</p>
-              {challenge.winner_name && <p className="text-sm text-accent font-semibold">👑 {challenge.winner_name} wins</p>}
+              {challenge.is_draw ? (
+                <p className="text-sm text-secondary font-semibold">🤝 Draw</p>
+              ) : challenge.winner_name ? (
+                <p className="text-sm text-accent font-semibold">👑 {challenge.winner_name} wins</p>
+              ) : null}
               {challenge.caption && <p className="text-sm mt-2">{challenge.caption}</p>}
             </div>
           )}

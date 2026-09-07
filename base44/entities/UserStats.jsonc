@@ -17,6 +17,10 @@
       "type": "number",
       "default": 0
     },
+    "draws": {
+      "type": "number",
+      "default": 0
+    },
     "current_streak": {
       "type": "number",
       "default": 0
