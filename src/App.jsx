@@ -19,6 +19,7 @@ const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
+const PublicLeaderboard = lazy(() => import('@/pages/PublicLeaderboard'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const Home = lazy(() => import('@/pages/Home'));
 const BallUp = lazy(() => import('@/pages/BallUp'));
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/leaderboard/:sport" element={<PublicLeaderboard />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<MobileShell />}>

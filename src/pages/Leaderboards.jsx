@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ExternalLink } from 'lucide-react';
 
 const boards = [
   { key: 'ball_knower_points', label: 'Ball Knower' },
@@ -26,6 +28,11 @@ export default function Leaderboards() {
         </TabsList>
         {boards.map((b) => (
           <TabsContent key={b.key} value={b.key}>
+            <div className="flex justify-end mb-2">
+              <Link to={`/leaderboard/${b.key}`} className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                View public leaderboard <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
             <div className="space-y-2">
               {[...stats].sort((a, c) => (c[b.key] || 0) - (a[b.key] || 0)).slice(0, 20).map((s, i) => (
                 <div key={s.id} className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
