@@ -19,22 +19,10 @@ export default function Daily() {
 
   const load = async () => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    let q = (await base44.entities.DailyQuestion.filter({ question_date: today }))[0];
-    if (!q) {
-      const generated = await base44.integrations.Core.InvokeLLM({
-        prompt: 'Generate one factually accurate basketball trivia question with exactly 4 multiple choice options and one correct answer. Include a short 1-2 sentence explanation.',
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            question: { type: 'string' },
-            options: { type: 'array', items: { type: 'string' } },
-            correct_index: { type: 'number' },
-            explanation: { type: 'string' },
-          },
-        },
-      });
-      q = await base44.entities.DailyQuestion.create({ question_date: today, ...generated });
-    }
+    // Generation + persistence run in the `generateDailyQuestion` backend function
+    // so the restricted InvokeLLM call stays server-side under the service role.
+    const res = await base44.functions.invoke('generateDailyQuestion', { question_date: today });
+    const q = res.data;
     setQuestion(q);
     const myAnswer = (await base44.entities.DailyQuestionAnswer.filter({ question_id: q.id, created_by_id: user.id }))[0];
     if (myAnswer) {
