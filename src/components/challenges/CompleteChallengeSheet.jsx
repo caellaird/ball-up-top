@@ -119,6 +119,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       } else if (winnerId) {
         await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId });
       }
+      base44.analytics.track({ eventName: 'game_played' });
     }
 
     return updated;
@@ -179,6 +180,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     } else if (winnerIdThisGame) {
       await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
     }
+    base44.analytics.track({ eventName: 'game_played' });
 
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
     const opponentWins = (challenge.opponent_games_won || 0) + (winnerIdThisGame && !isCreatorGameWinner ? 1 : 0);

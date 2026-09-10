@@ -95,6 +95,7 @@ export default function BallUp() {
       series_name: seriesType !== 'single' ? seriesName : undefined,
       games_to_win: GAMES_TO_WIN[seriesType],
     });
+    base44.analytics.track({ eventName: 'challenge_sent' });
     await Promise.all(opponents.map((o) =>
       sendNotification({ userId: o.id, type: 'challenge_invite', actorName: user.full_name, title: `${user.full_name} challenged you to ${sportDisplay.label}!`, link: `/challenges/${challenge.id}` })
     ));
