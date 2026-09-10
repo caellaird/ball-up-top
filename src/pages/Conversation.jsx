@@ -229,7 +229,7 @@ export default function Conversation() {
         </div>
       }
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center px-2">
         <button
           onClick={() => setShowChallenge(true)}
           className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center shadow-md active:scale-95 transition"
