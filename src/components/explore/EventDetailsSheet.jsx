@@ -189,7 +189,7 @@ export default function EventDetailsSheet({ event, user, onClose, onOpenChat }) 
             onClick={() => setShareOpen(true)}
             className="w-full mt-2 h-10 rounded-full border border-border text-sm font-semibold inline-flex items-center justify-center gap-2"
           >
-            <Share2 className="w-4 h-4" /> Share
+            <Share2 className="w-4 h-4" /> Share event
           </button>
 
           {isCreator && !cancelled && !ended && (
