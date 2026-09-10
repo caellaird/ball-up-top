@@ -14,6 +14,7 @@ import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
 import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import SocialShareSheet from '@/components/shared/SocialShareSheet';
+import SquadNudgeSheet from '@/components/challenges/SquadNudgeSheet';
 import { useGoBack } from '@/hooks/useGoBack';
 
 export default function ChallengeDetail() {
@@ -32,10 +33,26 @@ export default function ChallengeDetail() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareImageFile, setShareImageFile] = useState(null);
   const shareCardRef = useRef(null);
+  const [showSquadNudge, setShowSquadNudge] = useState(false);
 
   useEffect(() => {
     load();
   }, [id]);
+
+  // Show the "Bring your squad" nudge once per completed challenge (tracked in
+  // localStorage so it doesn't reappear on every visit to the same challenge).
+  useEffect(() => {
+    if (!challenge || challenge.status !== 'completed') return;
+    const isParticipant = challenge.created_by_id === user.id
+      || challenge.opponent_id === user.id
+      || challenge.opponent_ids?.includes(user.id);
+    if (!isParticipant) return;
+    const key = `squad_nudge_${challenge.id}`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1');
+      setShowSquadNudge(true);
+    }
+  }, [challenge?.id, challenge?.status, user.id]);
 
   const load = async () => {
     const c = await base44.entities.Challenge.get(id);
@@ -308,6 +325,12 @@ export default function ChallengeDetail() {
             : `Result posted — ${sportDisplay.label} #BallUpTop`
         }
         url={`https://ball-up-pro.base44.app/challenges/${id}`}
+      />
+
+      <SquadNudgeSheet
+        open={showSquadNudge}
+        onOpenChange={setShowSquadNudge}
+        user={user}
       />
 
       {challenge && (
