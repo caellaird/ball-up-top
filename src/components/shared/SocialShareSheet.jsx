@@ -1,13 +1,16 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Share2 } from 'lucide-react';
+import { Share2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Bottom sheet that lets users share an event/result to Instagram, TikTok, or
-// copy the link. Instagram/TikTok open the OS share sheet (where those apps
-// appear if installed); Copy Link writes the URL to the clipboard.
-export default function SocialShareSheet({ open, onOpenChange, title, text, url }) {
+// copy the link. When an imageFile is attached (e.g. a result card), the native
+// share sheet shares the image file directly — Instagram/TikTok receive the
+// image instead of just a URL.
+export default function SocialShareSheet({ open, onOpenChange, title, text, url, imageFile }) {
+  const canShareFiles = imageFile && typeof navigator.canShare === 'function' && navigator.canShare({ files: [imageFile] });
   const data = { title: title || 'Ball Up Top', text, url };
+  if (canShareFiles) data.files = [imageFile];
 
   const nativeShare = async () => {
     if (navigator.share) {
@@ -23,7 +26,7 @@ export default function SocialShareSheet({ open, onOpenChange, title, text, url 
 
   const shareSocial = async () => {
     const ok = await nativeShare();
-    if (!ok) await copyLink();
+    if (!ok && !canShareFiles) await copyLink();
     onOpenChange(false);
   };
 
@@ -33,6 +36,10 @@ export default function SocialShareSheet({ open, onOpenChange, title, text, url 
   // to paste. `document.hidden` lets us avoid the web fallback when the app
   // actually took over.
   const shareToApp = async (scheme, fallback, label) => {
+    if (canShareFiles) {
+      try { await navigator.share(data); onOpenChange(false); return; }
+      catch { /* user cancelled — fall through to URL scheme */ }
+    }
     await navigator.clipboard.writeText(url).catch(() => {});
     toast.success(`Link copied — paste in ${label}`);
     const start = Date.now();
@@ -60,6 +67,21 @@ export default function SocialShareSheet({ open, onOpenChange, title, text, url 
           <ShareOption emoji="🎵" label="TikTok" gradient="from-slate-800 to-black" onClick={tiktok} />
           <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={async () => { await copyLink(); onOpenChange(false); }} />
         </div>
+        {imageFile && (
+          <button
+            onClick={() => {
+              const a = document.createElement('a');
+              a.href = URL.createObjectURL(imageFile);
+              a.download = 'ball-up-top-result.png';
+              a.click();
+              URL.revokeObjectURL(a.href);
+              onOpenChange(false);
+            }}
+            className="w-full mt-3 h-12 rounded-full border border-input bg-transparent font-semibold inline-flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" /> Save Image
+          </button>
+        )}
         <button
           onClick={async () => { await shareSocial(); }}
           className="w-full mt-5 h-12 rounded-full bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2"

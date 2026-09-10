@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
+import ResultShareCard from '@/components/challenges/ResultShareCard';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
 import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
@@ -29,6 +30,8 @@ export default function ChallengeDetail() {
   const [creatorUsername, setCreatorUsername] = useState('');
   const [opponentUsername, setOpponentUsername] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
+  const [shareImageFile, setShareImageFile] = useState(null);
+  const shareCardRef = useRef(null);
 
   useEffect(() => {
     load();
@@ -79,6 +82,25 @@ export default function ChallengeDetail() {
     } catch (e) {
       setDeleting(false);
     }
+  };
+
+  // Captures the visible ResultShareCard to a PNG and opens the share sheet
+  // with the image attached. Falls back to sharing without an image on error.
+  const handleShareResult = async () => {
+    if (!shareCardRef.current) { setShareOpen(true); return; }
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(shareCardRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 3,
+      });
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (blob) {
+        setShareImageFile(new File([blob], 'ball-up-top-result.png', { type: 'image/png' }));
+      }
+    } catch { /* ignore capture errors — share without image */ }
+    setShareOpen(true);
   };
 
   if (!challenge) return <div className="text-center text-muted-foreground py-10">Loading challenge...</div>;
@@ -256,9 +278,14 @@ export default function ChallengeDetail() {
         )}
 
         {challenge.status === 'completed' && (
-          <Button onClick={() => setShareOpen(true)} variant="outline" className="w-full rounded-full h-12">
-            <Share2 className="w-4 h-4" /> Share Result
-          </Button>
+          <>
+            <div className="flex justify-center mb-4">
+              <ResultShareCard ref={shareCardRef} challenge={challenge} sportDisplay={sportDisplay} creatorWins={creatorWins} opponentWins={opponentWins} />
+            </div>
+            <Button onClick={handleShareResult} variant="outline" className="w-full rounded-full h-12">
+              <Share2 className="w-4 h-4" /> Share Result
+            </Button>
+          </>
         )}
       </div>
 
@@ -273,6 +300,7 @@ export default function ChallengeDetail() {
       <SocialShareSheet
         open={shareOpen}
         onOpenChange={setShareOpen}
+        imageFile={shareImageFile}
         title={`${sportDisplay.emoji} ${challenge.creator_name} vs ${opponentNameList.join(', ')}`}
         text={
           challenge.winner_name
