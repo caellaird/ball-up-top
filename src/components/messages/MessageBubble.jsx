@@ -74,7 +74,7 @@ export default function MessageBubble({ message, isMe, isGroup, userId, onReply,
   }
 
   return (
-    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2`}>
+    <div className={`flex flex-col mb-2 ml-2 ${isMe ? 'items-end' : 'items-start'} `}>
       {isGroup && !isMe &&
       <Link to={`/profile/${message.sender_username || 'me'}`} className="text-xs font-semibold text-secondary ml-1 mb-0.5 hover:underline">
           {message.sender_name}
