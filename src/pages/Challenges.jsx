@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useOutletContext, Link, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
@@ -63,32 +63,35 @@ export default function Challenges({ user: userProp }) {
     return () => { u1?.(); u2?.(); };
   }, []);
 
-  const grouped = {
-    pending: challenges?.filter((c) => c.status === 'pending') || [],
-    accepted: [],
-    completed: challenges?.filter((c) => c.status === 'completed') || [],
-  };
+  // Compute each tab's items via useMemo so switching tabs re-derives the
+  // correct list from the current data — no stale closures or object mutation.
+  const grouped = useMemo(() => {
+    if (!challenges || !events) return { pending: [], accepted: [], completed: [] };
 
-  // Merge accepted private challenges with active public events. Ended and
-  // cancelled events leave the Accepted tab and surface under Completed.
-  if (challenges && events) {
+    const pending = challenges.filter((c) => c.status === 'pending');
     const acceptedChallenges = challenges.filter((c) => c.status === 'accepted');
+    const completed = challenges.filter((c) => c.status === 'completed');
+
+    // Merge accepted private challenges with active public events. Ended and
+    // cancelled events leave the Accepted tab and surface under Completed.
     const activeEvents = events.filter((e) => e.status === 'active');
-    // Sort: active (upcoming/soon/live) first by soonest start.
     const isActive = (e) => e.status === 'active' && new Date(e.start_datetime).getTime() > now;
-    const sortedEvents = [...activeEvents].sort((a, b) => {
+    const sortedActive = [...activeEvents].sort((a, b) => {
       const aActive = isActive(a), bActive = isActive(b);
       if (aActive !== bActive) return aActive ? -1 : 1;
       return new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime();
     });
-    grouped.accepted = [...sortedEvents, ...acceptedChallenges];
 
-    // Finished events (auto-ended after 2h, or cancelled by the owner) move to Completed.
     const finishedEvents = events
       .filter((e) => e.status === 'ended' || e.status === 'cancelled')
       .sort((a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime());
-    grouped.completed = [...finishedEvents, ...grouped.completed];
-  }
+
+    return {
+      pending,
+      accepted: [...sortedActive, ...acceptedChallenges],
+      completed: [...finishedEvents, ...completed],
+    };
+  }, [challenges, events, now]);
 
   const emptyCopy = {
     pending: { title: 'No pending challenges', description: 'Tap Ball Up to challenge a friend to a game.' },
@@ -120,7 +123,7 @@ export default function Challenges({ user: userProp }) {
                 ? <Button asChild className="rounded-full"><Link to="/ball-up">Ball Up Top</Link></Button>
                 : undefined}
             />
-          : <div className="pt-2">
+          : <div key={tab} className="pt-2">
               {grouped[tab].map((item) =>
                 item.competition_type
                   ? <PublicEventChallengeCard key={`ev-${item.id}`} event={item} now={now} />
