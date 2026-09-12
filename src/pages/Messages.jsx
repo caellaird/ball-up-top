@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/shared/EmptyState';
 import CreateGroupSheet from '@/components/messages/CreateGroupSheet';
-import { Users } from 'lucide-react';
+import { Users, ArrowLeft } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { isTyping } from '@/lib/messaging';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function Messages() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const [threads, setThreads] = useState(null);
   const [readMap, setReadMap] = useState({});
   const [threadReads, setThreadReads] = useState({});
@@ -91,7 +93,12 @@ export default function Messages() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-heading text-2xl font-extrabold">Messages</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={goBack} className="p-1 -ml-1 text-foreground shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-heading text-2xl font-extrabold">Messages</h1>
+        </div>
         <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => setShowCreateGroup(true)}>
           <Users className="w-4 h-4 mr-1.5" /> New Group
         </Button>

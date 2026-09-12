@@ -4,9 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
-import { MessageCircle, Trophy, UserPlus, Swords, Bell, Check, X } from 'lucide-react';
+import { MessageCircle, Trophy, UserPlus, Swords, Bell, Check, X, ArrowLeft } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { sendNotification } from '@/lib/notify';
+import { useGoBack } from '@/hooks/useGoBack';
 
 const ICON_MAP = {
   friend_request: UserPlus,
@@ -20,6 +21,7 @@ const ICON_MAP = {
 
 export default function Notifications() {
   const { user } = useOutletContext();
+  const goBack = useGoBack();
   const [notifications, setNotifications] = useState(null);
   const [actingId, setActingId] = useState(null);
 
@@ -76,7 +78,12 @@ export default function Notifications() {
   return (
     <div className="px-4 pt-4" style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-heading text-2xl">Notifications</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={goBack} className="p-1 -ml-1 text-foreground shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-heading text-2xl">Notifications</h1>
+        </div>
         {notifications.some((n) => !n.read) && <Button variant="secondary" size="sm" className="rounded-full" onClick={markAllRead}>Mark all read</Button>}
       </div>
       {notifications.length === 0 ? (
