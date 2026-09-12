@@ -37,8 +37,10 @@ export default function Challenges({ user: userProp }) {
     try {
       const myPart = await base44.entities.EventParticipant.filter({ user_id: user.id, status: 'accepted' });
       const ids = [...new Set(myPart.map((p) => p.event_id).filter(Boolean))];
-      const fetched = await Promise.all(ids.map((id) => base44.entities.PublicEvent.get(id).catch(() => null)));
-      setEvents(fetched.filter(Boolean));
+      if (ids.length === 0) { setEvents([]); return; }
+      // Single bulk fetch instead of N parallel get() calls — avoids rate limits.
+      const fetched = await base44.entities.PublicEvent.filter({ id: { $in: ids } });
+      setEvents(fetched);
     } catch (e) {
       setEvents([]);
     }
