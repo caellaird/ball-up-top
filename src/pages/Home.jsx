@@ -50,11 +50,11 @@ export default function Home({ user: userProp }) {
     // Single combined friend query replaces the 3 per-status fetches and gives
     // us a complete relation map for every feed author — one request for the
     // whole feed instead of one per post card (which tripped the rate limit).
-    const [data, myLikes, myRelations] = await Promise.all([
-      fetchPage(0),
-      base44.entities.Like.filter({ created_by_id: user.id }),
-      base44.entities.Friend.filter({ $or: [{ created_by_id: user.id }, { addressee_id: user.id }] }),
-    ]);
+    // Sequential (not Promise.all) to avoid bursting 3 API calls at once
+    // and tripping the platform rate limit.
+    const data = await fetchPage(0);
+    const myLikes = await base44.entities.Like.filter({ created_by_id: user.id });
+    const myRelations = await base44.entities.Friend.filter({ $or: [{ created_by_id: user.id }, { addressee_id: user.id }] });
     const friendRecordByUserId = {};
     const acceptedIds = new Set([user.id]);
     const blockedSet = new Set();
