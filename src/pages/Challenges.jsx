@@ -10,6 +10,12 @@ import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 
+// Module-level: preserves the selected tab across component remounts.
+// TabContainer keeps this component mounted during tab navigation, but a
+// Suspense fallback (lazy route loading) or brief auth re-check can unmount
+// and remount MobileShell — resetting useState. This variable survives that.
+let _persistedTab = 'pending';
+
 // Challenges lists the user's private challenges AND the public events they've
 // joined/created. Accepted public events appear under the "Accepted" tab
 // alongside accepted private challenges, sorted soonest-first with live status
@@ -18,7 +24,7 @@ export default function Challenges({ user: userProp }) {
   const outletCtx = useOutletContext();
   const user = userProp || outletCtx?.user;
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState('pending');
+  const [tab, setTab] = useState(_persistedTab);
   const [challenges, setChallenges] = useState(null);
   // Default to [] so the loading gate only depends on `challenges` — a null
   // events array would keep the skeleton visible forever if loadEvents fails.
@@ -28,6 +34,10 @@ export default function Challenges({ user: userProp }) {
   useEffect(() => {
     if (searchParams.get('event')) setTab('accepted'); // deep link opens Accepted
   }, [searchParams]);
+
+  // Persist tab across remounts — the single source of truth for which
+  // status filter is active. displayItems is derived from this + challenges.
+  useEffect(() => { _persistedTab = tab; }, [tab]);
 
   const loadEvents = useCallback(async () => {
     if (!user?.id) { setEvents([]); return; }
