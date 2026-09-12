@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext, Link, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
@@ -20,39 +20,40 @@ export default function Challenges({ user: userProp }) {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('pending');
   const [challenges, setChallenges] = useState(null);
-  const [events, setEvents] = useState(null);
-  const [now, setNow] = useState(Date.now());
+  // Default to [] so the loading gate only depends on `challenges` — a null
+  // events array would keep the skeleton visible forever if loadEvents fails.
+  const [events, setEvents] = useState([]);
+  const now = useRef(Date.now());
 
   useEffect(() => {
     if (searchParams.get('event')) setTab('accepted'); // deep link opens Accepted
   }, [searchParams]);
 
-  const load = async () => {
-    const all = await base44.entities.Challenge.list('-created_date', 100);
-    setChallenges(all.filter((c) => c.created_by_id === user.id || c.opponent_id === user.id || c.opponent_ids?.includes(user.id)));
-    await loadEvents();
-  };
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
+    if (!user?.id) { setEvents([]); return; }
     try {
       const myPart = await base44.entities.EventParticipant.filter({ user_id: user.id, status: 'accepted' });
       const ids = [...new Set(myPart.map((p) => p.event_id).filter(Boolean))];
       if (ids.length === 0) { setEvents([]); return; }
-      // Single bulk fetch instead of N parallel get() calls — avoids rate limits.
       const fetched = await base44.entities.PublicEvent.filter({ id: { $in: ids } });
-      setEvents(fetched);
+      setEvents(Array.isArray(fetched) ? fetched : []);
     } catch (e) {
       setEvents([]);
     }
-  };
+  }, [user?.id]);
 
-  useEffect(() => { load(); }, []);
+  const load = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const all = await base44.entities.Challenge.list('-created_date', 100);
+      setChallenges(all.filter((c) => c.created_by_id === user.id || c.opponent_id === user.id || c.opponent_ids?.includes(user.id)));
+    } catch (e) {
+      setChallenges([]);
+    }
+    await loadEvents();
+  }, [user?.id, loadEvents]);
 
-  // Keep the "time remaining" labels and live/upcoming transitions fresh.
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(t);
-  }, []);
+  useEffect(() => { load(); }, [load]);
 
   // Real-time: new accepted events / participant changes / event status changes.
   useEffect(() => {
@@ -60,40 +61,33 @@ export default function Challenges({ user: userProp }) {
     const u2 = base44.entities.PublicEvent.subscribe((ev) => {
       const d = ev?.data;
       if (!d) return;
-      setEvents((prev) => (prev || []).map((e) => (e.id === d.id ? { ...e, ...d } : e)));
+      setEvents((prev) => (Array.isArray(prev) ? prev : []).map((e) => (e.id === d.id ? { ...e, ...d } : e)));
     });
     return () => { u1?.(); u2?.(); };
-  }, []);
+  }, [loadEvents]);
 
-  // Compute each tab's items via useMemo so switching tabs re-derives the
-  // correct list from the current data — no stale closures or object mutation.
-  const grouped = useMemo(() => {
-    if (!challenges || !events) return { pending: [], accepted: [], completed: [] };
-
-    const pending = challenges.filter((c) => c.status === 'pending');
-    const acceptedChallenges = challenges.filter((c) => c.status === 'accepted');
-    const completed = challenges.filter((c) => c.status === 'completed');
-
-    // Merge accepted private challenges with active public events. Ended and
-    // cancelled events leave the Accepted tab and surface under Completed.
-    const activeEvents = events.filter((e) => e.status === 'active');
-    const isActive = (e) => e.status === 'active' && new Date(e.start_datetime).getTime() > now;
-    const sortedActive = [...activeEvents].sort((a, b) => {
-      const aActive = isActive(a), bActive = isActive(b);
-      if (aActive !== bActive) return aActive ? -1 : 1;
-      return new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime();
-    });
-
-    const finishedEvents = events
-      .filter((e) => e.status === 'ended' || e.status === 'cancelled')
-      .sort((a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime());
-
-    return {
-      pending,
-      accepted: [...sortedActive, ...acceptedChallenges],
-      completed: [...finishedEvents, ...completed],
-    };
-  }, [challenges, events, now]);
+  // Compute the display list directly from the current `tab` on every render.
+  // No useMemo — the list is derived fresh from `challenges`, `events`, and
+  // `tab` each time the component renders, so switching tabs always produces
+  // the correct filtered list.
+  let displayItems = [];
+  if (challenges && challenges.length > 0) {
+    if (tab === 'pending') {
+      displayItems = challenges.filter((c) => c.status === 'pending');
+    } else if (tab === 'accepted') {
+      const activeEvents = events
+        .filter((e) => e.status === 'active')
+        .sort((a, b) => new Date(a.start_datetime).getTime() - new Date(b.start_datetime).getTime());
+      const acceptedChallenges = challenges.filter((c) => c.status === 'accepted');
+      displayItems = [...activeEvents, ...acceptedChallenges];
+    } else if (tab === 'completed') {
+      const finishedEvents = events
+        .filter((e) => e.status === 'ended' || e.status === 'cancelled')
+        .sort((a, b) => new Date(b.start_datetime).getTime() - new Date(a.start_datetime).getTime());
+      const completedChallenges = challenges.filter((c) => c.status === 'completed');
+      displayItems = [...finishedEvents, ...completedChallenges];
+    }
+  }
 
   const emptyCopy = {
     pending: { title: 'No pending challenges', description: 'Tap Ball Up to challenge a friend to a game.' },
@@ -115,9 +109,9 @@ export default function Challenges({ user: userProp }) {
           onChange={setTab}
         />
       </div>
-      {challenges === null || events === null
+      {challenges === null
         ? <ListSkeleton count={4} />
-        : grouped[tab].length === 0
+        : displayItems.length === 0
           ? <EmptyState
               title={emptyCopy[tab].title}
               description={emptyCopy[tab].description}
@@ -125,10 +119,10 @@ export default function Challenges({ user: userProp }) {
                 ? <Button asChild className="rounded-full"><Link to="/ball-up">Ball Up Top</Link></Button>
                 : undefined}
             />
-          : <div key={tab} className="pt-2">
-              {grouped[tab].map((item) =>
+          : <div className="pt-2">
+              {displayItems.map((item) =>
                 item.competition_type
-                  ? <PublicEventChallengeCard key={`ev-${item.id}`} event={item} now={now} />
+                  ? <PublicEventChallengeCard key={`ev-${item.id}`} event={item} now={now.current} />
                   : <ChallengeCard key={item.id} challenge={item} />
               )}
             </div>
