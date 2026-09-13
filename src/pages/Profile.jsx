@@ -166,7 +166,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-1" onClick={() => setEditing(true)}>Edit Profile</Button>}
             {!isSelf && (
               <div className="flex gap-2 mb-1">
-                <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => setShowChallenge(true)}>
+                <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => { setActiveTab('stats'); setShowChallenge(true); }}>
                   <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
                 </Button>
                 <FriendButton
@@ -237,7 +237,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             created={profileStats?.challengesCreated ?? 0}
             completed={profileStats?.challengesCompleted ?? 0}
             topActivities={profileStats?.topActivities}
-            headToHead={!isSelf ? { currentUserId: user.id, currentUserName: user.full_name, profileOwnerId: ownerId, profileOwnerName: displayName } : null}
+            headToHead={!isSelf ? { currentUserId: user.id, currentUserName: user.full_name, profileOwnerId: ownerId, profileOwnerName: displayName, profileOwnerAvatar: profile.avatar_url, profileOwnerUsername: profile.username } : null}
           />
         )}
         {activeTab === 'friends' && (

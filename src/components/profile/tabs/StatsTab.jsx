@@ -12,6 +12,14 @@ function Stat({ label, value }) {
 }
 
 export default function StatsTab({ wins, losses, draws, winPct, currentStreak, longestStreak, created, completed, topActivities, headToHead }) {
+  const h2hProps = headToHead ? {
+    currentUserId: headToHead.currentUserId,
+    currentUserName: headToHead.currentUserName,
+    profileOwnerId: headToHead.profileOwnerId,
+    profileOwnerName: headToHead.profileOwnerName,
+    profileOwnerAvatar: headToHead.profileOwnerAvatar,
+    profileOwnerUsername: headToHead.profileOwnerUsername,
+  } : null;
   return (
     <div className="px-4 pt-4 pb-6">
       <div className="grid grid-cols-4 gap-2 text-center">
@@ -27,14 +35,7 @@ export default function StatsTab({ wins, losses, draws, winPct, currentStreak, l
 
       <TrophyCase topActivities={topActivities} />
 
-      {headToHead && (
-        <HeadToHead
-          currentUserId={headToHead.currentUserId}
-          currentUserName={headToHead.currentUserName}
-          profileOwnerId={headToHead.profileOwnerId}
-          profileOwnerName={headToHead.profileOwnerName}
-        />
-      )}
+      {h2hProps && <HeadToHead {...h2hProps} />}
     </div>
   );
 }

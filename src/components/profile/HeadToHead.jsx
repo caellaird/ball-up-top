@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Share2 } from 'lucide-react';
 import { computeHeadToHead } from '@/lib/profileStats';
 import { SPORT_EMOJI, SPORTS } from '@/lib/constants';
+import RivalryCardShare from '@/components/profile/RivalryCardShare';
 
 const SPORT_LABEL = SPORTS.reduce((acc, s) => ({ ...acc, [s.key]: s.label }), {});
 
-export default function HeadToHead({ currentUserId, currentUserName, profileOwnerId, profileOwnerName }) {
+export default function HeadToHead({ currentUserId, currentUserName, profileOwnerId, profileOwnerName, profileOwnerAvatar, profileOwnerUsername }) {
   const [record, setRecord] = useState(null);
+  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => { load(); }, [currentUserId, profileOwnerId]);
 
@@ -17,7 +20,15 @@ export default function HeadToHead({ currentUserId, currentUserName, profileOwne
 
   return (
     <div className="mt-6">
-      <h3 className="font-heading font-bold mb-3">Head-to-Head</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-heading font-bold">Head-to-Head</h3>
+        <button
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-primary px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/15 transition-colors"
+        >
+          <Share2 className="w-3.5 h-3.5" /> Share Rivalry
+        </button>
+      </div>
       <div className="bg-card rounded-2xl shadow-sm p-4">
         <div className="flex items-center justify-around text-center mb-4">
           <div>
@@ -56,6 +67,18 @@ export default function HeadToHead({ currentUserId, currentUserName, profileOwne
           ))}
         </div>
       </div>
+
+      <RivalryCardShare
+        open={showShare}
+        onOpenChange={setShowShare}
+        record={record}
+        currentUserId={currentUserId}
+        currentUserName={currentUserName}
+        profileOwnerId={profileOwnerId}
+        profileOwnerName={profileOwnerName}
+        profileOwnerAvatar={profileOwnerAvatar}
+        profileOwnerUsername={profileOwnerUsername}
+      />
     </div>
   );
 }
