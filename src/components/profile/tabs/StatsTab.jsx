@@ -11,7 +11,7 @@ function Stat({ label, value }) {
   );
 }
 
-export default function StatsTab({ wins, losses, draws, winPct, currentStreak, longestStreak, created, completed, topActivities, headToHead }) {
+export default function StatsTab({ wins, losses, draws, winPct, currentStreak, longestStreak, created, completed, topActivities, headToHead, awards, ownerId, ownerName, ownerUsername, ownerAvatar }) {
   const h2hProps = headToHead ? {
     currentUserId: headToHead.currentUserId,
     currentUserName: headToHead.currentUserName,
@@ -33,7 +33,7 @@ export default function StatsTab({ wins, losses, draws, winPct, currentStreak, l
         <Stat label="Completed" value={completed} />
       </div>
 
-      <TrophyCase topActivities={topActivities} />
+      <TrophyCase topActivities={topActivities} awards={awards} ownerId={ownerId} ownerName={ownerName} ownerUsername={ownerUsername} ownerAvatar={ownerAvatar} />
 
       {h2hProps && <HeadToHead {...h2hProps} />}
     </div>

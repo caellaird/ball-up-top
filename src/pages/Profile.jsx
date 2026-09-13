@@ -237,6 +237,11 @@ export default function Profile({ user: userProp, usernameOverride }) {
             created={profileStats?.challengesCreated ?? 0}
             completed={profileStats?.challengesCompleted ?? 0}
             topActivities={profileStats?.topActivities}
+            awards={awards}
+            ownerId={ownerId}
+            ownerName={displayName}
+            ownerUsername={profile.username}
+            ownerAvatar={profile.avatar_url}
             headToHead={!isSelf ? { currentUserId: user.id, currentUserName: user.full_name, profileOwnerId: ownerId, profileOwnerName: displayName, profileOwnerAvatar: profile.avatar_url, profileOwnerUsername: profile.username } : null}
           />
         )}
