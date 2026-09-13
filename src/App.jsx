@@ -21,6 +21,7 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 const PublicLeaderboard = lazy(() => import('@/pages/PublicLeaderboard'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
+const AsoScreenshots = lazy(() => import('@/pages/AsoScreenshots'));
 const Home = lazy(() => import('@/pages/Home'));
 const BallUp = lazy(() => import('@/pages/BallUp'));
 const Groups = lazy(() => import('@/pages/Groups'));
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/leaderboard/:sport" element={<PublicLeaderboard />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/aso-screenshots" element={<AsoScreenshots />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<MobileShell />}>
             <Route path="/" element={<Home />} />
