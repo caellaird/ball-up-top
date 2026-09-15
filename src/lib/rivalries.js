@@ -21,9 +21,12 @@ export async function fetchCurrentRival(userId, profile) {
     } catch { /* fall through to auto */ }
   }
   const rivalries = await fetchUserRivalries(userId);
-  // Auto-select: most recent active rivalry with at least 2 games
+  // Auto-select: most frequent opponent (highest total_games), recency as tiebreaker
   const eligible = rivalries.filter((r) => (r.total_games || 0) >= 2);
-  return (eligible[0] || rivalries[0] || null);
+  const pool = (eligible.length ? eligible : rivalries);
+  pool.sort((a, b) => (b.total_games || 0) - (a.total_games || 0)
+    || new Date(b.last_game_at || b.updated_date) - new Date(a.last_game_at || a.updated_date));
+  return (pool[0] || null);
 }
 
 export async function fetchRivalry(rivalryId) {
