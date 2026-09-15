@@ -20,6 +20,10 @@ const PREF_BY_TYPE: Record<string, string> = {
   nearby_event: "notify_nearby",
   event_join: "notify_nearby",
   event_cancelled: "notify_nearby",
+  // Rivalry alerts ride the challenge-results preference — rivalries are a
+  // competitive outcome, so users who opted out of result pings won't get these.
+  rivalry_activated: "notif_challenge_results",
+  rivalry_lead_change: "notif_challenge_results",
 };
 
 // Only these types also fire a native lock-screen push. Everything else is
@@ -30,6 +34,8 @@ const HIGH_SIGNAL_PUSH_TYPES = new Set<string>([
   "challenge_result",
   "event_reminder",
   "event_cancelled",
+  "rivalry_activated",
+  "rivalry_lead_change",
 ]);
 
 export function prefFieldForType(type?: string): string | null {

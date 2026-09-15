@@ -2,6 +2,8 @@
 // Tracks head-to-head records between users and auto-activates rivalries when
 // two users complete 6+ challenges against each other within a rolling 7-day window.
 
+import { sendIfAllowed } from "./notifPrefs.ts";
+
 const SPORT_EMOJI: Record<string, string> = {
   basketball: '🏀',
   golf: '⛳',
@@ -161,6 +163,52 @@ async function updateRivalry(
       current_streak_user_id: streakUserId,
       current_streak_count: streakCount,
     };
+
+    // --- Lead change notification (active rivalries only) ---
+    // Fires when the winner was behind or tied and now leads, or evened up
+    // from behind — only for established rivalries with an announcement post.
+    if (rivalry.announcement_post_id && !isDraw && winnerId) {
+      const oldAWins = rivalry.user_a_wins ?? 0;
+      const oldBWins = rivalry.user_b_wins ?? 0;
+      const winnerIsA = winnerId === a.id;
+      const winnerIsB = winnerId === b.id;
+      const tookLead =
+        (winnerIsA && oldAWins <= oldBWins && newAWins > newBWins) ||
+        (winnerIsB && oldBWins <= oldAWins && newBWins > newAWins);
+      const evenedUp =
+        (winnerIsA && oldAWins < oldBWins && newAWins === newBWins) ||
+        (winnerIsB && oldBWins < oldAWins && newBWins === newAWins);
+
+      if (tookLead || evenedUp) {
+        const mover = winnerIsA ? a : b;
+        const other = winnerIsA ? b : a;
+        const moverWins = winnerIsA ? newAWins : newBWins;
+        const otherWins = winnerIsA ? newAWins : newBWins;
+        const rivalLink = `/rivalry/${rivalry.id}`;
+        const headline = tookLead
+          ? `📈 ${mover.name} took the lead!`
+          : `📈 ${mover.name} evened it up!`;
+        const body = `${mover.name} ${moverWins} — ${other.name} ${otherWins}. The rivalry just shifted.`;
+        await Promise.all([
+          sendIfAllowed(admin, {
+            user_id: mover.id,
+            type: "rivalry_lead_change",
+            actor_name: other.name,
+            title: `You moved up on ${other.name}!`,
+            body,
+            link: rivalLink,
+          }),
+          sendIfAllowed(admin, {
+            user_id: other.id,
+            type: "rivalry_lead_change",
+            actor_name: mover.name,
+            title: headline,
+            body,
+            link: rivalLink,
+          }),
+        ]);
+      }
+    }
   }
 
   // --- Rivalry activation: 6+ completed games in 7 days ---
@@ -186,6 +234,27 @@ async function updateRivalry(
         announcement_post_id: post.id,
         activated_at: now,
       });
+
+      // Notify both users that a new rivalry has been activated.
+      const rivalLink = `/rivalry/${rivalry.id}`;
+      await Promise.all([
+        sendIfAllowed(admin, {
+          user_id: a.id,
+          type: "rivalry_activated",
+          actor_name: b.name,
+          title: `⚔️ New rivalry with ${b.name}!`,
+          body: `You've played ${rivalry.total_games} games. The rivalry is official.`,
+          link: rivalLink,
+        }),
+        sendIfAllowed(admin, {
+          user_id: b.id,
+          type: "rivalry_activated",
+          actor_name: a.name,
+          title: `⚔️ New rivalry with ${a.name}!`,
+          body: `You've played ${rivalry.total_games} games. The rivalry is official.`,
+          link: rivalLink,
+        }),
+      ]);
     }
   }
 
