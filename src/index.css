@@ -163,4 +163,28 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Subtle pulsing glow on the Ball Up Top logo. */
+  @keyframes logo-glow {
+    0%, 100% { filter: drop-shadow(0 0 2px hsl(205 90% 52% / 0.25)); }
+    50% { filter: drop-shadow(0 0 7px hsl(205 90% 52% / 0.5)); }
+  }
+  .logo-glow { animation: logo-glow 3.5s ease-in-out infinite; }
+
+  /* Very subtle drifting brand-tinted blobs in the app background. */
+  @keyframes bg-drift {
+    0%, 100% { background-position: 0% 50%, 100% 50%; }
+    50% { background-position: 30% 70%, 70% 30%; }
+  }
+  .animated-bg {
+    background-image:
+      radial-gradient(circle at 15% 15%, hsl(205 90% 52% / 0.045), transparent 35%),
+      radial-gradient(circle at 85% 85%, hsl(0 74% 56% / 0.035), transparent 35%);
+    background-size: 180% 180%;
+    animation: bg-drift 22s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-glow, .animated-bg { animation: none; }
 }

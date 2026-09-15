@@ -1,11 +1,12 @@
 import React from 'react';
 import EmptyState from '@/components/shared/EmptyState';
+import { PERSONALITY } from '@/lib/personality';
 
 export default function AwardsTab({ awards }) {
   if (!awards || awards.length === 0) {
     return (
       <div className="px-4 pt-6">
-        <EmptyState title="No awards yet" description="Awards from completed challenges will show up here." />
+        <EmptyState title={PERSONALITY.noAwards.title} description={PERSONALITY.noAwards.description} />
       </div>
     );
   }

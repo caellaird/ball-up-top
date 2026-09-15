@@ -15,7 +15,7 @@ export default function Header({ title, onBack }) {
             </button>
           )}
           <Link to="/" className="flex items-center gap-2 min-w-0">
-            <img src={LOGO_URL} alt="Ball Up Top" className="w-8 h-8 rounded-lg shrink-0" />
+            <img src={LOGO_URL} alt="Ball Up Top" className="w-8 h-8 rounded-lg shrink-0 logo-glow" />
             <span className="font-heading font-extrabold text-lg truncate">{title || 'Ball Up Top'}</span>
           </Link>
         </div>

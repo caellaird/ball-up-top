@@ -30,6 +30,8 @@ import HighlightsTab from '@/components/profile/tabs/HighlightsTab';
 import FavoriteSportPicker from '@/components/profile/FavoriteSportPicker';
 import CompetitiveRecord from '@/components/profile/CompetitiveRecord';
 import CurrentRival from '@/components/profile/CurrentRival';
+import AnimatedNumber from '@/components/shared/AnimatedNumber';
+import AchievementBadges from '@/components/shared/AchievementBadges';
 import { getSportDisplay } from '@/lib/favoriteSport';
 
 export default function Profile({ user: userProp, usernameOverride }) {
@@ -201,11 +203,11 @@ export default function Profile({ user: userProp, usernameOverride }) {
           {profile.bio && <p className="text-sm mt-1.5">{profile.bio}</p>}
 
           <div className="flex items-center gap-5 mt-3 text-sm">
-            <span><strong className="font-heading">{wins}</strong> <span className="text-muted-foreground">Wins</span></span>
-            <span><strong className="font-heading">{losses}</strong> <span className="text-muted-foreground">Losses</span></span>
+            <span><AnimatedNumber value={wins} className="font-heading font-bold" /> <span className="text-muted-foreground">Wins</span></span>
+            <span><AnimatedNumber value={losses} className="font-heading font-bold" /> <span className="text-muted-foreground">Losses</span></span>
 
             <button onClick={() => setActiveTab('friends')} className="flex items-center gap-1">
-              <strong className="font-heading">{friendRecords.length}</strong> <span className="text-muted-foreground">Friends</span>
+              <AnimatedNumber value={friendRecords.length} className="font-heading font-bold" /> <span className="text-muted-foreground">Friends</span>
             </button>
           </div>
 
@@ -224,6 +226,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
       <div className="px-4 pb-3 space-y-3">
         <CompetitiveRecord stats={{ ...profileStats, rivalriesWon: stats?.rivalries_won ?? 0 }} />
         <CurrentRival userId={ownerId} profile={profile} isSelf={isSelf} />
+        <AchievementBadges stats={{ wins, losses, draws: profileStats?.draws ?? stats?.draws ?? 0, currentStreak, longestStreak }} />
       </div>
 
       <ProfileTabs active={activeTab} onChange={setActiveTab} />

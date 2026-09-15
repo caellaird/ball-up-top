@@ -23,7 +23,7 @@ export default function MobileShell() {
 
   return (
     <div className="min-h-screen bg-muted/50 flex min-[769px]:justify-center">
-      <div className="relative w-full min-[769px]:max-w-[430px] h-[100dvh] bg-background flex flex-col shadow-2xl overflow-hidden">
+      <div className="relative w-full min-[769px]:max-w-[430px] h-[100dvh] bg-background animated-bg flex flex-col shadow-2xl overflow-hidden">
         {/* Content area — the only part that scrolls. Bottom nav below is a fixed sibling. */}
         <div className="relative flex-1 min-h-0">
           <TabContainer user={user} pathname={location.pathname} />

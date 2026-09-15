@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
 import { Crown } from 'lucide-react';
 import { sendNotification } from '@/lib/notify';
+import CelebrationOverlay from '@/components/shared/CelebrationOverlay';
 
 // Notifies every other participant that a result was published, gated by each
 // recipient's "Challenge Results" notification preference.
@@ -36,6 +37,17 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const [photos, setPhotos] = useState([]);
   const [finalGame, setFinalGame] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [celebration, setCelebration] = useState(null);
+  const completedRef = useRef(null);
+
+  // Determines win/loss/tie for the current user and fires the celebration
+  // overlay before handing control back to the parent.
+  const finishWithCelebration = (updated, gameWinnerId, isDraw) => {
+    const userWon = isDraw ? false : (gameWinnerId || updated.winner_id) === user.id;
+    const result = isDraw ? 'tie' : userWon ? 'win' : 'loss';
+    completedRef.current = updated;
+    setCelebration(result);
+  };
 
   const isSeries = challenge.series_type !== 'single';
   const gameNumber = (challenge.creator_games_won || 0) + (challenge.opponent_games_won || 0) + 1;
@@ -151,7 +163,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       const winnerName = isDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
-      onCompleted(updated);
+      finishWithCelebration(updated, undefined, isDraw);
       return;
     }
 
@@ -199,7 +211,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       const winnerName = isSeriesDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
-      onCompleted(updated);
+      finishWithCelebration(updated, undefined, isSeriesDraw);
     } else {
       await base44.entities.Post.create({
         author_name: user.full_name,
@@ -226,11 +238,12 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       });
       await notifyResult(challenge, participants, user, gameWinnerName);
       setSaving(false);
-      onCompleted(updated);
+      finishWithCelebration(updated, winnerIdThisGame, isDrawGame);
     }
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[90vh] overflow-y-auto">
         <SheetHeader>
@@ -317,5 +330,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         </div>
       </SheetContent>
     </Sheet>
+    <CelebrationOverlay result={celebration} onDone={() => { setCelebration(null); onCompleted(completedRef.current); }} />
+    </>
   );
 }

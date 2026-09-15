@@ -8,6 +8,8 @@ import ChallengeCard from '@/components/challenges/ChallengeCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
+import MotionCard from '@/components/shared/MotionCard';
+import { PERSONALITY } from '@/lib/personality';
 
 // Module-level: preserves the selected tab across component remounts.
 let _persistedTab = 'pending';
@@ -51,7 +53,7 @@ export default function Challenges({ user: userProp }) {
   }
 
   const emptyCopy = {
-    pending: { title: 'No pending challenges', description: 'Tap Ball Up to challenge a friend to a game.' },
+    pending: { title: PERSONALITY.noChallenges.title, description: PERSONALITY.noChallenges.description },
     accepted: { title: 'No active challenges', description: 'Once a challenge is accepted, it shows up here.' },
     completed: { title: 'No completed challenges yet', description: 'Finish a challenge and log the result to see it here.' }
   };
@@ -81,7 +83,11 @@ export default function Challenges({ user: userProp }) {
                 : undefined}
             />
           : <div className="pt-2">
-              {displayItems.map((item) => <ChallengeCard key={item.id} challenge={item} />)}
+              {displayItems.map((item, i) => (
+                <MotionCard key={item.id} index={i}>
+                  <ChallengeCard challenge={item} />
+                </MotionCard>
+              ))}
             </div>
       }
     </PullToRefresh>

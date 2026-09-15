@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { X, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ export default function BallUp() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
   const goBack = useGoBack();
+  const reduce = useReducedMotion();
   const [step, setStep] = useState(1);
   const [sport, setSport] = useState(null);
   const [friends, setFriends] = useState(null);
@@ -103,11 +105,19 @@ export default function BallUp() {
             <h1 className="font-heading text-2xl font-extrabold mb-1">BALL UP TOP</h1>
             <p className="text-muted-foreground mb-6">Pick Your Game</p>
             <div className="grid grid-cols-3 gap-3">
-              {SPORTS.map((s) => (
-                <button key={s.key} onClick={() => { setSport(s.key); if (s.key !== 'custom') setStep(2); }} className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 ${sport === s.key ? 'border-accent bg-accent/10' : 'border-border bg-card'}`}>
+              {SPORTS.map((s, i) => (
+                <motion.button
+                  key={s.key}
+                  onClick={() => { setSport(s.key); if (s.key !== 'custom') setStep(2); }}
+                  initial={reduce ? false : { opacity: 0, y: 12 }}
+                  animate={reduce ? {} : { opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  whileTap={reduce ? undefined : { scale: 0.94 }}
+                  className={`aspect-square rounded-3xl flex flex-col items-center justify-center gap-1 border-2 ${sport === s.key ? 'border-accent bg-accent/10' : 'border-border bg-card'}`}
+                >
                   <span className="text-3xl">{s.emoji}</span>
                   <span className="text-xs font-semibold text-center px-1">{s.label}</span>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>

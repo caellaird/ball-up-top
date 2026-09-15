@@ -10,6 +10,9 @@ import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import CityRankings from '@/components/explore/CityRankings';
+import FeedPersonalHeader from '@/components/feed/FeedPersonalHeader';
+import MotionCard from '@/components/shared/MotionCard';
+import { PERSONALITY } from '@/lib/personality';
 
 const PAGE = 15;
 
@@ -131,38 +134,39 @@ export default function Home({ user: userProp }) {
           <CityRankings user={user} />
         ) : (
           <PullToRefresh className="h-full overflow-y-auto overscroll-contain" onRefresh={() => loadInitial(true)}>
+            <FeedPersonalHeader user={user} />
             {posts === null ? (
               <ListSkeleton count={4} />
             ) : posts.length === 0 ? (
               <EmptyState
-                title="No friend posts yet"
-                description="When your friends post results or trash talk, it'll show up here."
+                title={PERSONALITY.noPosts.title}
+                description={PERSONALITY.noPosts.description}
                 action={<Button asChild variant="secondary" className="rounded-full"><Link to="/friends">Find friends</Link></Button>}
               />
             ) : (
-              <div className="pt-2">
-                {posts.map((post) => (
-                  post.post_type === 'rivalry_announcement' ? (
-                    <RivalryAnnouncementCard
-                      key={post.id}
-                      post={post}
-                      reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
-                      onReact={onReact}
-                      userId={user.id}
-                      onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
-                    />
-                  ) : (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
-                      onReact={onReact}
-                      userId={user.id}
-                      currentUserName={user.full_name}
-                      friendRecordByUserId={friendRecords}
-                      onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
-                    />
-                  )
+              <div className="pt-1">
+                {posts.map((post, i) => (
+                  <MotionCard key={post.id} index={i}>
+                    {post.post_type === 'rivalry_announcement' ? (
+                      <RivalryAnnouncementCard
+                        post={post}
+                        reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
+                        onReact={onReact}
+                        userId={user.id}
+                        onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+                      />
+                    ) : (
+                      <PostCard
+                        post={post}
+                        reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
+                        onReact={onReact}
+                        userId={user.id}
+                        currentUserName={user.full_name}
+                        friendRecordByUserId={friendRecords}
+                        onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+                      />
+                    )}
+                  </MotionCard>
                 ))}
                 <div ref={sentinelRef} className="h-1" />
                 {loadingMore && <div className="py-4 text-center text-xs text-muted-foreground">Loading more…</div>}
