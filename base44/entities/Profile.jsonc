@@ -105,6 +105,10 @@
     "push_enabled": {
       "type": "boolean",
       "default": true
+    },
+    "current_rival_id": {
+      "type": "string",
+      "description": "Manually selected rivalry ID to display as Current Rival on profile"
     }
   },
   "required": [

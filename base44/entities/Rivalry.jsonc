@@ -1,0 +1,115 @@
+{
+  "name": "Rivalry",
+  "type": "object",
+  "properties": {
+    "user_a_id": {
+      "type": "string",
+      "description": "Lexicographically smaller user ID (canonical pairing)"
+    },
+    "user_b_id": {
+      "type": "string",
+      "description": "Lexicographically larger user ID"
+    },
+    "user_a_name": {
+      "type": "string"
+    },
+    "user_b_name": {
+      "type": "string"
+    },
+    "user_a_avatar": {
+      "type": "string"
+    },
+    "user_b_avatar": {
+      "type": "string"
+    },
+    "user_a_wins": {
+      "type": "number",
+      "default": 0
+    },
+    "user_b_wins": {
+      "type": "number",
+      "default": 0
+    },
+    "total_games": {
+      "type": "number",
+      "default": 0
+    },
+    "draws": {
+      "type": "number",
+      "default": 0
+    },
+    "current_streak_user_id": {
+      "type": "string"
+    },
+    "current_streak_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_game_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_game_summary": {
+      "type": "string"
+    },
+    "last_winner_id": {
+      "type": "string"
+    },
+    "primary_sport": {
+      "type": "string"
+    },
+    "primary_sport_emoji": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "past"
+      ],
+      "default": "active"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the rivalry first reached the 6-in-7-days threshold"
+    },
+    "announcement_post_id": {
+      "type": "string",
+      "description": "ID of the feed post announcing the rivalry activation"
+    }
+  },
+  "required": [
+    "user_a_id",
+    "user_b_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_a_id": "{{user.id}}"
+        },
+        {
+          "data.user_b_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.user_a_id": "{{user.id}}"
+        },
+        {
+          "data.user_b_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

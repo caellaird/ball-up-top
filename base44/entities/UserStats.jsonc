@@ -33,6 +33,10 @@
       "type": "number",
       "default": 0
     },
+    "rivalries_won": {
+      "type": "number",
+      "default": 0
+    },
     "ball_knower_points": {
       "type": "number",
       "default": 0

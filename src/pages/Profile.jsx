@@ -28,6 +28,8 @@ import FriendsTab from '@/components/profile/tabs/FriendsTab';
 import AwardsTab from '@/components/profile/tabs/AwardsTab';
 import HighlightsTab from '@/components/profile/tabs/HighlightsTab';
 import FavoriteSportPicker from '@/components/profile/FavoriteSportPicker';
+import CompetitiveRecord from '@/components/profile/CompetitiveRecord';
+import CurrentRival from '@/components/profile/CurrentRival';
 import { getSportDisplay } from '@/lib/favoriteSport';
 
 export default function Profile({ user: userProp, usernameOverride }) {
@@ -221,6 +223,12 @@ export default function Profile({ user: userProp, usernameOverride }) {
         </div>
       </div>
 
+      {/* Competitive Record + Current Rival — pinned above tabs */}
+      <div className="shrink-0 px-4 pb-3 space-y-3">
+        <CompetitiveRecord stats={{ ...profileStats, rivalriesWon: stats?.rivalries_won ?? 0 }} />
+        <CurrentRival userId={ownerId} profile={profile} isSelf={isSelf} />
+      </div>
+
       <ProfileTabs active={activeTab} onChange={setActiveTab} />
 
       {/* Only the active tab's content scrolls */}
@@ -237,6 +245,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
             created={profileStats?.challengesCreated ?? 0}
             completed={profileStats?.challengesCompleted ?? 0}
             topActivities={profileStats?.topActivities}
+            sportsBreakdown={profileStats?.sportsBreakdown}
             awards={awards}
             ownerId={ownerId}
             ownerName={displayName}

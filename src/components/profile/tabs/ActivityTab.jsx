@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import PostCard from '@/components/feed/PostCard';
+import RivalryAnnouncementCard from '@/components/feed/RivalryAnnouncementCard';
 import CompletedChallenges from '@/components/profile/CompletedChallenges';
 import EmptyState from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,14 +44,25 @@ export default function ActivityTab({ ownerId, ownerName, viewerId }) {
         </div>
       ) : (
         posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            reactions={{}}
-            onReact={onReact}
-            userId={viewerId || ownerId}
-            onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
-          />
+          post.post_type === 'rivalry_announcement' ? (
+            <RivalryAnnouncementCard
+              key={post.id}
+              post={post}
+              reactions={{}}
+              onReact={onReact}
+              userId={viewerId || ownerId}
+              onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+            />
+          ) : (
+            <PostCard
+              key={post.id}
+              post={post}
+              reactions={{}}
+              onReact={onReact}
+              userId={viewerId || ownerId}
+              onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+            />
+          )
         ))
       )}
     </div>

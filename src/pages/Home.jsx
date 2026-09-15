@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
+import RivalryAnnouncementCard from '@/components/feed/RivalryAnnouncementCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
@@ -141,16 +142,27 @@ export default function Home({ user: userProp }) {
             ) : (
               <div className="pt-2">
                 {posts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
-                    onReact={onReact}
-                    userId={user.id}
-                    currentUserName={user.full_name}
-                    friendRecordByUserId={friendRecords}
-                    onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
-                  />
+                  post.post_type === 'rivalry_announcement' ? (
+                    <RivalryAnnouncementCard
+                      key={post.id}
+                      post={post}
+                      reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
+                      onReact={onReact}
+                      userId={user.id}
+                      onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+                    />
+                  ) : (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
+                      onReact={onReact}
+                      userId={user.id}
+                      currentUserName={user.full_name}
+                      friendRecordByUserId={friendRecords}
+                      onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
+                    />
+                  )
                 ))}
                 <div ref={sentinelRef} className="h-1" />
                 {loadingMore && <div className="py-4 text-center text-xs text-muted-foreground">Loading more…</div>}

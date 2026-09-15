@@ -23,6 +23,7 @@ const PublicLeaderboard = lazy(() => import('@/pages/PublicLeaderboard'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const AsoScreenshots = lazy(() => import('@/pages/AsoScreenshots'));
 const AwardPage = lazy(() => import('@/pages/AwardPage'));
+const Rivalry = lazy(() => import('@/pages/Rivalry'));
 const Home = lazy(() => import('@/pages/Home'));
 const BallUp = lazy(() => import('@/pages/BallUp'));
 const Groups = lazy(() => import('@/pages/Groups'));
@@ -89,6 +90,7 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route element={<MobileShell />}>
             <Route path="/" element={<Home />} />
+            <Route path="/rivalry/:rivalryId" element={<Rivalry />} />
             <Route path="/ball-up" element={<BallUp />} />
             <Route path="/groups" element={<Groups />} />
             <Route path="/challenges" element={<Challenges />} />

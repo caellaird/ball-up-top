@@ -13,9 +13,12 @@ function myNameInChallenge(c, userId) {
 
 export async function computeProfileStats(userId) {
   try {
-  const [asCreator, asOpponent] = await Promise.all([
+  const [asCreator, asOpponent, asRivalA, asRivalB, userPosts] = await Promise.all([
     base44.entities.Challenge.filter({ created_by_id: userId }),
     base44.entities.Challenge.list('-created_date', 300),
+    base44.entities.Rivalry.filter({ user_a_id: userId }),
+    base44.entities.Rivalry.filter({ user_b_id: userId }),
+    base44.entities.Post.filter({ created_by_id: userId }, '-created_date', 100),
   ]);
 
   const asOpponentMine = asOpponent.filter((c) => c.opponent_id === userId || c.opponent_ids?.includes(userId));
@@ -135,17 +138,36 @@ export async function computeProfileStats(userId) {
 
   sportBreakdown.sort((a, b) => b.games - a.games);
 
+  // Unique opponents across all challenges
+  const opponentIds = new Set();
+  all.forEach((c) => {
+    if (c.created_by_id === userId) {
+      (c.opponent_ids?.length ? c.opponent_ids : c.opponent_id ? [c.opponent_id] : [])
+        .forEach((id) => id && opponentIds.add(id));
+    } else {
+      opponentIds.add(c.created_by_id);
+    }
+  });
+
+  const rivalries = [...asRivalA, ...asRivalB];
+  const gameMoments = userPosts.filter((p) => p.challenge_id).length;
+
   return {
     wins,
     losses,
     draws,
+    totalGames: wins + losses + draws,
     winPct,
     currentStreak,
     longestStreak,
     challengesCompleted: completed.length,
     challengesCreated: createdCount,
     topActivities: sportBreakdown.slice(0, 3),
+    sportsBreakdown: sportBreakdown,
     favoriteCompetition: sportBreakdown[0]?.sport || null,
+    rivalriesCount: rivalries.length,
+    gameMoments,
+    uniqueOpponents: opponentIds.size,
   };
   } catch (e) {
     return null;

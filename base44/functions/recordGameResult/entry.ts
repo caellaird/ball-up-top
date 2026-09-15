@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { normalizeCity, getWeekKey } from '../../shared/cityScore.ts';
+import { processRivalries } from '../../shared/rivalries.ts';
 
 // Records a single game result toward every participant's UserStats. Runs as the
 // service role so it can update opponents' stats — UserStats.update is locked to
@@ -118,6 +119,15 @@ export default async function(req) {
             leaderboard_week: weekKey,
             completed_at: new Date().toISOString(),
           });
+        }
+
+        // Rivalry processing — runs after city_score_counted is set so it
+        // only fires once per completed challenge. Wrapped in its own try
+        // so a rivalry failure doesn't roll back city scoring.
+        try {
+          await processRivalries(admin, challenge, winnerId, isDraw, user);
+        } catch (rErr) {
+          // Best-effort: rivalry processing failure is non-fatal.
         }
       } catch (e) {
         // Best-effort: don't fail the result recording if city scoring fails.

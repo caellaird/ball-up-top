@@ -1,6 +1,7 @@
 import React from 'react';
 import TrophyCase from '@/components/profile/TrophyCase';
 import HeadToHead from '@/components/profile/HeadToHead';
+import { SPORT_EMOJI } from '@/lib/constants';
 
 function Stat({ label, value }) {
   return (
@@ -11,7 +12,7 @@ function Stat({ label, value }) {
   );
 }
 
-export default function StatsTab({ wins, losses, draws, winPct, currentStreak, longestStreak, created, completed, topActivities, headToHead, awards, ownerId, ownerName, ownerUsername, ownerAvatar }) {
+export default function StatsTab({ wins, losses, draws, winPct, currentStreak, longestStreak, created, completed, topActivities, sportsBreakdown, headToHead, awards, ownerId, ownerName, ownerUsername, ownerAvatar }) {
   const h2hProps = headToHead ? {
     currentUserId: headToHead.currentUserId,
     currentUserName: headToHead.currentUserName,
@@ -34,6 +35,31 @@ export default function StatsTab({ wins, losses, draws, winPct, currentStreak, l
       </div>
 
       <TrophyCase topActivities={topActivities} awards={awards} ownerId={ownerId} ownerName={ownerName} ownerUsername={ownerUsername} ownerAvatar={ownerAvatar} />
+
+      {sportsBreakdown?.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-heading font-bold mb-3">Competition Breakdown</h3>
+          <div className="space-y-2">
+            {sportsBreakdown.map((s) => (
+              <div key={s.sport} className="bg-card rounded-2xl shadow-sm p-3 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="text-xl">{s.emoji}</span>
+                  <span className="font-medium text-sm">{s.sport}</span>
+                </span>
+                <div className="text-right">
+                  <p className="font-heading font-bold text-sm">
+                    <span className="text-accent">{s.wins}</span>
+                    <span className="text-muted-foreground mx-1">–</span>
+                    <span className="text-secondary">{s.losses}</span>
+                    {s.draws > 0 && <span className="text-muted-foreground ml-2 text-xs">🤝 {s.draws}</span>}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{s.games} games · {s.winPct}%</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {h2hProps && <HeadToHead {...h2hProps} />}
     </div>
