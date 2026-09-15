@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -55,7 +55,28 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const [showReportUser, setShowReportUser] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
+  const tabBarRef = useRef(null);
   const isSelf = username === 'me';
+
+  // Switching tabs scrolls the sticky tab bar to the top of the scroll viewport
+  // so the newly-mounted tab content is immediately visible (the bar is sticky,
+  // so it stays pinned while the content flows underneath).
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    requestAnimationFrame(() => {
+      const bar = tabBarRef.current;
+      if (!bar) return;
+      let el = bar.parentElement;
+      while (el) {
+        const oy = window.getComputedStyle(el).overflowY;
+        if (oy === 'auto' || oy === 'scroll') {
+          el.scrollTo({ top: bar.offsetTop, behavior: 'smooth' });
+          return;
+        }
+        el = el.parentElement;
+      }
+    });
+  };
 
   useEffect(() => { load(); }, [username]);
 
@@ -238,7 +259,9 @@ export default function Profile({ user: userProp, usernameOverride }) {
         <AchievementBadges stats={{ wins, losses, draws: profileStats?.draws ?? stats?.draws ?? 0, currentStreak, longestStreak }} />
       </div>
 
-      <ProfileTabs active={activeTab} onChange={setActiveTab} />
+      <div ref={tabBarRef}>
+        <ProfileTabs active={activeTab} onChange={handleTabChange} />
+      </div>
 
       {/* Active tab content flows in the page scroll */}
       <div>
