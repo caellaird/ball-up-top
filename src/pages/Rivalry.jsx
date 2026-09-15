@@ -82,12 +82,15 @@ export default function Rivalry() {
   const draws = overall?.draws ?? rivalry?.draws ?? 0;
   const isTied = aWins === bWins;
 
-  const streakName = overall?.currentStreakUserId === userA?.id ? userA.name
-    : overall?.currentStreakUserId === userB?.id ? userB.name : null;
+  const streakName = overall?.currentStreakUserId && userA && userB
+    ? (overall.currentStreakUserId === userA.id ? userA.name
+      : overall.currentStreakUserId === userB.id ? userB.name : null)
+    : null;
   const streakCount = overall?.currentStreakCount ?? 0;
 
-  const story = breakdown ? generateRivalryStory(breakdown, userA.name, userB.name) : '';
-  const insights = breakdown
+  const story = breakdown && userA && userB
+    ? generateRivalryStory(breakdown, userA.name, userB.name) : '';
+  const insights = breakdown && userA && userB
     ? generateRivalryInsights(breakdown, rivalry.user_a_id, rivalry.user_b_id, user?.id, userA.name, userB.name)
     : [];
 
