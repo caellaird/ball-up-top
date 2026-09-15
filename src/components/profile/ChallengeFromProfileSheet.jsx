@@ -7,26 +7,26 @@ import { base44 } from '@/api/base44Client';
 import { SPORTS, SERIES_TYPES, GAMES_TO_WIN, getSportDisplay, CUSTOM_SPORT_EMOJIS } from '@/lib/constants';
 import { sendNotification } from '@/lib/notify';
 
-export default function ChallengeFromProfileSheet({ open, onOpenChange, opponentId, opponentName, opponentUsername }) {
+export default function ChallengeFromProfileSheet({ open, onOpenChange, opponentId, opponentName, opponentUsername, defaultSport, defaultCustomName, defaultCustomEmoji }) {
   const { user } = useOutletContext();
   const navigate = useNavigate();
-  const [sport, setSport] = useState('basketball');
+  const [sport, setSport] = useState(defaultSport || 'basketball');
   const [seriesType, setSeriesType] = useState('single');
   const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [seriesName, setSeriesName] = useState('');
-  const [customSportName, setCustomSportName] = useState('');
-  const [customSportEmoji, setCustomSportEmoji] = useState('');
+  const [customSportName, setCustomSportName] = useState(defaultCustomName || '');
+  const [customSportEmoji, setCustomSportEmoji] = useState(defaultCustomEmoji || '');
   const [sending, setSending] = useState(false);
 
   const reset = () => {
-    setSport('basketball');
+    setSport(defaultSport || 'basketball');
     setSeriesType('single');
     setLocation('');
     setDate('');
     setSeriesName('');
-    setCustomSportName('');
-    setCustomSportEmoji('');
+    setCustomSportName(defaultCustomName || '');
+    setCustomSportEmoji(defaultCustomEmoji || '');
   };
 
   const canSend = sport !== 'custom' || customSportName.trim();

@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Swords, Flame } from 'lucide-react';
-import { fetchCurrentRival, getRival, getSelf } from '@/lib/rivalries';
+import { fetchCurrentRival, getRival, getSelf, fetchRivalryHistory } from '@/lib/rivalries';
+import { computeRivalryBreakdown } from '@/lib/rivalryBreakdown';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function CurrentRival({ userId, profile, isSelf }) {
   const [rivalry, setRivalry] = useState(null);
+  const [breakdown, setBreakdown] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -15,7 +17,16 @@ export default function CurrentRival({ userId, profile, isSelf }) {
     let cancelled = false;
     setLoading(true);
     fetchCurrentRival(userId, profile)
-      .then((r) => { if (!cancelled) setRivalry(r); })
+      .then(async (r) => {
+        if (cancelled) return;
+        setRivalry(r);
+        if (r && (r.total_games || 0) >= 1) {
+          try {
+            const history = await fetchRivalryHistory(r.user_a_id, r.user_b_id);
+            if (!cancelled) setBreakdown(computeRivalryBreakdown(history, r.user_a_id, r.user_b_id));
+          } catch { /* best-effort */ }
+        }
+      })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -29,10 +40,22 @@ export default function CurrentRival({ userId, profile, isSelf }) {
   const leadDiff = self.wins - rival.wins;
   const isTied = self.wins === rival.wins;
   const streakName = rivalry.current_streak_user_id === userId
-    ? `${self.name}'s streak`
+    ? self.name
     : rivalry.current_streak_user_id === rival.id
-      ? `${rival.name}'s streak`
+      ? rival.name
       : null;
+
+  // Most-played sport (from breakdown, computed from real data)
+  const mostPlayed = breakdown?.mostPlayedSport;
+  const mostPlayedSelfWins = mostPlayed
+    ? (rivalry.user_a_id === userId ? mostPlayed.aWins : mostPlayed.bWins)
+    : null;
+  const mostPlayedRivalWins = mostPlayed
+    ? (rivalry.user_a_id === userId ? mostPlayed.bWins : mostPlayed.aWins)
+    : null;
+  const mostPlayedLeader = mostPlayed && mostPlayedSelfWins !== mostPlayedRivalWins
+    ? (mostPlayedSelfWins > mostPlayedRivalWins ? self.name.split(' ')[0] : rival.name.split(' ')[0])
+    : null;
 
   return (
     <div className="bg-card rounded-3xl arena-shadow border border-border/50 p-4">
@@ -72,6 +95,20 @@ export default function CurrentRival({ userId, profile, isSelf }) {
         </div>
       </div>
 
+      {/* Most-played sport line */}
+      {mostPlayed && mostPlayed.totalGames >= 1 && (
+        <div className="bg-muted/60 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
+          <span className="text-lg">{mostPlayed.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Most Played</p>
+            <p className="text-xs font-bold truncate">
+              {mostPlayed.label} — {mostPlayedSelfWins}–{mostPlayedRivalWins}
+              {mostPlayedLeader && <span className="text-muted-foreground font-medium"> {mostPlayedLeader}</span>}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="text-center mb-3">
         {isTied ? (
           <p className="text-xs font-semibold text-muted-foreground">🔥 Dead even — nobody's on top</p>
@@ -81,7 +118,9 @@ export default function CurrentRival({ userId, profile, isSelf }) {
           </p>
         )}
         {streakName && rivalry.current_streak_count > 1 && (
-          <p className="text-xs text-accent font-semibold mt-0.5">🔥 {streakName}: {rivalry.current_streak_count}</p>
+          <p className="text-xs text-accent font-semibold mt-0.5 flex items-center justify-center gap-0.5">
+            <Flame className="w-3 h-3" /> {streakName} W{rivalry.current_streak_count}
+          </p>
         )}
       </div>
 
