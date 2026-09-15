@@ -130,30 +130,28 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const sportDisplay = getSportDisplay(profile.favorite_sport);
 
   return (
-    <div className="h-full flex flex-col">
-      {!isSelf && (
-        <div className="flex items-center px-4 pt-3 pb-1 shrink-0">
-          <button onClick={goBack} className="p-1 -ml-1 text-foreground">
+    <div>
+      {/* Profile header — banner with floating back / settings controls */}
+      <div className="relative">
+        <ProfileBanner profile={profile} />
+        {isSelf ? (
+          <button
+            onClick={() => navigate('/settings')}
+            className="absolute right-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
+            style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+            aria-label="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            onClick={goBack}
+            className="absolute left-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
+            style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
+            aria-label="Go back"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
-        </div>
-      )}
-      {/* Pinned profile header — stays visible while the tab content below scrolls */}
-      <div className="shrink-0">
-        {isSelf ? (
-          <div className="relative">
-            <ProfileBanner profile={profile} />
-            <button
-              onClick={() => navigate('/settings')}
-              className="absolute right-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
-              style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
-              aria-label="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          <ProfileBanner profile={profile} />
         )}
         <div className="px-4 -mt-10 relative z-10">
           <div className="flex items-end justify-between mb-2">
@@ -223,16 +221,16 @@ export default function Profile({ user: userProp, usernameOverride }) {
         </div>
       </div>
 
-      {/* Competitive Record + Current Rival — pinned above tabs */}
-      <div className="shrink-0 px-4 pb-3 space-y-3">
+      {/* Competitive Record + Current Rival */}
+      <div className="px-4 pb-3 space-y-3">
         <CompetitiveRecord stats={{ ...profileStats, rivalriesWon: stats?.rivalries_won ?? 0 }} />
         <CurrentRival userId={ownerId} profile={profile} isSelf={isSelf} />
       </div>
 
       <ProfileTabs active={activeTab} onChange={setActiveTab} />
 
-      {/* Only the active tab's content scrolls */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      {/* Active tab content flows in the page scroll */}
+      <div>
         {activeTab === 'activity' && <ActivityTab ownerId={ownerId} ownerName={displayName} viewerId={user.id} />}
         {activeTab === 'stats' && (
           <StatsTab
