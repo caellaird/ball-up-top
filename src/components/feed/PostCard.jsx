@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { format, formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
-import MediaViewer from '@/components/feed/MediaViewer';
+import { usePhotoViewer } from '@/lib/photoViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
@@ -15,7 +15,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [viewerIndex, setViewerIndex] = useState(null);
+  const { open: openPhotoViewer } = usePhotoViewer();
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -146,15 +146,11 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
       {mediaUrls?.length > 0 && (
         <div className={`grid gap-1.5 mb-3 ${mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {mediaUrls.slice(0, 5).map((url, i) => (
-            <button key={url} onClick={() => setViewerIndex(i)} className="block">
+            <button key={url} onClick={() => openPhotoViewer(mediaUrls, i)} className="block">
               <img src={url} alt="" className="rounded-2xl object-cover w-full h-40" />
             </button>
           ))}
         </div>
-      )}
-
-      {viewerIndex !== null && (
-        <MediaViewer urls={mediaUrls} initialIndex={viewerIndex} onClose={() => setViewerIndex(null)} />
       )}
 
       <div className="flex items-center gap-4 text-muted-foreground text-sm pt-1">

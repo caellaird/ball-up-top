@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { Trophy } from 'lucide-react';
+import { usePhotoViewer } from '@/lib/photoViewer';
 
 const QUICK_REACTIONS = ['👍', '🔥', '🏀', '😂', '💪', '👑'];
 
@@ -16,6 +17,7 @@ function parseChallengeCard(body) {
 export default function MessageBubble({ message, isMe, isGroup, userId, onReply, seen }) {
   const [showActions, setShowActions] = useState(false);
   const [reactions, setReactions] = useState([]);
+  const { open: openPhotoViewer } = usePhotoViewer();
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(message.body || '');
 
@@ -93,7 +95,7 @@ export default function MessageBubble({ message, isMe, isGroup, userId, onReply,
         src={message.media_url}
         alt=""
         className="max-w-[70%] rounded-2xl cursor-pointer shadow-sm mx-2"
-        onClick={() => setShowActions(!showActions)} /> :
+        onClick={() => openPhotoViewer(message.media_url)} /> :
 
       editing ?
       <div className={`flex flex-col gap-1 max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>

@@ -15,11 +15,13 @@ import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import SocialShareSheet from '@/components/shared/SocialShareSheet';
 import SquadNudgeSheet from '@/components/challenges/SquadNudgeSheet';
+import { usePhotoViewer } from '@/lib/photoViewer';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
   const { user } = useOutletContext();
   const navigate = useNavigate();
+  const { open: openPhotoViewer } = usePhotoViewer();
   const [challenge, setChallenge] = useState(null);
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
@@ -221,7 +223,11 @@ export default function ChallengeDetail() {
 
         {challenge.photos?.length > 0 && (
           <div className="grid grid-cols-2 gap-2 mb-5">
-            {challenge.photos.map((p, i) => <img key={i} src={p} alt="" className="rounded-2xl object-cover w-full h-32" />)}
+            {challenge.photos.map((p, i) => (
+              <button key={i} onClick={() => openPhotoViewer(challenge.photos, i)} className="block active:scale-[0.98] transition">
+                <img src={p} alt="" className="rounded-2xl object-cover w-full h-32" />
+              </button>
+            ))}
           </div>
         )}
 
@@ -239,7 +245,11 @@ export default function ChallengeDetail() {
                   {g.caption && <p className="text-sm text-muted-foreground mt-1">{g.caption}</p>}
                   {g.photos?.length > 0 && (
                     <div className="grid grid-cols-3 gap-1.5 mt-2">
-                      {g.photos.map((p, i) => <img key={i} src={p} alt="" className="rounded-lg object-cover w-full h-20" />)}
+                      {g.photos.map((p, i) => (
+                        <button key={i} onClick={() => openPhotoViewer(g.photos, i)} className="block active:scale-[0.98] transition">
+                          <img src={p} alt="" className="rounded-lg object-cover w-full h-20" />
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

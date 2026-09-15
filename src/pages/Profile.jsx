@@ -33,6 +33,7 @@ import CurrentRival from '@/components/profile/CurrentRival';
 import AnimatedNumber from '@/components/shared/AnimatedNumber';
 import AchievementBadges from '@/components/shared/AchievementBadges';
 import { getSportDisplay } from '@/lib/favoriteSport';
+import { usePhotoViewer } from '@/lib/photoViewer';
 
 export default function Profile({ user: userProp, usernameOverride }) {
   const { username: paramUsername } = useParams();
@@ -41,6 +42,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const username = usernameOverride || paramUsername;
   const navigate = useNavigate();
   const goBack = useGoBack();
+  const { open: openPhotoViewer } = usePhotoViewer();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [profileStats, setProfileStats] = useState(null);
@@ -159,10 +161,16 @@ export default function Profile({ user: userProp, usernameOverride }) {
             {isSelf ? (
               <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} />
             ) : (
-              <Avatar className="w-16 h-16 border-4 border-background">
-                <AvatarImage src={profile.avatar_url} />
-                <AvatarFallback className="text-xl">{displayName?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
+              <button
+                onClick={() => profile.avatar_url && openPhotoViewer(profile.avatar_url)}
+                className={`shrink-0 ${profile.avatar_url ? 'active:scale-95 transition' : 'cursor-default'}`}
+                aria-label={profile.avatar_url ? 'View profile photo' : undefined}
+              >
+                <Avatar className="w-16 h-16 border-4 border-background">
+                  <AvatarImage src={profile.avatar_url} />
+                  <AvatarFallback className="text-xl">{displayName?.[0] || 'U'}</AvatarFallback>
+                </Avatar>
+              </button>
             )}
             {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-1" onClick={() => setEditing(true)}>Edit Profile</Button>}
             {!isSelf && (

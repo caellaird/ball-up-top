@@ -11,6 +11,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AgeGate from '@/components/AgeGate';
+import PhotoViewerProvider from '@/components/shared/PhotoViewerProvider';
 
 // Eager: layout + platform scaffold. Lazy: all page components for code splitting.
 const MobileShell = lazy(() => import('@/components/layout/MobileShell'));
@@ -120,7 +121,9 @@ function App() {
         <Router>
           <ScrollToTop />
           <ErrorBoundary>
-            <AuthenticatedApp />
+            <PhotoViewerProvider>
+              <AuthenticatedApp />
+            </PhotoViewerProvider>
           </ErrorBoundary>
         </Router>
         <Toaster />
