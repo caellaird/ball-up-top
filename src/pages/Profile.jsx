@@ -138,7 +138,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
         {isSelf ? (
           <button
             onClick={() => navigate('/settings')}
-            className="absolute right-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
+            className="absolute right-2 min-w-[44px] min-h-[44px] rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
             style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
             aria-label="Settings"
           >
@@ -147,7 +147,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
         ) : (
           <button
             onClick={goBack}
-            className="absolute left-2 p-2 rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
+            className="absolute left-2 min-w-[44px] min-h-[44px] rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
             style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
             aria-label="Go back"
           >

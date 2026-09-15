@@ -1,15 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useGoBack } from "@/hooks/useGoBack";
 
 export default function LegalLayout({ title, updated, children }) {
+  const goBack = useGoBack("/login");
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 safe-top bg-background/95 backdrop-blur border-b border-border z-10">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/login" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <button onClick={goBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground min-h-[44px] px-2 -ml-2">
             <ArrowLeft className="w-4 h-4" /> Back
-          </Link>
+          </button>
           <span className="font-heading font-semibold text-sm">Ball Up Top</span>
         </div>
       </div>

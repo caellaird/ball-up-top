@@ -4,18 +4,17 @@ import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Image as ImageIcon, X, Settings as SettingsIcon, ArrowLeft, Users, Trophy } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Settings as SettingsIcon, Users, Trophy } from 'lucide-react';
 import MessageBubble from '@/components/messages/MessageBubble';
 import GroupSettingsSheet from '@/components/messages/GroupSettingsSheet';
 import ChallengeButtonSheet from '@/components/messages/ChallengeButtonSheet';
 import { markThreadRead, setTyping, isTyping, hasRead, notifyMessageParticipants } from '@/lib/messaging';
-import { useGoBack } from '@/hooks/useGoBack';
+import BackButton from '@/components/shared/BackButton';
 
 export default function Conversation() {
   const { threadId } = useParams();
   const { user } = useOutletContext();
   const navigate = useNavigate();
-  const goBack = useGoBack();
   const [thread, setThread] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
@@ -161,9 +160,7 @@ export default function Conversation() {
   return (
     <div className="flex flex-col h-full safe-top">
       <div className="flex items-center gap-3 mb-3 bg-card rounded-2xl shadow-sm px-3 py-2.5">
-        <button onClick={goBack} className="shrink-0 p-1 -ml-1 text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <BackButton fallback="/messages" className="-ml-1.5 text-muted-foreground hover:text-foreground" />
 
         <div className="relative shrink-0">
           <Avatar className="w-11 h-11">
@@ -252,7 +249,7 @@ export default function Conversation() {
         thread={thread}
         user={user}
         onUpdated={setThread}
-        onLeave={() => navigate(-1)} />
+        onLeave={() => navigate('/messages', { replace: true })} />
 
       }
 

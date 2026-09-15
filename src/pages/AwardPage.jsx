@@ -5,11 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy } from 'lucide-react';
 import { getAwardMeta, RARITY_CLASSES } from '@/lib/awards';
 import { LOGO_URL } from '@/lib/constants';
+import { useGoBack } from '@/hooks/useGoBack';
 
 export default function AwardPage() {
   const { awardId } = useParams();
   const [searchParams] = useSearchParams();
   const userIdParam = searchParams.get('user');
+  const goBack = useGoBack('/login');
 
   const [award, setAward] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -53,7 +55,7 @@ export default function AwardPage() {
       {/* Sticky header */}
       <div className="sticky top-0 safe-top bg-background/95 backdrop-blur border-b border-border z-10">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">Back</Link>
+          <button onClick={goBack} className="text-sm text-muted-foreground hover:text-foreground min-h-[44px] px-2 -ml-2">Back</button>
           <img src={LOGO_URL} alt="Ball Up Top" className="h-7 w-7 rounded-lg" />
           <Link to="/register" className="text-sm font-semibold text-primary">Sign up</Link>
         </div>

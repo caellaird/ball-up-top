@@ -11,11 +11,9 @@ import SettingsSection from '@/components/settings/SettingsSection';
 import ToggleRow from '@/components/settings/ToggleRow';
 import NotificationPreferences from '@/components/settings/NotificationPreferences';
 import Header from '@/components/layout/Header';
-import { useGoBack } from '@/hooks/useGoBack';
 
 export default function Settings() {
   const { user } = useOutletContext();
-  const goBack = useGoBack();
   const [profile, setProfile] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -48,7 +46,7 @@ export default function Settings() {
 
   return (
     <div className="pb-10">
-      <Header title="Settings" onBack={goBack} />
+      <Header title="Settings" backFallback="/profile/me" />
 
       {/* Notifications */}
       <SettingsSection title="Notifications" description="Control exactly which notifications you receive.">

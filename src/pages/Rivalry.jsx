@@ -4,11 +4,12 @@ import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Swords, Flame } from 'lucide-react';
+import { Swords, Flame } from 'lucide-react';
 import { fetchRivalry, fetchRivalryHistory } from '@/lib/rivalries';
 import { getSportDisplay } from '@/lib/constants';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useGoBack } from '@/hooks/useGoBack';
+import BackButton from '@/components/shared/BackButton';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
 
 export default function Rivalry() {
@@ -73,10 +74,8 @@ export default function Rivalry() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="shrink-0 flex items-center px-4 pt-3 pb-2">
-        <button onClick={goBack} className="p-1 -ml-1 text-foreground">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <span className="font-heading font-bold ml-2">Rivalry</span>
+        <BackButton fallback="/" className="-ml-1 text-foreground" />
+        <span className="font-heading font-bold ml-1">Rivalry</span>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-6">

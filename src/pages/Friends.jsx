@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Header from '@/components/layout/Header';
-import { useGoBack } from '@/hooks/useGoBack';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import EmptyState from '@/components/shared/EmptyState';
 import UserSearchResult from '@/components/friends/UserSearchResult';
@@ -18,7 +17,6 @@ import RecommendedFriends from '@/components/friends/RecommendedFriends';
 export default function Friends() {
   const { user } = useOutletContext();
   const navigate = useNavigate();
-  const goBack = useGoBack();
   const [tab, setTab] = useState('friends');
   const [allRelations, setAllRelations] = useState([]);
   const [allRecords, setAllRecords] = useState([]);
@@ -128,7 +126,7 @@ export default function Friends() {
 
   return (
     <div>
-      <Header title="Friends" onBack={goBack} />
+      <Header title="Friends" backFallback="/" />
 
       <div className="px-4 pt-4">
         <Button onClick={() => setShowAddFriends(true)} className="w-full rounded-full mb-4 bg-gradient-to-r from-primary to-accent">

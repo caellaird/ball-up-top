@@ -15,13 +15,11 @@ import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import SocialShareSheet from '@/components/shared/SocialShareSheet';
 import SquadNudgeSheet from '@/components/challenges/SquadNudgeSheet';
-import { useGoBack } from '@/hooks/useGoBack';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
   const { user } = useOutletContext();
   const navigate = useNavigate();
-  const goBack = useGoBack();
   const [challenge, setChallenge] = useState(null);
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
@@ -146,7 +144,7 @@ export default function ChallengeDetail() {
 
   return (
     <div>
-      <Header title="Challenge" onBack={goBack} />
+      <Header title="Challenge" backFallback="/challenges" />
       <div className="p-4">
         <div className="bg-card rounded-3xl shadow-sm p-5 mb-5 text-center relative">
           {isParticipant && challenge.status !== 'completed' && challenge.status !== 'declined' && (

@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import { Bell, ArrowLeft } from 'lucide-react';
 import { LOGO_URL } from '@/lib/constants';
 import NotificationBadge from '@/components/layout/NotificationBadge';
+import BackButton from '@/components/shared/BackButton';
 
-export default function Header({ title, onBack }) {
+export default function Header({ title, backFallback, onBack }) {
   return (
     <header className="sticky top-0 z-30 px-4 pt-[env(safe-area-inset-top)] pb-2">
       <div className="flex items-center justify-between h-12 px-3 rounded-full border border-border/60 bg-background/80 backdrop-blur-xl arena-shadow">
-        <div className="flex items-center gap-2 min-w-0">
-          {onBack && (
-            <button onClick={onBack} className="p-1.5 -ml-1 text-foreground shrink-0">
+        <div className="flex items-center gap-1 min-w-0">
+          {backFallback && <BackButton fallback={backFallback} className="-ml-1.5 text-foreground" />}
+          {onBack && !backFallback && (
+            <button onClick={onBack} aria-label="Go back" className="flex items-center justify-center min-w-[44px] min-h-[44px] -ml-1.5 text-foreground shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
