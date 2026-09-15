@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,10 @@ import { getSportDisplay } from '@/lib/constants';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useGoBack } from '@/hooks/useGoBack';
 import ChallengeFromProfileSheet from '@/components/profile/ChallengeFromProfileSheet';
-import { getOrCreateProfile } from '@/lib/ensureProfile';
 
 export default function Rivalry() {
   const { rivalryId } = useParams();
   const goBack = useGoBack();
-  const navigate = useNavigate();
   const [rivalry, setRivalry] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,6 @@
 import React from 'react';
 import TrophyCase from '@/components/profile/TrophyCase';
 import HeadToHead from '@/components/profile/HeadToHead';
-import { SPORT_EMOJI } from '@/lib/constants';
 
 function Stat({ label, value }) {
   return (
