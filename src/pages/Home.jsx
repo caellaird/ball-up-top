@@ -8,11 +8,9 @@ import PostCard from '@/components/feed/PostCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
-import ExploreMap from '@/components/explore/ExploreMap';
-import PublicEventCard from '@/components/explore/PublicEventCard';
+import CityRankings from '@/components/explore/CityRankings';
 
 const PAGE = 15;
-const WINDOW_MS = 12 * 3600 * 1000;
 
 export default function Home({ user: userProp }) {
   const outletCtx = useOutletContext();
@@ -23,7 +21,6 @@ export default function Home({ user: userProp }) {
   const [myReactions, setMyReactions] = useState({});
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [sharedEvents, setSharedEvents] = useState([]);
   const [friendRecords, setFriendRecords] = useState({});
 
   const tabRef = useRef(tab);
@@ -47,11 +44,7 @@ export default function Home({ user: userProp }) {
     if (tabRef.current === 'explore') { if (!silent) setPosts(null); return; }
     if (!silent) setPosts(null);
     const isFriends = tabRef.current === 'friends';
-    // Single combined friend query replaces the 3 per-status fetches and gives
-    // us a complete relation map for every feed author — one request for the
-    // whole feed instead of one per post card (which tripped the rate limit).
-    // Sequential (not Promise.all) to avoid bursting 3 API calls at once
-    // and tripping the platform rate limit.
+    // Sequential (not Promise.all) to avoid bursting API calls and tripping the rate limit.
     const data = await fetchPage(0);
     const myLikes = await base44.entities.Like.filter({ created_by_id: user.id });
     const myRelations = await base44.entities.Friend.filter({ $or: [{ created_by_id: user.id }, { addressee_id: user.id }] });
@@ -71,14 +64,8 @@ export default function Home({ user: userProp }) {
     setFriendRecords(friendRecordByUserId);
     if (isFriends) {
       friendIdsRef.current = acceptedIds;
-      const now = Date.now();
-      try {
-        const evs = await base44.entities.PublicEvent.filter({ status: 'active', share_to_friends: true });
-        setSharedEvents(evs.filter((e) => acceptedIds.has(e.created_by_id) && new Date(e.start_datetime).getTime() > now && new Date(e.start_datetime).getTime() <= now + WINDOW_MS));
-      } catch (e) { setSharedEvents([]); }
     } else {
       friendIdsRef.current = null;
-      setSharedEvents([]);
     }
     const map = {};
     myLikes.forEach((l) => { map[l.post_id] = map[l.post_id] || {}; map[l.post_id][l.type || 'like'] = true; });
@@ -109,24 +96,6 @@ export default function Home({ user: userProp }) {
   useEffect(() => { tabRef.current = tab; loadInitial(); }, [tab]);
 
   useEffect(() => {
-    if (tab !== 'friends') return;
-    const unsub = base44.entities.PublicEvent.subscribe((event) => {
-      const d = event?.data;
-      if (!d) return;
-      if (d.status !== 'active' || !d.share_to_friends) {
-        setSharedEvents((prev) => prev.filter((e) => e.id !== d.id));
-        return;
-      }
-      setSharedEvents((prev) => {
-        if (!friendIdsRef.current?.has(d.created_by_id)) return prev;
-        if (prev.some((e) => e.id === d.id)) return prev.map((e) => (e.id === d.id ? { ...e, ...d } : e));
-        return [d, ...prev];
-      });
-    });
-    return unsub;
-  }, [tab]);
-
-  useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) loadMore(); }, { rootMargin: '500px' });
@@ -134,7 +103,7 @@ export default function Home({ user: userProp }) {
     return () => io.disconnect();
   }, [posts, hasMore, loadingMore]);
 
-  const countField = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count', trophy: 'trophy_count' };
+  const countField = { like: 'like_count', fire: 'fire_count', trash: 'trash_count', trophy: 'trophy_count' };
   const onReact = async (post, type) => {
     const already = myReactions[post.id]?.[type];
     const newMap = { ...myReactions, [post.id]: { ...myReactions[post.id], [type]: !already } };
@@ -158,18 +127,12 @@ export default function Home({ user: userProp }) {
       </div>
       <div className="flex-1 min-h-0">
         {tab === 'explore' ? (
-          <ExploreMap user={user} onOpenChat={(chatId) => navigate(`/messages/${chatId}`)} />
+          <CityRankings user={user} />
         ) : (
           <PullToRefresh className="h-full overflow-y-auto overscroll-contain" onRefresh={() => loadInitial(true)}>
-            {sharedEvents.length > 0 && (
-              <div className="pt-2">
-                <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Shared Events</p>
-                {sharedEvents.map((e) => <PublicEventCard key={e.id} event={e} user={user} />)}
-              </div>
-            )}
             {posts === null ? (
               <ListSkeleton count={4} />
-            ) : posts.length === 0 && sharedEvents.length === 0 ? (
+            ) : posts.length === 0 ? (
               <EmptyState
                 title="No friend posts yet"
                 description="When your friends post results or trash talk, it'll show up here."

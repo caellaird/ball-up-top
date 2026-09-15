@@ -7,7 +7,6 @@ import { Loader2, LogOut, Moon, Sun, Trash2, Shield, FileText } from 'lucide-rea
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useTheme } from '@/hooks/useTheme';
-import NearbyNotificationsSettings from '@/components/settings/NearbyNotificationsSettings';
 import SettingsSection from '@/components/settings/SettingsSection';
 import ToggleRow from '@/components/settings/ToggleRow';
 import NotificationPreferences from '@/components/settings/NotificationPreferences';
@@ -55,17 +54,6 @@ export default function Settings() {
       <SettingsSection title="Notifications" description="Control exactly which notifications you receive.">
         {profile
           ? <NotificationPreferences profile={profile} setProfile={setProfile} />
-          : <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>}
-      </SettingsSection>
-
-      {/* Explore */}
-      <SettingsSection title="Explore" description="Nearby competitions, interests, and saved events.">
-        {profile
-          ? <div className="px-0">
-              <div className="px-4 py-3">
-                <NearbyNotificationsSettings profile={profile} setProfile={setProfile} embed />
-              </div>
-            </div>
           : <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>}
       </SettingsSection>
 

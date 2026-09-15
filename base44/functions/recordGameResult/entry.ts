@@ -1,16 +1,26 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { normalizeCity, getWeekKey } from '../../shared/cityScore.ts';
 
 // Records a single game result toward every participant's UserStats. Runs as the
 // service role so it can update opponents' stats — UserStats.update is locked to
 // owner-only on the client, so challenge completion must go through this function.
+//
+// Also counts the city competition score exactly once per completed challenge:
+// when challenge.status === 'completed' and city_score_counted is not yet true,
+// the completing user's profile city gets +1 on the weekly CityWeeklyScore row.
+// The city_score_counted flag makes this idempotent — page refreshes, result
+// edits, or repeated calls never double-count.
+//
+// skipStats: when true, only the city score logic runs (used after series
+// clinch, where per-game stats were already recorded individually).
 export default async function(req) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { challengeId, winnerId, isDraw } = body || {};
+    const { challengeId, winnerId, isDraw, skipStats } = body || {};
     if (!challengeId) {
       return Response.json({ error: 'challengeId is required' }, { status: 400 });
     }
-    if (!isDraw && !winnerId) {
+    if (!skipStats && !isDraw && !winnerId) {
       return Response.json({ error: 'winnerId is required when not a draw' }, { status: 400 });
     }
 
@@ -38,35 +48,83 @@ export default async function(req) {
       ...opponentIds.map((id, i) => ({ id, name: opponentNames[i] || '' })),
     ].filter((p) => p.id && p.name);
 
-    for (const p of participants) {
-      const won = !isDraw && p.id === winnerId;
-      const existing = await admin.entities.UserStats.filter({ created_by_id: p.id });
-      let stats = existing[0];
-      if (!stats) {
-        stats = await admin.entities.UserStats.create({
-          user_name: p.name,
-          games_played: 0,
-          games_won: 0,
-          losses: 0,
-          draws: 0,
-          current_streak: 0,
-          longest_streak: 0,
+    // --- Stats recording (skipped when skipStats=true, e.g. series clinch) ---
+    if (!skipStats) {
+      for (const p of participants) {
+        const won = !isDraw && p.id === winnerId;
+        const existing = await admin.entities.UserStats.filter({ created_by_id: p.id });
+        let stats = existing[0];
+        if (!stats) {
+          stats = await admin.entities.UserStats.create({
+            user_name: p.name,
+            games_played: 0,
+            games_won: 0,
+            losses: 0,
+            draws: 0,
+            current_streak: 0,
+            longest_streak: 0,
+          });
+        }
+        await admin.entities.UserStats.update(stats.id, {
+          games_played: (stats.games_played || 0) + 1,
+          games_won: (stats.games_won || 0) + (won ? 1 : 0),
+          losses: (stats.losses || 0) + (!isDraw && !won ? 1 : 0),
+          draws: (stats.draws || 0) + (isDraw ? 1 : 0),
+          current_streak: won ? (stats.current_streak || 0) + 1 : 0,
+          longest_streak: won
+            ? Math.max((stats.current_streak || 0) + 1, stats.longest_streak || 0)
+            : stats.longest_streak || 0,
         });
       }
-      await admin.entities.UserStats.update(stats.id, {
-        games_played: (stats.games_played || 0) + 1,
-        games_won: (stats.games_won || 0) + (won ? 1 : 0),
-        losses: (stats.losses || 0) + (!isDraw && !won ? 1 : 0),
-        draws: (stats.draws || 0) + (isDraw ? 1 : 0),
-        // A draw breaks a win streak the same way a loss does.
-        current_streak: won ? (stats.current_streak || 0) + 1 : 0,
-        longest_streak: won
-          ? Math.max((stats.current_streak || 0) + 1, stats.longest_streak || 0)
-          : stats.longest_streak || 0,
-      });
     }
 
-    return Response.json({ success: true, recorded: participants.length, draw: !!isDraw });
+    // --- City competition score (idempotent, once per completed challenge) ---
+    // Runs regardless of skipStats. Only fires when the challenge is actually
+    // completed (status === 'completed') and hasn't been counted yet.
+    if (challenge.status === 'completed' && !challenge.city_score_counted) {
+      try {
+        const profiles = await admin.entities.Profile.filter({ created_by_id: user.id });
+        const profile = profiles?.[0];
+        const rawCity = profile?.city?.trim();
+        const weekKey = getWeekKey();
+
+        if (rawCity) {
+          const { key, display } = normalizeCity(rawCity);
+          const existing = await admin.entities.CityWeeklyScore.filter({ city_key: key, week: weekKey });
+          let score = existing[0];
+          if (!score) {
+            score = await admin.entities.CityWeeklyScore.create({
+              city_key: key,
+              city_display: display,
+              week: weekKey,
+              completed_count: 1,
+            });
+          } else {
+            await admin.entities.CityWeeklyScore.update(score.id, {
+              completed_count: (score.completed_count || 0) + 1,
+            });
+          }
+          await admin.entities.Challenge.update(challengeId, {
+            city_score_counted: true,
+            city_attribution: key,
+            leaderboard_week: weekKey,
+            completed_at: new Date().toISOString(),
+          });
+        } else {
+          // No city in profile — mark as counted to prevent future counting.
+          // The user is prompted to add their city in the Explore page.
+          await admin.entities.Challenge.update(challengeId, {
+            city_score_counted: true,
+            leaderboard_week: weekKey,
+            completed_at: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        // Best-effort: don't fail the result recording if city scoring fails.
+      }
+    }
+
+    return Response.json({ success: true, recorded: skipStats ? 0 : participants.length, draw: !!isDraw });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

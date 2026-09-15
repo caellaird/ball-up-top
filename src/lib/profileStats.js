@@ -135,28 +135,10 @@ export async function computeProfileStats(userId) {
 
   sportBreakdown.sort((a, b) => b.games - a.games);
 
-  // Public events the user participated in that have ended — either auto-ended
-  // 2h after start, or cancelled by the owner. Creators count too, since the
-  // creator is added as an accepted participant on event creation.
-  let publicEvents = 0;
-  try {
-    const myPart = await base44.entities.EventParticipant.filter({ user_id: userId, status: 'accepted' });
-    const myEventIds = new Set((myPart || []).map((p) => p.event_id).filter(Boolean));
-    if (myEventIds.size > 0) {
-      const [ended, cancelled] = await Promise.all([
-        base44.entities.PublicEvent.filter({ status: 'ended' }),
-        base44.entities.PublicEvent.filter({ status: 'cancelled' }),
-      ]);
-      const finished = [...(ended || []), ...(cancelled || [])].filter((e) => myEventIds.has(e.id));
-      publicEvents = new Set(finished.map((e) => e.id)).size;
-    }
-  } catch { /* best-effort */ }
-
   return {
     wins,
     losses,
     draws,
-    publicEvents,
     winPct,
     currentStreak,
     longestStreak,

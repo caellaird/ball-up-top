@@ -137,6 +137,20 @@
       "items": {
         "type": "string"
       }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "city_score_counted": {
+      "type": "boolean",
+      "default": false
+    },
+    "city_attribution": {
+      "type": "string"
+    },
+    "leaderboard_week": {
+      "type": "string"
     }
   },
   "required": [

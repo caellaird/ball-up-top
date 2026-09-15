@@ -193,6 +193,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       // An open-ended series can end in a draw if the final game leaves it tied.
       const isSeriesDraw = !challenge.games_to_win && finalGame && creatorWins === opponentWins;
       const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw);
+      // Count the city competition score now that the challenge is completed.
+      // skipStats=true because per-game stats were already recorded above.
+      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, skipStats: true });
       const winnerName = isSeriesDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);

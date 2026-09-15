@@ -1,0 +1,38 @@
+{
+  "name": "CityWeeklyScore",
+  "type": "object",
+  "properties": {
+    "city_key": {
+      "type": "string",
+      "description": "Normalized lowercase key, e.g. 'durham, nc'"
+    },
+    "city_display": {
+      "type": "string",
+      "description": "Display name, e.g. 'Durham, NC'"
+    },
+    "week": {
+      "type": "string",
+      "description": "ISO string of the week's Monday 00:00 UTC start"
+    },
+    "completed_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "city_key",
+    "week"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
