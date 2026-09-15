@@ -1,6 +1,7 @@
 import React from 'react';
 import { base44 } from '@/api/base44Client';
 import ToggleRow from '@/components/settings/ToggleRow';
+import { invalidateProfile } from '@/lib/ensureProfile';
 
 // All independent notification on/off toggles, persisted immediately on the
 // user's Profile. Defaults are on, so existing users keep current behavior.
@@ -9,6 +10,7 @@ import ToggleRow from '@/components/settings/ToggleRow';
 export default function NotificationPreferences({ profile, setProfile }) {
   const save = async (field, checked) => {
     const updated = await base44.entities.Profile.update(profile.id, { [field]: checked });
+    invalidateProfile(profile.created_by_id);
     setProfile(updated);
   };
 

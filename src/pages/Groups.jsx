@@ -7,7 +7,7 @@ import Header from '@/components/layout/Header';
 import EmptyState from '@/components/shared/EmptyState';
 import CreateGroupSheet from '@/components/messages/CreateGroupSheet';
 import NewDmSheet from '@/components/messages/NewDmSheet';
-import { getOrCreateProfile } from '@/lib/ensureProfile';
+import { getOrCreateProfile, invalidateProfile } from '@/lib/ensureProfile';
 import { MessageCircle, Users } from 'lucide-react';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import { formatDistanceToNow } from 'date-fns';
@@ -34,6 +34,7 @@ export default function Groups({ user: userProp }) {
 
   const toggleReady = async (checked) => {
     const updated = await base44.entities.Profile.update(profile.id, { ready_to_ball: checked });
+    invalidateProfile(user.id);
     setProfile(updated);
   };
 

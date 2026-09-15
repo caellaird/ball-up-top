@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, LogOut, Moon, Sun, Trash2, Shield, FileText } from 'lucide-react';
-import { getOrCreateProfile } from '@/lib/ensureProfile';
+import { getOrCreateProfile, invalidateProfile } from '@/lib/ensureProfile';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useTheme } from '@/hooks/useTheme';
 import SettingsSection from '@/components/settings/SettingsSection';
@@ -26,6 +26,7 @@ export default function Settings() {
 
   const togglePrivacy = async (checked) => {
     const updated = await base44.entities.Profile.update(profile.id, { privacy_level: checked ? 'private' : 'public' });
+    invalidateProfile(user.id);
     setProfile(updated);
   };
 
@@ -87,7 +88,7 @@ export default function Settings() {
             label="Private Profile"
             description="Only friends can see your profile"
             checked={profile.privacy_level === 'private'}
-            onSave={async (c) => { const u = await base44.entities.Profile.update(profile.id, { privacy_level: c ? 'private' : 'public' }); setProfile(u); }}
+            onSave={async (c) => { const u = await base44.entities.Profile.update(profile.id, { privacy_level: c ? 'private' : 'public' }); invalidateProfile(user.id); setProfile(u); }}
           />
         ) : (
           <div className="px-4 py-4 text-sm text-muted-foreground">Loading…</div>

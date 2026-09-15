@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { getOrCreateProfile, getOrCreateStats } from '@/lib/ensureProfile';
+import { getOrCreateProfile, getOrCreateStats, invalidateProfile } from '@/lib/ensureProfile';
 import { findOrCreateThread } from '@/lib/friendsHelpers';
 import { computeProfileStats } from '@/lib/profileStats';
 import QRCodeDialog from '@/components/friends/QRCodeDialog';
@@ -97,6 +97,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
 
   const save = async () => {
     const updated = await base44.entities.Profile.update(profile.id, form);
+    invalidateProfile(user.id);
     setProfile(updated);
     setDisplayName(form.nickname || user.full_name);
     setEditing(false);
