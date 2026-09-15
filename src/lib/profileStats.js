@@ -13,13 +13,12 @@ function myNameInChallenge(c, userId) {
 
 export async function computeProfileStats(userId) {
   try {
-  const [asCreator, asOpponent, asRivalA, asRivalB, userPosts] = await Promise.all([
-    base44.entities.Challenge.filter({ created_by_id: userId }),
-    base44.entities.Challenge.list('-created_date', 300),
-    base44.entities.Rivalry.filter({ user_a_id: userId }),
-    base44.entities.Rivalry.filter({ user_b_id: userId }),
-    base44.entities.Post.filter({ created_by_id: userId }, '-created_date', 100),
-  ]);
+  // Sequential awaits (not Promise.all) to avoid rate-limit bursts.
+  const asCreator = await base44.entities.Challenge.filter({ created_by_id: userId });
+  const asOpponent = await base44.entities.Challenge.list('-created_date', 300);
+  const asRivalA = await base44.entities.Rivalry.filter({ user_a_id: userId });
+  const asRivalB = await base44.entities.Rivalry.filter({ user_b_id: userId });
+  const userPosts = await base44.entities.Post.filter({ created_by_id: userId }, '-created_date', 100);
 
   const asOpponentMine = asOpponent.filter((c) => c.opponent_id === userId || c.opponent_ids?.includes(userId));
   const seen = new Set();

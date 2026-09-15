@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { getOrCreateProfile, getOrCreateStats, invalidateProfile } from '@/lib/ensureProfile';
+import { getOrCreateProfile, getOrCreateStats, invalidateProfile, getCachedProfileStats, invalidateProfileStats } from '@/lib/ensureProfile';
 import { findOrCreateThread } from '@/lib/friendsHelpers';
-import { computeProfileStats } from '@/lib/profileStats';
 import QRCodeDialog from '@/components/friends/QRCodeDialog';
 import { buildFriendInviteUrl } from '@/lib/friendCodes';
 import { ArrowLeft, Swords, QrCode, Settings, MoreVertical } from 'lucide-react';
@@ -86,7 +85,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
       const friendsAsCreator = await base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' });
       const friendsAsAddressee = await base44.entities.Friend.filter({ addressee_id: ownerId, status: 'accepted' });
-      const profileStatsResult = await computeProfileStats(ownerId);
+      const profileStatsResult = await getCachedProfileStats(ownerId);
       const pendingList = isSelf ? await base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : [];
       setAwards(awardList);
       setFriendRecords([...friendsAsCreator, ...friendsAsAddressee]);
@@ -98,6 +97,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const save = async () => {
     const updated = await base44.entities.Profile.update(profile.id, form);
     invalidateProfile(user.id);
+    invalidateProfileStats(user.id);
     setProfile(updated);
     setDisplayName(form.nickname || user.full_name);
     setEditing(false);

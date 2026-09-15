@@ -54,6 +54,20 @@ export async function getOrCreateStatsById(userId, userName) {
   });
 }
 
+// Cached wrapper for the heavy computeProfileStats call (5+ API calls each
+// profile mount). Same TTL/pending de-dup so tab-switches and re-mounts reuse
+// the result instead of firing another burst.
+export async function getCachedProfileStats(userId) {
+  return cached(`profileStats:${userId}`, async () => {
+    const { computeProfileStats } = await import('@/lib/profileStats');
+    return computeProfileStats(userId);
+  });
+}
+
+export function invalidateProfileStats(userId) {
+  _cache.delete(`profileStats:${userId}`);
+}
+
 export function invalidateStats(userId) {
   _cache.delete(`stats:${userId}`);
 }
