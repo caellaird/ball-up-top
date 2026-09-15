@@ -10,7 +10,7 @@ const TABS = [
   { path: '/', Component: Home, scroll: true },
   { path: '/challenges', Component: Challenges, scroll: true },
   { path: '/groups', Component: Groups, scroll: true },
-  { path: '/profile/me', Component: Profile, scroll: false, extraProps: { usernameOverride: 'me' } },
+  { path: '/profile/me', Component: Profile, scroll: true, extraProps: { usernameOverride: 'me' } },
 ];
 
 export default function TabContainer({ user, pathname }) {
