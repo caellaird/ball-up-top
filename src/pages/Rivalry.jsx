@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useOutletContext, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Swords, Flame, RefreshCw, BarChart3 } from 'lucide-react';
@@ -213,10 +213,7 @@ export default function Rivalry() {
 
             <div className="flex items-center justify-around text-center mb-4">
               <Link to={`/profile/${userA.name?.toLowerCase().replace(/\s/g, '')}`} className="flex flex-col items-center gap-1">
-                <Avatar className="w-16 h-16 border-2 border-white/40">
-                  <AvatarImage src={userA.avatar} />
-                  <AvatarFallback className="bg-white/20 text-white text-xl">{userA.name?.[0] || 'U'}</AvatarFallback>
-                </Avatar>
+                <UserAvatar userId={userA.id} src={userA.avatar} name={userA.name} className="w-16 h-16 border-2 border-white/40" fallbackClassName="bg-white/20 text-white text-xl" />
                 <p className="font-heading font-bold text-sm mt-1">{userA.name}</p>
                 <p className="font-heading font-extrabold text-2xl">{aWins}</p>
                 <p className="text-[9px] uppercase opacity-70">Wins</p>
@@ -227,10 +224,7 @@ export default function Rivalry() {
                 {draws > 0 && <span className="text-[10px] opacity-60 mt-1">🤝 {draws} draws</span>}
               </div>
               <Link to={`/profile/${userB.name?.toLowerCase().replace(/\s/g, '')}`} className="flex flex-col items-center gap-1">
-                <Avatar className="w-16 h-16 border-2 border-white/40">
-                  <AvatarImage src={userB.avatar} />
-                  <AvatarFallback className="bg-white/20 text-white text-xl">{userB.name?.[0] || 'U'}</AvatarFallback>
-                </Avatar>
+                <UserAvatar userId={userB.id} src={userB.avatar} name={userB.name} className="w-16 h-16 border-2 border-white/40" fallbackClassName="bg-white/20 text-white text-xl" />
                 <p className="font-heading font-bold text-sm mt-1">{userB.name}</p>
                 <p className="font-heading font-extrabold text-2xl">{bWins}</p>
                 <p className="text-[9px] uppercase opacity-70">Wins</p>

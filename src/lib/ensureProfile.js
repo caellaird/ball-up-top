@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { setAvatar } from '@/lib/avatarStore';
 
 // Short-lived in-memory cache + in-flight de-duplication.
 // All four tab pages (Home, Challenges, Groups, Profile) mount at the same
@@ -30,9 +31,15 @@ async function cached(key, fetcher) {
 export async function getOrCreateProfile(user) {
   return cached(`profile:${user.id}`, async () => {
     const existing = await base44.entities.Profile.filter({ created_by_id: user.id });
-    if (existing.length > 0) return existing[0];
-    const username = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
-    return base44.entities.Profile.create({ username, bio: '', skill_level: 5 });
+    const profile = existing.length > 0
+      ? existing[0]
+      : await base44.entities.Profile.create({
+          username: user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, ''),
+          bio: '',
+          skill_level: 5,
+        });
+    setAvatar(user.id, profile.avatar_url);
+    return profile;
   });
 }
 

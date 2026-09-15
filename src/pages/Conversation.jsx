@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
+import { setAvatar } from '@/lib/avatarStore';
 import { Send, Image as ImageIcon, X, Settings as SettingsIcon, Users, Trophy } from 'lucide-react';
 import MessageBubble from '@/components/messages/MessageBubble';
 import GroupSettingsSheet from '@/components/messages/GroupSettingsSheet';
@@ -77,6 +79,7 @@ export default function Conversation() {
       if (otherId) {
         const others = await base44.entities.Profile.filter({ created_by_id: otherId });
         setOtherProfile(others[0] || null);
+        if (others[0]) setAvatar(otherId, others[0].avatar_url);
       }
     }
     const msgs = await base44.entities.Message.filter({ thread_id: threadId }, 'created_date');
@@ -163,12 +166,14 @@ export default function Conversation() {
         <BackButton fallback="/messages" className="-ml-1.5 text-muted-foreground hover:text-foreground" />
 
         <div className="relative shrink-0">
-          <Avatar className="w-11 h-11">
-            <AvatarImage src={isGroup ? thread.avatar_url : otherProfile?.avatar_url} />
-            <AvatarFallback className={isGroup ? 'bg-secondary text-secondary-foreground' : ''}>
-              {isGroup ? <Users className="w-5 h-5" /> : otherName?.[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          {isGroup ? (
+            <Avatar className="w-11 h-11">
+              <AvatarImage src={thread.avatar_url} />
+              <AvatarFallback className="bg-secondary text-secondary-foreground"><Users className="w-5 h-5" /></AvatarFallback>
+            </Avatar>
+          ) : (
+            <UserAvatar userId={otherProfile?.created_by_id} src={otherProfile?.avatar_url} name={otherName} className="w-11 h-11" />
+          )}
           {!isGroup && otherProfile?.ready_to_ball &&
           <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary border-2 border-card" />
           }

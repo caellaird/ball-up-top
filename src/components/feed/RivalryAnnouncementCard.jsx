@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Swords, MessageCircle, Share2, Flame } from 'lucide-react';
 import { fetchRivalry } from '@/lib/rivalries';
@@ -49,10 +49,7 @@ export default function RivalryAnnouncementCard({ post, reactions, onReact, user
           {/* Players */}
           <div className="flex items-center justify-around text-center mb-4">
             <div className="flex flex-col items-center gap-1">
-              <Avatar className="w-14 h-14 border-2 border-white/40">
-                <AvatarImage src={userA.avatar} />
-                <AvatarFallback className="bg-white/20 text-white">{userA.name?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
+              <UserAvatar userId={userA.id} src={userA.avatar} name={userA.name} className="w-14 h-14 border-2 border-white/40" fallbackClassName="bg-white/20 text-white" />
               <p className="font-heading font-bold text-xs truncate max-w-[80px]">{userA.name}</p>
               <p className="font-heading font-extrabold text-xl">{userA.wins}</p>
               <p className="text-[9px] uppercase opacity-70">Wins</p>
@@ -64,10 +61,7 @@ export default function RivalryAnnouncementCard({ post, reactions, onReact, user
               )}
             </div>
             <div className="flex flex-col items-center gap-1">
-              <Avatar className="w-14 h-14 border-2 border-white/40">
-                <AvatarImage src={userB.avatar} />
-                <AvatarFallback className="bg-white/20 text-white">{userB.name?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
+              <UserAvatar userId={userB.id} src={userB.avatar} name={userB.name} className="w-14 h-14 border-2 border-white/40" fallbackClassName="bg-white/20 text-white" />
               <p className="font-heading font-bold text-xs truncate max-w-[80px]">{userB.name}</p>
               <p className="font-heading font-extrabold text-xl">{userB.wins}</p>
               <p className="text-[9px] uppercase opacity-70">Wins</p>

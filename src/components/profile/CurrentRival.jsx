@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Swords, Flame } from 'lucide-react';
 import { fetchCurrentRival, getRival, getSelf, fetchRivalryHistory } from '@/lib/rivalries';
@@ -70,10 +70,7 @@ export default function CurrentRival({ userId, profile, isSelf }) {
 
       <div className="flex items-center justify-around text-center mb-3">
         <div className="flex flex-col items-center gap-1">
-          <Avatar className="w-12 h-12 border-2 border-primary/30">
-            <AvatarImage src={self.avatar} />
-            <AvatarFallback>{self.name?.[0] || 'U'}</AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={self.id} src={self.avatar} name={self.name} className="w-12 h-12 border-2 border-primary/30" />
           <p className="font-heading font-bold text-sm">{self.wins}</p>
           <p className="text-[10px] text-muted-foreground truncate max-w-[70px]">{self.name}</p>
         </div>
@@ -86,10 +83,7 @@ export default function CurrentRival({ userId, profile, isSelf }) {
           )}
         </div>
         <div className="flex flex-col items-center gap-1">
-          <Avatar className="w-12 h-12 border-2 border-accent/30">
-            <AvatarImage src={rival.avatar} />
-            <AvatarFallback>{rival.name?.[0] || 'U'}</AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={rival.id} src={rival.avatar} name={rival.name} className="w-12 h-12 border-2 border-accent/30" />
           <p className="font-heading font-bold text-sm">{rival.wins}</p>
           <p className="text-[10px] text-muted-foreground truncate max-w-[70px]">{rival.name}</p>
         </div>

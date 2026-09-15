@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/shared/EmptyState';
 import { MessageCircle, Trophy, UserPlus, Swords, Bell, Check, X } from 'lucide-react';
@@ -93,10 +93,7 @@ export default function Notifications() {
             const card = (
               <div className={`flex items-start gap-3 p-3 rounded-2xl border transition ${!isFriendRequest ? 'active:scale-[0.98]' : ''} ${n.read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'}`}>
                 <div className="relative shrink-0">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={n.actor_avatar} />
-                    <AvatarFallback>{n.actor_name?.[0] || 'B'}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar userId={n.actor_id} src={n.actor_avatar} name={n.actor_name} className="w-10 h-10" />
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-card">
                     <Icon className="w-2.5 h-2.5 text-primary-foreground" />
                   </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { SPORT_EMOJI } from '@/lib/constants';
 
 export default function FriendRow({ friend }) {
@@ -13,10 +13,7 @@ export default function FriendRow({ friend }) {
       className="flex items-center gap-3 bg-card rounded-2xl shadow-sm p-3 mb-2 mx-4"
     >
       <div className="relative">
-        <Avatar className="w-12 h-12">
-          <AvatarImage src={profile?.avatar_url} />
-          <AvatarFallback>{name?.[0] || 'U'}</AvatarFallback>
-        </Avatar>
+        <UserAvatar userId={profile?.created_by_id} src={profile?.avatar_url} name={name} className="w-12 h-12" />
         {profile?.ready_to_ball && (
           <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-accent border-2 border-card" />
         )}

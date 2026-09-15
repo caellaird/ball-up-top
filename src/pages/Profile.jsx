@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateProfile, getOrCreateStats, invalidateProfile, getCachedProfileStats, invalidateProfileStats } from '@/lib/ensureProfile';
+import { setAvatar } from '@/lib/avatarStore';
 import { findOrCreateThread } from '@/lib/friendsHelpers';
 import QRCodeDialog from '@/components/friends/QRCodeDialog';
 import { buildFriendInviteUrl } from '@/lib/friendCodes';
@@ -101,6 +102,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
     setStats(s);
     setDisplayName(name);
     if (p) {
+      setAvatar(ownerId, p.avatar_url);
       setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
       // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);

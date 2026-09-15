@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Share2, Swords, Pencil, Trash2, Flag } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/shared/UserAvatar';
 import { base44 } from '@/api/base44Client';
 import { format, formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
@@ -67,10 +67,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
     <article className="bg-card rounded-3xl arena-shadow border border-border/50 p-4 mb-4 mx-4">
       <div className="flex items-center gap-3 mb-3">
         <Link to={`/profile/${post.author_username || 'me'}`}>
-          <Avatar className="w-11 h-11 border-2 border-primary/20">
-            <AvatarImage src={post.author_avatar} />
-            <AvatarFallback>{post.author_name?.[0] || 'U'}</AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={post.created_by_id} src={post.author_avatar} name={post.author_name} className="w-11 h-11 border-2 border-primary/20" />
         </Link>
         <div className="flex-1 min-w-0">
           <Link to={`/profile/${post.author_username || 'me'}`}><p className="font-semibold text-sm">{post.author_name}</p></Link>
@@ -204,10 +201,7 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
         <div className="mt-3 pt-3 border-t border-border space-y-2">
           {comments.map((c) => (
             <div key={c.id} className="flex items-start gap-2 text-sm">
-              <Avatar className="w-6 h-6 mt-0.5">
-                <AvatarImage src={c.author_avatar} />
-                <AvatarFallback className="text-[10px]">{c.author_name?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
+              <UserAvatar userId={c.created_by_id} src={c.author_avatar} name={c.author_name} className="w-6 h-6 mt-0.5" fallbackClassName="text-[10px]" />
               <p><Link to={`/profile/${c.author_username || 'me'}`} className="font-semibold">{c.author_name}</Link><span>: </span><span>{c.body}</span></p>
             </div>
           ))}

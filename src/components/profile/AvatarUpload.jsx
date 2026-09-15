@@ -5,6 +5,7 @@ import { Camera, Loader2, RotateCcw, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cropSquareAndCompress } from '@/lib/imageUtils';
 import { invalidateProfile } from '@/lib/ensureProfile';
+import { setAvatar } from '@/lib/avatarStore';
 
 export default function AvatarUpload({ profile, fallback, onUploaded, size = 'w-20 h-20' }) {
   const galleryRef = useRef(null);
@@ -24,6 +25,7 @@ export default function AvatarUpload({ profile, fallback, onUploaded, size = 'w-
       const { file_url } = await base44.integrations.Core.UploadFile({ file: processed });
       const updated = await base44.entities.Profile.update(profile.id, { avatar_url: file_url });
       invalidateProfile(profile.created_by_id);
+      setAvatar(profile.created_by_id, file_url);
       onUploaded(updated);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
