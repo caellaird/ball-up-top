@@ -12,13 +12,16 @@ export default function ActivityTab({ ownerId, ownerName, viewerId }) {
   useEffect(() => { load(); }, [ownerId]);
 
   const load = async () => {
-    const [mine, tagged] = await Promise.all([
-      base44.entities.Post.filter({ created_by_id: ownerId }, '-created_date', 20),
-      base44.entities.Post.list('-created_date', 100),
-    ]);
-    const taggedPosts = tagged.filter((p) => p.created_by_id !== ownerId && p.tagged_user_ids?.includes(ownerId));
-    const combined = [...mine, ...taggedPosts].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-    setPosts(combined);
+    try {
+      // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
+      const mine = await base44.entities.Post.filter({ created_by_id: ownerId }, '-created_date', 20);
+      const tagged = await base44.entities.Post.list('-created_date', 100);
+      const taggedPosts = tagged.filter((p) => p.created_by_id !== ownerId && p.tagged_user_ids?.includes(ownerId));
+      const combined = [...mine, ...taggedPosts].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      setPosts(combined);
+    } catch {
+      setPosts([]);
+    }
   };
 
   const onReact = async (post, type) => {

@@ -78,13 +78,12 @@ export default function Profile({ user: userProp, usernameOverride }) {
     setDisplayName(name);
     if (p) {
       setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
-      const [awardList, friendsAsCreator, friendsAsAddressee, profileStatsResult, pendingList] = await Promise.all([
-        base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20),
-        base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' }),
-        base44.entities.Friend.filter({ addressee_id: ownerId, status: 'accepted' }),
-        computeProfileStats(ownerId),
-        isSelf ? base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : Promise.resolve([]),
-      ]);
+      // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
+      const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
+      const friendsAsCreator = await base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' });
+      const friendsAsAddressee = await base44.entities.Friend.filter({ addressee_id: ownerId, status: 'accepted' });
+      const profileStatsResult = await computeProfileStats(ownerId);
+      const pendingList = isSelf ? await base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : [];
       setAwards(awardList);
       setFriendRecords([...friendsAsCreator, ...friendsAsAddressee]);
       setProfileStats(profileStatsResult);
