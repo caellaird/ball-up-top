@@ -69,7 +69,7 @@ export default function Challenges({ user: userProp }) {
             { value: 'completed', label: 'Completed' }
           ]}
           value={tab}
-          onChange={setTab}
+          onChange={(v) => { setTab(v); load(); }}
         />
       </div>
       {challenges === null
