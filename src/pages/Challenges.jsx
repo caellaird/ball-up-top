@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext, Link, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
@@ -68,16 +68,15 @@ export default function Challenges({ user: userProp }) {
     return () => clearInterval(t);
   }, []);
 
-  // The active tab is the single source of truth for what is rendered. Each
-  // tab's list is derived fresh from the latest full list — never cached or
-  // reused across tabs — so Pending/Accepted/Completed can't share stale state.
-  const displayItems = useMemo(() => {
-    if (!challenges || challenges.length === 0) return [];
-    if (tab === 'pending') return challenges.filter((c) => c.status === 'pending' && !isPendingChallengeExpired(c));
-    if (tab === 'accepted') return challenges.filter((c) => c.status === 'accepted');
-    if (tab === 'completed') return challenges.filter((c) => c.status === 'completed');
-    return [];
-  }, [challenges, tab]);
+  // The active tab is the single source of truth for what is rendered. The list
+  // is derived directly on every render from the live `tab` + loaded
+  // `challenges` — no memoization, so it can never hold a previous tab's items.
+  let displayItems = [];
+  if (challenges && challenges.length > 0) {
+    if (tab === 'pending') displayItems = challenges.filter((c) => c.status === 'pending' && !isPendingChallengeExpired(c));
+    else if (tab === 'accepted') displayItems = challenges.filter((c) => c.status === 'accepted');
+    else if (tab === 'completed') displayItems = challenges.filter((c) => c.status === 'completed');
+  }
 
   const emptyCopy = {
     pending: { title: PERSONALITY.noChallenges.title, description: PERSONALITY.noChallenges.description },
