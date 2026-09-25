@@ -64,6 +64,7 @@ export default function Conversation() {
   }, [messages]);
 
   const load = async () => {
+    if (!user?.id) return;
     let t;
     try {
       t = await base44.entities.Thread.get(threadId);
@@ -84,13 +85,19 @@ export default function Conversation() {
     }
     const msgs = await base44.entities.Message.filter({ thread_id: threadId }, 'created_date');
     setMessages(msgs);
-    await markThreadRead(threadId, user.id);
-    loadThreadReads();
-  };
-
-  const loadThreadReads = async () => {
+    // Fetch all read receipts once and mark this thread read from the same set.
+    // Replaces markThreadRead (which re-filters my read + re-gets the thread) plus
+    // a second loadThreadReads filter — trims the redundant calls that bursted the
+    // rate limit.
     const reads = await base44.entities.ThreadRead.filter({ thread_id: threadId });
     setThreadReads(reads);
+    const mine = reads.find((r) => r.created_by_id === user.id);
+    const now = new Date().toISOString();
+    if (mine) {
+      await base44.entities.ThreadRead.update(mine.id, { last_read_at: now });
+    } else {
+      await base44.entities.ThreadRead.create({ thread_id: threadId, last_read_at: now, participant_ids: t.participant_ids || [] });
+    }
   };
 
   const handleTextChange = (e) => {
