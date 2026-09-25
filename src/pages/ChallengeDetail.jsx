@@ -9,6 +9,7 @@ import { getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
+import EndSeriesDialog from '@/components/challenges/EndSeriesDialog';
 import ResultShareCard from '@/components/challenges/ResultShareCard';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
 import WinnerSelector from '@/components/challenges/WinnerSelector';
@@ -25,6 +26,7 @@ export default function ChallengeDetail() {
   const [challenge, setChallenge] = useState(null);
   const [games, setGames] = useState([]);
   const [showComplete, setShowComplete] = useState(false);
+  const [showEndSeries, setShowEndSeries] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -289,17 +291,28 @@ export default function ChallengeDetail() {
             {showMultiStatus ? 'Waiting for players to respond...' : `Waiting for ${challenge.opponent_name} to respond...`}
           </p>
         )}
-        {challenge.status === 'accepted' && isParticipant && (
+        {challenge.status === 'accepted' && isParticipant && !isSeries && (
           <WinnerSelector
             challenge={challenge}
             onSaved={(updated) => setChallenge(updated)}
           />
         )}
 
-        {challenge.status === 'accepted' && isParticipant && (
+        {challenge.status === 'accepted' && isParticipant && !isSeries && (
           <Button onClick={() => setShowComplete(true)} className="w-full rounded-full h-12 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))]">
-            {isSeries ? `Log Game ${creatorWins + opponentWins + 1}` : 'Complete Challenge'}
+            Complete Challenge
           </Button>
+        )}
+
+        {challenge.status === 'accepted' && isParticipant && isSeries && (
+          <div className="flex gap-3">
+            <Button onClick={() => setShowComplete(true)} className="flex-1 rounded-full h-12">
+              Log Game {creatorWins + opponentWins + 1}
+            </Button>
+            <Button onClick={() => setShowEndSeries(true)} variant="outline" className="flex-1 rounded-full h-12">
+              End Series
+            </Button>
+          </div>
         )}
 
         {challenge.status === 'completed' && (
@@ -350,6 +363,16 @@ export default function ChallengeDetail() {
             user={user}
             onCompleted={() => {
               setShowComplete(false);
+              load();
+            }}
+          />
+          <EndSeriesDialog
+            open={showEndSeries}
+            onOpenChange={setShowEndSeries}
+            challenge={challenge}
+            user={user}
+            onEnded={() => {
+              setShowEndSeries(false);
               load();
             }}
           />

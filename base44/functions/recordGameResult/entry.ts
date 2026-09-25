@@ -12,17 +12,17 @@ import { processRivalries } from '../../shared/rivalries.ts';
 // The city_score_counted flag makes this idempotent — page refreshes, result
 // edits, or repeated calls never double-count.
 //
-// skipStats: when true, only the city score logic runs (used after series
-// clinch, where per-game stats were already recorded individually).
+// endSeries: when true, computes the overall series winner from the challenge's
+// creator_games_won / opponent_games_won, closes the series (status -> completed),
+// and records exactly ONE result to each participant's record. Used by the
+// "End Series" action so a series can be closed without logging another game.
+// Refuses if the series is already completed (prevents double-ending).
 export default async function(req) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { challengeId, winnerId, isDraw, skipStats } = body || {};
+    const { challengeId, winnerId: suppliedWinnerId, isDraw: suppliedIsDraw, skipStats, endSeries } = body || {};
     if (!challengeId) {
       return Response.json({ error: 'challengeId is required' }, { status: 400 });
-    }
-    if (!skipStats && !isDraw && !winnerId) {
-      return Response.json({ error: 'winnerId is required when not a draw' }, { status: 400 });
     }
 
     const base44 = createClientFromRequest(req);
@@ -49,7 +49,60 @@ export default async function(req) {
       ...opponentIds.map((id, i) => ({ id, name: opponentNames[i] || '' })),
     ].filter((p) => p.id && p.name);
 
-    // --- Stats recording (skipped when skipStats=true, e.g. series clinch) ---
+    let winnerId = suppliedWinnerId || null;
+    let isDraw = !!suppliedIsDraw;
+
+    // --- End Series mode: compute winner from the series score and close it ---
+    if (endSeries) {
+      if (challenge.series_type === 'single') {
+        return Response.json({ error: 'Not a series' }, { status: 400 });
+      }
+      if (challenge.status === 'completed') {
+        return Response.json({ error: 'Series already ended' }, { status: 409 });
+      }
+
+      const creatorWins = challenge.creator_games_won || 0;
+      const opponentWins = challenge.opponent_games_won || 0;
+      const seriesIsDraw = creatorWins === opponentWins;
+      // Opponent side is a group for multiplayer — use the first opponent as the
+      // representative winner, matching the existing finalizeSeries behavior.
+      const seriesWinnerId = seriesIsDraw
+        ? ''
+        : (creatorWins > opponentWins
+            ? challenge.created_by_id
+            : (opponentIds[0] || challenge.opponent_id));
+      const winnerName = seriesIsDraw
+        ? ''
+        : (participants.find((p) => p.id === seriesWinnerId)?.name || '');
+
+      await admin.entities.Challenge.update(challengeId, {
+        status: 'completed',
+        score_creator: creatorWins,
+        score_opponent: opponentWins,
+        winner_id: seriesWinnerId,
+        winner_name: winnerName,
+        is_draw: seriesIsDraw,
+        completed_at: new Date().toISOString(),
+      });
+
+      // Reflect the update on the in-memory copy so the city/rivalry block below
+      // sees status === 'completed'.
+      challenge.status = 'completed';
+      challenge.score_creator = creatorWins;
+      challenge.score_opponent = opponentWins;
+      challenge.winner_id = seriesWinnerId;
+      challenge.winner_name = winnerName;
+      challenge.is_draw = seriesIsDraw;
+
+      winnerId = seriesWinnerId;
+      isDraw = seriesIsDraw;
+    }
+
+    if (!skipStats && !isDraw && !winnerId) {
+      return Response.json({ error: 'winnerId is required when not a draw' }, { status: 400 });
+    }
+
+    // --- Stats recording (skipped when skipStats=true) ---
     if (!skipStats) {
       for (const p of participants) {
         const won = !isDraw && p.id === winnerId;
@@ -134,7 +187,7 @@ export default async function(req) {
       }
     }
 
-    return Response.json({ success: true, recorded: skipStats ? 0 : participants.length, draw: !!isDraw });
+    return Response.json({ success: true, recorded: skipStats ? 0 : participants.length, draw: !!isDraw, winnerId: winnerId || '' });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

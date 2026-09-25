@@ -184,14 +184,9 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       photos,
     });
 
-    // Record this individual game's result toward every participant's record immediately —
-    // each game in a series counts on its own, not just the series' final outcome.
-    // Runs through the service-role function so opponents' stats (locked to owner-only) update.
-    if (isDrawGame) {
-      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, isDraw: true });
-    } else if (winnerIdThisGame) {
-      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
-    }
+    // Individual series games only update the series score — they do NOT record a
+    // win/loss/draw to each player's overall record. The overall record is updated
+    // once, when the series ends (auto-clinch below, or the End Series action).
     base44.analytics.track({ eventName: 'game_played' });
 
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
@@ -205,9 +200,14 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       // An open-ended series can end in a draw if the final game leaves it tied.
       const isSeriesDraw = !challenge.games_to_win && finalGame && creatorWins === opponentWins;
       const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw);
-      // Count the city competition score now that the challenge is completed.
-      // skipStats=true because per-game stats were already recorded above.
-      await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, skipStats: true });
+      // The series is now complete — record exactly ONE overall result (win/loss/draw)
+      // to each participant's record, plus the city score and rivalry update. Individual
+      // games above did not touch the record, so there is no double counting.
+      await base44.functions.invoke('recordGameResult', {
+        challengeId: challenge.id,
+        winnerId: updated.winner_id,
+        isDraw: updated.is_draw,
+      });
       const winnerName = isSeriesDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
