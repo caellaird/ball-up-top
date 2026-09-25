@@ -17,6 +17,7 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import SocialShareSheet from '@/components/shared/SocialShareSheet';
 import SquadNudgeSheet from '@/components/challenges/SquadNudgeSheet';
 import { usePhotoViewer } from '@/lib/photoViewer';
+import { isPendingChallengeExpired } from '@/lib/challengeExpiry';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
@@ -127,6 +128,8 @@ export default function ChallengeDetail() {
   const isOpponent = challenge.opponent_id === user.id || challenge.opponent_ids?.includes(user.id);
   const isCreator = challenge.created_by_id === user.id;
   const isParticipant = isCreator || isOpponent;
+  // A pending challenge past its 3-day grace window can no longer be accepted.
+  const isExpired = isPendingChallengeExpired(challenge);
   const isSeries = challenge.series_type !== 'single';
   const sportDisplay = getSportDisplay(challenge);
   const creatorWins = challenge.creator_games_won || 0;
@@ -275,18 +278,26 @@ export default function ChallengeDetail() {
           </div>
         )}
 
-        {challenge.status === 'pending' && isOpponent && myParticipantStatus === 'pending' && (
+        {challenge.status === 'pending' && isExpired && (
+          <div className="bg-muted/60 rounded-2xl p-4 text-center">
+            <p className="text-sm font-semibold text-muted-foreground">This challenge has expired</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              It passed its 3-day response window and can no longer be accepted.
+            </p>
+          </div>
+        )}
+        {challenge.status === 'pending' && !isExpired && isOpponent && myParticipantStatus === 'pending' && (
           <div className="flex gap-3">
             <Button onClick={() => respond('accepted')} className="flex-1 rounded-full h-12">Accept</Button>
             <Button onClick={() => respond('declined')} variant="secondary" className="flex-1 rounded-full h-12">Decline</Button>
           </div>
         )}
-        {challenge.status === 'pending' && isOpponent && myParticipantStatus !== 'pending' && (
+        {challenge.status === 'pending' && !isExpired && isOpponent && myParticipantStatus !== 'pending' && (
           <p className="text-center text-sm text-muted-foreground">
             Waiting for other players to respond...
           </p>
         )}
-        {challenge.status === 'pending' && isCreator && (
+        {challenge.status === 'pending' && !isExpired && isCreator && (
           <p className="text-center text-sm text-muted-foreground">
             {showMultiStatus ? 'Waiting for players to respond...' : `Waiting for ${challenge.opponent_name} to respond...`}
           </p>

@@ -10,6 +10,7 @@ import ListSkeleton from '@/components/shared/ListSkeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import MotionCard from '@/components/shared/MotionCard';
 import { PERSONALITY } from '@/lib/personality';
+import { isPendingChallengeExpired } from '@/lib/challengeExpiry';
 
 // Module-level: preserves the selected tab across component remounts.
 let _persistedTab = 'pending';
@@ -22,6 +23,7 @@ export default function Challenges({ user: userProp }) {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState(_persistedTab);
   const [challenges, setChallenges] = useState(null);
+  const [, setExpiryTick] = useState(0);
 
   useEffect(() => {
     if (searchParams.get('event')) setTab('accepted');
@@ -41,10 +43,17 @@ export default function Challenges({ user: userProp }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Re-evaluate pending expiry while the page stays open so a challenge that
+  // crosses the 3-day threshold disappears without a manual refresh.
+  useEffect(() => {
+    const t = setInterval(() => setExpiryTick((n) => n + 1), 60000);
+    return () => clearInterval(t);
+  }, []);
+
   let displayItems = [];
   if (challenges && challenges.length > 0) {
     if (tab === 'pending') {
-      displayItems = challenges.filter((c) => c.status === 'pending');
+      displayItems = challenges.filter((c) => c.status === 'pending' && !isPendingChallengeExpired(c));
     } else if (tab === 'accepted') {
       displayItems = challenges.filter((c) => c.status === 'accepted');
     } else if (tab === 'completed') {
