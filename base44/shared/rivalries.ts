@@ -13,6 +13,9 @@ const SPORT_EMOJI: Record<string, string> = {
   cornhole: '🌽',
   trivia: '🧠',
   chugging: '🍺',
+  ping_pong: '🏓',
+  spikeball: '🏐',
+  board_games: '🃏',
   custom: '🏆',
 };
 

@@ -9,6 +9,9 @@ export const SPORTS = [
   { key: 'cornhole', label: 'Cornhole', emoji: '🌽' },
   { key: 'trivia', label: 'Trivia', emoji: '🧠' },
   { key: 'chugging', label: 'Chugging', emoji: '🍺' },
+  { key: 'ping_pong', label: 'Ping Pong', emoji: '🏓' },
+  { key: 'spikeball', label: 'Spikeball', emoji: '🏐' },
+  { key: 'board_games', label: 'Board Games', emoji: '🃏' },
   { key: 'custom', label: 'Custom', emoji: '➕' },
 ];
 
@@ -25,6 +28,9 @@ export const SPORT_PIN_COLOR = {
   cornhole: '265 60% 60%',
   trivia: '216 70% 52%',
   chugging: '330 72% 58%',
+  ping_pong: '174 62% 44%',
+  spikeball: '25 90% 55%',
+  board_games: '280 55% 52%',
   custom: '220 14% 50%',
 };
 
