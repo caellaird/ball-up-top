@@ -50,8 +50,10 @@ export default function Challenges({ user: userProp }) {
     }
   }, [user?.id]);
 
-  // Initial load + re-fetch whenever the user changes (re-mount returns here).
-  useEffect(() => { load(); }, [load]);
+  // Fetch on mount, whenever the user changes (re-mount returns here), and on
+  // every tab switch — so each tab always shows live results. Stale responses
+  // from rapid switching are discarded via the request token in `load`.
+  useEffect(() => { load(); }, [load, tab]);
 
   // Refresh when the page regains focus so accept/complete/expire actions
   // taken elsewhere are reflected without a manual pull-to-refresh.
