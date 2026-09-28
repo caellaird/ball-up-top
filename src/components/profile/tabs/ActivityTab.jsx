@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useReactions } from '@/hooks/useReactions';
 import PostCard from '@/components/feed/PostCard';
 import RivalryAnnouncementCard from '@/components/feed/RivalryAnnouncementCard';
 import CompletedChallenges from '@/components/profile/CompletedChallenges';
@@ -24,11 +25,8 @@ export default function ActivityTab({ ownerId, ownerName, viewerId }) {
     }
   };
 
-  const onReact = async (post, type) => {
-    const field = { like: 'like_count', fire: 'fire_count', trash_talk: 'trash_count' }[type];
-    await base44.entities.Post.update(post.id, { [field]: (post[field] || 0) + 1 });
-    setPosts(posts.map((p) => (p.id === post.id ? { ...p, [field]: (p[field] || 0) + 1 } : p)));
-  };
+  const postIds = (posts || []).map((p) => p.id);
+  const { countsByPost, myEmojiByPost, react } = useReactions(postIds, viewerId || ownerId);
 
   return (
     <div className="pt-4">
@@ -51,8 +49,9 @@ export default function ActivityTab({ ownerId, ownerName, viewerId }) {
             <RivalryAnnouncementCard
               key={post.id}
               post={post}
-              reactions={{}}
-              onReact={onReact}
+              reactionCounts={countsByPost[post.id] || {}}
+              myEmoji={myEmojiByPost[post.id] || null}
+              onReact={react}
               userId={viewerId || ownerId}
               onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
             />
@@ -60,8 +59,9 @@ export default function ActivityTab({ ownerId, ownerName, viewerId }) {
             <PostCard
               key={post.id}
               post={post}
-              reactions={{}}
-              onReact={onReact}
+              reactionCounts={countsByPost[post.id] || {}}
+              myEmoji={myEmojiByPost[post.id] || null}
+              onReact={react}
               userId={viewerId || ownerId}
               onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
             />

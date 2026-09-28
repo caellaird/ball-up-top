@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
-import { Swords, MessageCircle, Share2, Flame } from 'lucide-react';
+import { Swords, Flame } from 'lucide-react';
+import ReactionBar from '@/components/feed/ReactionBar';
 import { fetchRivalry } from '@/lib/rivalries';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function RivalryAnnouncementCard({ post, reactions, onReact, userId }) {
+export default function RivalryAnnouncementCard({ post, reactionCounts, myEmoji, onReact, userId }) {
   const [rivalry, setRivalry] = useState(null);
 
   useEffect(() => {
@@ -92,20 +93,15 @@ export default function RivalryAnnouncementCard({ post, reactions, onReact, user
       </div>
 
       {/* Reaction bar — matches PostCard's style */}
-      <div className="bg-card rounded-b-3xl border border-t-0 border-border/50 px-4 py-2.5 flex items-center gap-4 text-muted-foreground text-sm">
-        <button onClick={() => onReact(post, 'like')} className={`flex items-center gap-1.5 ${reactions?.liked ? 'text-primary font-semibold' : ''}`}>
-          ❤️ {post.like_count || 0}
-        </button>
-        <button onClick={() => onReact(post, 'fire')} className={`flex items-center gap-1.5 ${reactions?.fired ? 'text-accent font-semibold' : ''}`}>
-          🔥 {post.fire_count || 0}
-        </button>
-        <button onClick={() => onReact(post, 'trophy')} className={`flex items-center gap-1.5 ${reactions?.trophied ? 'text-accent font-semibold' : ''}`}>
-          🏆 {post.trophy_count || 0}
-        </button>
-        <button className="flex items-center gap-1.5">
-          <MessageCircle className="w-4 h-4" /> {post.comment_count || 0}
-        </button>
-        <button className="ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
+      <div className="bg-card rounded-b-3xl border border-t-0 border-border/50 px-4 py-2.5">
+        <ReactionBar
+          post={post}
+          counts={reactionCounts}
+          myEmoji={myEmoji}
+          onReact={onReact}
+          commentCount={post.comment_count}
+          onShare={handleShare}
+        />
       </div>
     </article>
   );

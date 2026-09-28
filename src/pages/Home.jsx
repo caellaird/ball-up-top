@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import SegmentedControl from '@/components/shared/SegmentedControl';
 import PostCard from '@/components/feed/PostCard';
+import { useReactions } from '@/hooks/useReactions';
 import RivalryAnnouncementCard from '@/components/feed/RivalryAnnouncementCard';
 import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
@@ -22,7 +23,6 @@ export default function Home({ user: userProp }) {
   const user = userProp || outletCtx?.user;
   const [tab, setTab] = useState('friends');
   const [posts, setPosts] = useState(null);
-  const [myReactions, setMyReactions] = useState({});
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [friendRecords, setFriendRecords] = useState({});
@@ -50,7 +50,6 @@ export default function Home({ user: userProp }) {
     const isFriends = tabRef.current === 'friends';
     // Sequential (not Promise.all) to avoid bursting API calls and tripping the rate limit.
     const data = await fetchPage(0);
-    const myLikes = await base44.entities.Like.filter({ created_by_id: user.id });
     const myRelations = await base44.entities.Friend.filter({ $or: [{ created_by_id: user.id }, { addressee_id: user.id }] });
     const friendRecordByUserId = {};
     const acceptedIds = new Set([user.id]);
@@ -71,9 +70,6 @@ export default function Home({ user: userProp }) {
     } else {
       friendIdsRef.current = null;
     }
-    const map = {};
-    myLikes.forEach((l) => { map[l.post_id] = map[l.post_id] || {}; map[l.post_id][l.type || 'like'] = true; });
-    setMyReactions(map);
     const filtered = applyFilters(data);
     setPosts(filtered);
     pageRef.current = 0;
@@ -107,21 +103,8 @@ export default function Home({ user: userProp }) {
     return () => io.disconnect();
   }, [posts, hasMore, loadingMore]);
 
-  const countField = { like: 'like_count', fire: 'fire_count', trash: 'trash_count', trophy: 'trophy_count' };
-  const onReact = async (post, type) => {
-    const already = myReactions[post.id]?.[type];
-    const newMap = { ...myReactions, [post.id]: { ...myReactions[post.id], [type]: !already } };
-    if (already) {
-      const existing = await base44.entities.Like.filter({ post_id: post.id, created_by_id: user.id, type });
-      if (existing[0]) await base44.entities.Like.delete(existing[0].id);
-      await base44.entities.Post.update(post.id, { [countField[type]]: Math.max((post[countField[type]] || 1) - 1, 0) });
-    } else {
-      await base44.entities.Like.create({ post_id: post.id, type });
-      await base44.entities.Post.update(post.id, { [countField[type]]: (post[countField[type]] || 0) + 1 });
-    }
-    setMyReactions(newMap);
-    setPosts(posts.map((p) => (p.id === post.id ? { ...p, [countField[type]]: p[countField[type]] + (already ? -1 : 1) } : p)));
-  };
+  const postIds = (posts || []).map((p) => p.id);
+  const { countsByPost, myEmojiByPost, react } = useReactions(postIds, user.id);
 
   return (
     <div className="h-full flex flex-col">
@@ -150,16 +133,18 @@ export default function Home({ user: userProp }) {
                     {post.post_type === 'rivalry_announcement' ? (
                       <RivalryAnnouncementCard
                         post={post}
-                        reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
-                        onReact={onReact}
+                        reactionCounts={countsByPost[post.id] || {}}
+                        myEmoji={myEmojiByPost[post.id] || null}
+                        onReact={react}
                         userId={user.id}
                         onDeleted={(id) => setPosts(posts.filter((p) => p.id !== id))}
                       />
                     ) : (
                       <PostCard
                         post={post}
-                        reactions={{ liked: !!myReactions[post.id]?.like, fired: !!myReactions[post.id]?.fire, trophied: !!myReactions[post.id]?.trophy, trashed: !!myReactions[post.id]?.trash_talk }}
-                        onReact={onReact}
+                        reactionCounts={countsByPost[post.id] || {}}
+                        myEmoji={myEmojiByPost[post.id] || null}
+                        onReact={react}
                         userId={user.id}
                         currentUserName={user.full_name}
                         friendRecordByUserId={friendRecords}

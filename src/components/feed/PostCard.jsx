@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Share2, Swords, Pencil, Trash2, Flag } from 'lucide-react';
+import { Swords, Pencil, Trash2, Flag } from 'lucide-react';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { base44 } from '@/api/base44Client';
+import ReactionBar from '@/components/feed/ReactionBar';
 import { format, formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { usePhotoViewer } from '@/lib/photoViewer';
@@ -11,7 +12,7 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
 
-export default function PostCard({ post, reactions, onReact, userId, currentUserName, onDeleted, friendRecordByUserId }) {
+export default function PostCard({ post, reactionCounts, myEmoji, onReact, userId, currentUserName, onDeleted, friendRecordByUserId }) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -150,24 +151,15 @@ export default function PostCard({ post, reactions, onReact, userId, currentUser
         </div>
       )}
 
-      <div className="flex items-center gap-4 text-muted-foreground text-sm pt-1">
-        <button onClick={() => onReact(post, 'like')} className={`py-1.5 flex items-center gap-1.5 ${reactions.liked ? 'text-primary font-semibold' : ''}`}>
-          ❤️ {post.like_count || 0}
-        </button>
-        <button onClick={() => onReact(post, 'fire')} className={`py-1.5 flex items-center gap-1.5 ${reactions.fired ? 'text-accent font-semibold' : ''}`}>
-          🔥 {post.fire_count || 0}
-        </button>
-        <button onClick={() => onReact(post, 'trophy')} className={`py-1.5 flex items-center gap-1.5 ${reactions.trophied ? 'text-accent font-semibold' : ''}`}>
-          🏆 {post.trophy_count || 0}
-        </button>
-        <button onClick={() => onReact(post, 'trash_talk')} className={`py-1.5 flex items-center gap-1.5 ${reactions.trashed ? 'text-secondary font-semibold' : ''}`}>
-          🗑️ {post.trash_count || 0}
-        </button>
-        <button onClick={loadComments} className="py-1.5 flex items-center gap-1.5">
-          <MessageCircle className="w-4 h-4" /> {post.comment_count || 0}
-        </button>
-        <button className="py-1.5 ml-auto" onClick={handleShare}><Share2 className="w-4 h-4" /></button>
-      </div>
+      <ReactionBar
+        post={post}
+        counts={reactionCounts}
+        myEmoji={myEmoji}
+        onReact={onReact}
+        commentCount={post.comment_count}
+        onComment={loadComments}
+        onShare={handleShare}
+      />
 
       {showEdit && (
         <PostEditSheet

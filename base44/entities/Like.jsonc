@@ -5,15 +5,10 @@
     "post_id": {
       "type": "string"
     },
-    "type": {
+    "emoji": {
       "type": "string",
-      "enum": [
-        "like",
-        "fire",
-        "trash_talk",
-        "trophy"
-      ],
-      "default": "like"
+      "default": "\ud83d\udd25",
+      "description": "A single emoji reaction chosen by the user for this post"
     }
   },
   "required": [
