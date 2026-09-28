@@ -1,45 +1,20 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SmilePlus, MessageCircle, Share2 } from 'lucide-react';
 import { DEFAULT_REACTION, sortedReactions } from '@/lib/reactions';
 import ReactionPickerSheet from '@/components/feed/ReactionPickerSheet';
 
-// The reaction row shown under each post: used-emoji pills (sorted by count,
-// the user's own highlighted), a primary reaction button, the comment count,
-// and an optional share action.
+// The reaction row shown under each post.
 //
-// - Tap a pill: set your reaction to that emoji (or remove it if it's yours).
-// - Tap the primary button: add the default emoji (🔥); tap again to remove.
-// - Press-and-hold the primary button: open the curated emoji picker.
+// Interactions (all single-tap — no long-press gesture required, which was the
+// source of the tap/hold conflict that made the picker unreachable):
+//   - Tap an emoji pill: set your reaction to that emoji, or remove it if it's
+//     already yours (one reaction per user per post).
+//   - Tap "🔥 React": quickly toggle the default 🔥 reaction.
+//   - Tap the SmilePlus button: open the curated emoji picker.
 export default function ReactionBar({ post, counts, myEmoji, onReact, commentCount, onComment, onShare }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const pressTimer = useRef(null);
-  const longFired = useRef(false);
-
   const reactions = sortedReactions(counts || {});
-  const hasReactions = reactions.length > 0;
-
-  const startPress = () => {
-    longFired.current = false;
-    pressTimer.current = setTimeout(() => {
-      longFired.current = true;
-      setPickerOpen(true);
-    }, 450);
-  };
-  const cancelPress = () => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-  };
-  const handleClick = () => {
-    cancelPress();
-    if (longFired.current) {
-      longFired.current = false;
-      return; // picker already opened from the long press
-    }
-    onReact(post, DEFAULT_REACTION);
-  };
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap pt-1 text-sm">
@@ -66,21 +41,22 @@ export default function ReactionBar({ post, counts, myEmoji, onReact, commentCou
         })}
       </AnimatePresence>
 
-      {/* Primary reaction button: default emoji when no reactions exist, add icon otherwise. */}
+      {/* Quick react: toggle the default 🔥 */}
       <button
-        onTouchStart={startPress}
-        onTouchEnd={cancelPress}
-        onTouchCancel={cancelPress}
-        onMouseDown={startPress}
-        onMouseUp={cancelPress}
-        onMouseLeave={cancelPress}
-        onClick={handleClick}
-        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition active:scale-95 ${
-          hasReactions ? 'bg-muted text-muted-foreground hover:text-foreground' : 'bg-primary/10 text-primary'
-        }`}
-        aria-label="React"
+        onClick={() => onReact(post, DEFAULT_REACTION)}
+        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary transition active:scale-95"
+        aria-label="React with fire"
       >
-        {hasReactions ? <SmilePlus className="w-4 h-4" /> : <>{DEFAULT_REACTION} React</>}
+        {DEFAULT_REACTION} React
+      </button>
+
+      {/* Open the curated emoji picker — always one tap away */}
+      <button
+        onClick={() => setPickerOpen(true)}
+        className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold bg-muted text-muted-foreground hover:text-foreground transition active:scale-95"
+        aria-label="Choose a reaction"
+      >
+        <SmilePlus className="w-4 h-4" />
       </button>
 
       <div className="ml-auto flex items-center gap-2 text-muted-foreground">

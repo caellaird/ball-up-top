@@ -12,8 +12,19 @@ import { DEFAULT_REACTION } from '@/lib/reactions';
 export function useReactions(postIds, currentUserId) {
   const [likesByPost, setLikesByPost] = useState({}); // { [postId]: Like[] }
   const [myLikeByPost, setMyLikeByPost] = useState({}); // { [postId]: Like }
+  const [reloadTick, setReloadTick] = useState(0);
 
   const key = JSON.stringify(postIds || []);
+
+  // Refetch when the page regains focus so reactions from other users appear
+  // without a manual refresh (matches the app's existing focus-refresh pattern).
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible') setReloadTick((t) => t + 1);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, []);
 
   // (Re)load likes whenever the set of visible post ids changes.
   useEffect(() => {
@@ -45,7 +56,7 @@ export function useReactions(postIds, currentUserId) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, currentUserId]);
+  }, [key, currentUserId, reloadTick]);
 
   // Add / change / remove the current user's reaction on a post.
   const react = useCallback(
@@ -94,7 +105,8 @@ export function useReactions(postIds, currentUserId) {
           setMyLikeByPost((prev) => ({ ...prev, [postId]: created }));
         }
       } catch {
-        // Re-sync this post's reactions on failure.
+        // Re-sync this post's reactions on failure and clear any optimistic
+        // (temp) state so the UI never stays stuck on a reaction that didn't save.
         try {
           const likes = await base44.entities.Like.filter({ post_id: { $in: [postId] } });
           const byPost = {};
@@ -103,8 +115,17 @@ export function useReactions(postIds, currentUserId) {
             (byPost[l.post_id] = byPost[l.post_id] || []).push(l);
             if (l.created_by_id === currentUserId) mine[l.post_id] = l;
           }
-          setLikesByPost((prev) => ({ ...prev, ...byPost }));
-          setMyLikeByPost((prev) => ({ ...prev, ...mine }));
+          setLikesByPost((prev) => {
+            const next = { ...prev };
+            next[postId] = byPost[postId] || [];
+            return next;
+          });
+          setMyLikeByPost((prev) => {
+            const next = { ...prev };
+            if (mine[postId]) next[postId] = mine[postId];
+            else delete next[postId];
+            return next;
+          });
         } catch {
           /* ignore */
         }
