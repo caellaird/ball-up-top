@@ -73,8 +73,8 @@ export default function AvatarUpload({ profile, fallback, onUploaded, size = 'w-
         </button>
       )}
 
-      <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      <input ref={cameraRef} type="file" accept="image/*" capture="user" className="hidden" onChange={handleFile} />
+      <input ref={galleryRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handleFile} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="user" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handleFile} />
 
       <Sheet open={showSheet} onOpenChange={setShowSheet}>
         <SheetContent side="bottom" className="rounded-t-3xl">
