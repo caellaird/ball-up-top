@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useOutletContext, Link, useSearchParams } from 'react-router-dom';
+import { useOutletContext, Link, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -12,30 +12,22 @@ import MotionCard from '@/components/shared/MotionCard';
 import { PERSONALITY } from '@/lib/personality';
 import { isPendingChallengeExpired } from '@/lib/challengeExpiry';
 
-// Module-level: preserves the selected tab across component remounts.
-let _persistedTab = 'pending';
-
-// Challenges lists the user's challenges organized by status. The active tab
-// is the single source of truth: the full list is fetched once (and on
-// refresh/return), and each tab's view is derived from it via filtering — so
-// switching tabs is instant and can never render another tab's stale content.
+// Challenges lists the user's challenges organized by status. This page stays
+// permanently mounted in TabContainer, so `activeTab` (plain component state)
+// persists across opening a challenge and coming back. It is the ONLY value
+// controlling the selected tab; cards are derived from it + the fetched list
+// on every render, so the tab and the cards can never disagree.
 export default function Challenges({ user: userProp }) {
   const outletCtx = useOutletContext();
   const user = userProp || outletCtx?.user;
-  const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(_persistedTab);
+  const { pathname } = useLocation();
+  const [activeTab, setActiveTab] = useState('pending');
   const [challenges, setChallenges] = useState(null);
   const [, setExpiryTick] = useState(0);
 
   // Token used to ignore stale fetch responses (e.g. a refresh that completes
   // after the user has triggered a newer fetch).
   const reqId = useRef(0);
-
-  useEffect(() => {
-    if (searchParams.get('event')) setTab('accepted');
-  }, [searchParams]);
-
-  useEffect(() => { _persistedTab = tab; }, [tab]);
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -50,10 +42,11 @@ export default function Challenges({ user: userProp }) {
     }
   }, [user?.id]);
 
-  // Fetch on mount, whenever the user changes (re-mount returns here), and on
-  // every tab switch — so each tab always shows live results. Stale responses
+  // Fetch on mount, on every tab switch, and whenever you return to this page
+  // (e.g. back from a challenge you just accepted/completed). Stale responses
   // from rapid switching are discarded via the request token in `load`.
-  useEffect(() => { load(); }, [load, tab]);
+  const isVisible = pathname === '/challenges';
+  useEffect(() => { if (isVisible) load(); }, [load, activeTab, isVisible]);
 
   // Refresh when the page regains focus so accept/complete/expire actions
   // taken elsewhere are reflected without a manual pull-to-refresh.
@@ -70,15 +63,11 @@ export default function Challenges({ user: userProp }) {
     return () => clearInterval(t);
   }, []);
 
-  // The active tab is the single source of truth for what is rendered. The list
-  // is derived directly on every render from the live `tab` + loaded
-  // `challenges` — no memoization, so it can never hold a previous tab's items.
-  let displayItems = [];
-  if (challenges && challenges.length > 0) {
-    if (tab === 'pending') displayItems = challenges.filter((c) => c.status === 'pending' && !isPendingChallengeExpired(c));
-    else if (tab === 'accepted') displayItems = challenges.filter((c) => c.status === 'accepted');
-    else if (tab === 'completed') displayItems = challenges.filter((c) => c.status === 'completed');
-  }
+  // Derived on every render from `activeTab` + the latest `challenges`.
+  const displayItems = (challenges || []).filter((c) => {
+    if (activeTab === 'pending') return c.status === 'pending' && !isPendingChallengeExpired(c);
+    return c.status === activeTab;
+  });
 
   const emptyCopy = {
     pending: { title: PERSONALITY.noChallenges.title, description: PERSONALITY.noChallenges.description },
@@ -96,21 +85,21 @@ export default function Challenges({ user: userProp }) {
             { value: 'accepted', label: 'Accepted' },
             { value: 'completed', label: 'Completed' }
           ]}
-          value={tab}
-          onChange={setTab}
+          value={activeTab}
+          onChange={setActiveTab}
         />
       </div>
       {challenges === null
         ? <ListSkeleton count={4} />
         : displayItems.length === 0
           ? <EmptyState
-              title={emptyCopy[tab].title}
-              description={emptyCopy[tab].description}
-              action={tab !== 'completed'
+              title={emptyCopy[activeTab].title}
+              description={emptyCopy[activeTab].description}
+              action={activeTab !== 'completed'
                 ? <Button asChild className="rounded-full"><Link to="/ball-up">Ball Up Top</Link></Button>
                 : undefined}
             />
-          : <div className="pt-2" key={tab}>
+          : <div className="pt-2" key={activeTab}>
               {displayItems.map((item, i) => (
                 <MotionCard key={item.id} index={i}>
                   <ChallengeCard challenge={item} />

@@ -1,11 +1,23 @@
-import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { useOutlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 import TabContainer from './TabContainer';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const TAB_PATHS = ['/', '/challenges', '/groups', '/profile/me'];
+
+// Renders the overlay page's outlet. While the overlay animates out after
+// navigating back to a tab route, the live outlet would render a SECOND copy
+// of that tab page (e.g. Challenges) on top of the real one in TabContainer.
+// Keep showing the last non-tab page instead, so there's only ever one copy.
+function OverlayOutlet({ context }) {
+  const location = useLocation();
+  const outlet = useOutlet(context);
+  const last = useRef(outlet);
+  if (!TAB_PATHS.includes(location.pathname)) last.current = outlet;
+  return last.current;
+}
 
 export default function MobileShell() {
   const { user, loading } = useCurrentUser();
@@ -37,7 +49,7 @@ export default function MobileShell() {
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="absolute inset-0 bg-background overflow-y-auto overscroll-contain pb-4 z-10"
               >
-                <Outlet context={{ user }} />
+                <OverlayOutlet context={{ user }} />
               </motion.div>
             )}
           </AnimatePresence>
