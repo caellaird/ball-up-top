@@ -93,7 +93,7 @@ export default function BallUp() {
 
   return (
     <div className="min-h-full flex flex-col">
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <button onClick={back} aria-label="Go back" className="flex items-center justify-center min-w-[44px] min-h-[44px] -ml-2 text-foreground"><ChevronLeft className="w-6 h-6" /></button>
         <span className="font-heading font-bold">Step {step} of 5</span>
         <button onClick={goBack} aria-label="Close" className="flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 text-foreground"><X className="w-6 h-6" /></button>

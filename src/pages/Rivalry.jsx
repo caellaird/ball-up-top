@@ -184,7 +184,7 @@ export default function Rivalry() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="shrink-0 flex items-center px-4 pt-3 pb-2">
+      <div className="shrink-0 flex items-center px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
         <BackButton fallback="/" className="-ml-1 text-foreground" />
         <span className="font-heading font-bold ml-1">Rivalry</span>
       </div>

@@ -90,7 +90,7 @@ export default function Messages() {
   });
 
   return (
-    <div>
+    <div className="pt-[max(1rem,env(safe-area-inset-top))]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BackButton fallback="/groups" className="-ml-1.5 text-foreground" />

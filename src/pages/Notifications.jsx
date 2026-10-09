@@ -75,7 +75,7 @@ export default function Notifications() {
   if (notifications === null) return <div className="text-center text-muted-foreground py-10">Loading...</div>;
 
   return (
-    <div className="px-4 pt-4" style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}>
+    <div className="px-4 pt-[max(1rem,env(safe-area-inset-top))]" style={{ paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BackButton fallback="/" className="-ml-1.5 text-foreground" />
