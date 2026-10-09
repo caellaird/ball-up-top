@@ -18,11 +18,39 @@ const base44 = createClient({
 // call apart by a fixed interval so they never burst, regardless of how many
 // components mount simultaneously. Semantics are unchanged — calls are just
 // delayed, never dropped.
-const MIN_INTERVAL = 120; // ms between dispatched calls
+const MIN_INTERVAL = 150; // ms between dispatched calls
 const THROTTLED_METHODS = new Set(['filter', 'list', 'get', 'create', 'update', 'delete', 'bulkCreate', 'bulkUpdate', 'updateMany', 'deleteMany']);
 
 let _queue = Promise.resolve();
 let _lastDispatch = 0;
+
+// Detect a rate-limit rejection (HTTP 429 or the SDK's "Rate limit exceeded"
+// message) so a throttled call can transparently back off and retry instead of
+// surfacing the error to the user.
+function isRateLimitError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err);
+  if (/rate limit/i.test(msg)) return true;
+  const status = err.status ?? err.statusCode ?? err.response?.status;
+  return status === 429;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function withRetry(fn) {
+  const BACKOFFS = [400, 900, 1800, 3600]; // exponential backoff schedule (ms)
+  let lastErr;
+  for (let attempt = 0; attempt <= BACKOFFS.length; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (!isRateLimitError(err) || attempt === BACKOFFS.length) break;
+      await sleep(BACKOFFS[attempt]);
+    }
+  }
+  throw lastErr;
+}
 
 function throttled(fn) {
   return (...args) => {
@@ -30,7 +58,7 @@ function throttled(fn) {
       const wait = Math.max(0, _lastDispatch + MIN_INTERVAL - Date.now());
       return new Promise((resolve) => setTimeout(resolve, wait)).then(() => {
         _lastDispatch = Date.now();
-        return fn(...args);
+        return withRetry(() => fn(...args));
       });
     };
     _queue = _queue.then(run, run);
