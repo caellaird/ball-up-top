@@ -12,6 +12,7 @@ import HighlightCardVisual from '@/components/feed/HighlightCardVisual';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
+import PostShareSheet from '@/components/feed/PostShareSheet';
 
 export default function PostCard({ post, reactionCounts, myEmoji, onReact, userId, currentUserName, onDeleted, friendRecordByUserId }) {
   const [showComments, setShowComments] = useState(false);
@@ -23,6 +24,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
   const [showReport, setShowReport] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editState, setEditState] = useState({});
+  const [showShare, setShowShare] = useState(false);
 
   const loadComments = async () => {
     const data = await base44.entities.Comment.filter({ post_id: post.id }, '-created_date');
@@ -35,15 +37,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
   const mediaUrls = editState.media_urls ?? post.media_urls;
   const isEdited = editState.is_edited ?? post.is_edited;
 
-  const handleShare = async () => {
-    const shareText = post.score_text || post.body;
-    const shareUrl = `${window.location.origin}/profile/${post.author_username || 'me'}`;
-    if (navigator.share) {
-      await navigator.share({ title: `${post.author_name} on Ball Up Top`, text: shareText, url: shareUrl });
-    } else {
-      await navigator.clipboard.writeText(`${shareText} — ${shareUrl}`);
-    }
-  };
+  const handleShare = () => setShowShare(true);
 
   const submitComment = async () => {
     if (!commentText.trim()) return;
@@ -225,6 +219,8 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
         targetId={post.id}
         targetOwnerName={post.author_name}
       />
+
+      <PostShareSheet open={showShare} onOpenChange={setShowShare} post={post} />
 
       {showComments && (
         <div className="mt-3 pt-3 border-t border-border space-y-2">
