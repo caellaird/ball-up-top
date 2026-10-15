@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { X, ChevronLeft } from 'lucide-react';
+import { X, ChevronLeft, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
@@ -10,6 +10,7 @@ import { sendNotification } from '@/lib/notify';
 import { enrichFriends } from '@/lib/friendsHelpers';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useGoBack } from '@/hooks/useGoBack';
+import HighlightComposerSheet from '@/components/feed/HighlightComposerSheet';
 
 export default function BallUp() {
   const { user } = useOutletContext();
@@ -29,6 +30,7 @@ export default function BallUp() {
   const [customSportName, setCustomSportName] = useState('');
   const [customSportEmoji, setCustomSportEmoji] = useState('');
   const [sending, setSending] = useState(false);
+  const [showHighlight, setShowHighlight] = useState(false);
 
   useEffect(() => {
     base44.entities.Friend.filter({ status: 'accepted' }).then(async (all) => {
@@ -104,6 +106,22 @@ export default function BallUp() {
           <div>
             <h1 className="font-heading text-2xl font-extrabold mb-1">BALL UP TOP</h1>
             <p className="text-muted-foreground mb-6">Pick Your Game</p>
+            <motion.button
+              onClick={() => setShowHighlight(true)}
+              initial={reduce ? false : { opacity: 0, y: 12 }}
+              animate={reduce ? {} : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              whileTap={reduce ? undefined : { scale: 0.97 }}
+              className="w-full flex items-center gap-3 rounded-3xl border-2 border-primary/40 bg-primary/5 p-4 mb-6 text-left"
+            >
+              <span className="w-12 h-12 rounded-2xl brand-gradient flex items-center justify-center shrink-0">
+                <Star className="w-6 h-6 text-white fill-white" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-heading font-bold">Post a Scorecard</span>
+                <span className="block text-xs text-muted-foreground">Log your own stats & highlights — no challenge needed</span>
+              </span>
+            </motion.button>
             <div className="grid grid-cols-3 gap-3">
               {SPORTS.map((s, i) => (
                 <motion.button
@@ -217,6 +235,12 @@ export default function BallUp() {
           </div>
         )}
       </div>
+
+      <HighlightComposerSheet
+        open={showHighlight}
+        onOpenChange={setShowHighlight}
+        onPosted={() => navigate('/')}
+      />
     </div>
   );
 }
