@@ -10,6 +10,13 @@ export default function HighlightCardVisual({ post }) {
 
   return (
     <div className="rounded-3xl border border-border bg-card overflow-hidden">
+      {post.media_urls?.[0] && (
+        <img
+          src={post.media_urls[0]}
+          alt={post.highlight_title || post.body || 'highlight'}
+          className="w-full aspect-[4/3] object-cover bg-muted"
+        />
+      )}
       <div className="px-4 pt-3 flex items-center gap-2.5">
         <Link to={`/profile/${post.author_username || 'me'}`}>
           <UserAvatar userId={post.created_by_id} src={post.author_avatar} name={post.author_name} className="w-9 h-9" />
