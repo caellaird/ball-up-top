@@ -10,7 +10,7 @@ const TABS = [
 
 export default function ProfileTabs({ active, onChange }) {
   return (
-    <div className="sticky top-0 z-20 flex border-b border-border bg-background/95 backdrop-blur-sm">
+    <div className="sticky top-0 z-20 flex border-b border-border bg-background/95 backdrop-blur-sm pt-[max(0.5rem,env(safe-area-inset-top))]">
       {TABS.map((t) => (
         <button
           key={t.key}

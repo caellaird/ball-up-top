@@ -7,7 +7,7 @@ import BackButton from '@/components/shared/BackButton';
 
 export default function Header({ title, backFallback, onBack }) {
   return (
-    <header className="sticky top-0 z-30 px-4 pt-[env(safe-area-inset-top)] pb-2">
+    <header className="sticky top-0 z-30 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2">
       <div className="flex items-center justify-between h-12 px-3 rounded-full border border-border/60 bg-background/80 backdrop-blur-xl arena-shadow">
         <div className="flex items-center gap-1 min-w-0">
           {backFallback && <BackButton fallback={backFallback} className="-ml-1.5 text-foreground" />}
