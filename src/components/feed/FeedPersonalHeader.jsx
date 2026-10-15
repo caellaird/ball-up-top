@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import AnimatedNumber from '@/components/shared/AnimatedNumber';
-import { getOrCreateStats } from '@/lib/ensureProfile';
+import { getCachedProfileStats } from '@/lib/ensureProfile';
 
 // Personalized feed header — greets the user by first name and shows their
 // live win/loss/streak summary pulled from real competition history.
@@ -14,8 +14,9 @@ export default function FeedPersonalHeader({ user }) {
 
   useEffect(() => {
     (async () => {
-      // Sequential to avoid rate-limit bursts.
-      const s = await getOrCreateStats(user);
+      // Use the same competitive-record computation the Profile uses (cached,
+      // shared) so Home and Profile always show identical wins/losses/streak.
+      const s = await getCachedProfileStats(user.id);
       setStats(s);
       const mine = await base44.entities.Challenge.filter({ created_by_id: user.id }, '-created_date', 20);
       setActiveCount(mine.filter((c) => c.status === 'pending' || c.status === 'accepted').length);
@@ -23,9 +24,9 @@ export default function FeedPersonalHeader({ user }) {
   }, [user.id]);
 
   const firstName = user.full_name?.split(' ')[0] || 'Baller';
-  const wins = stats?.games_won ?? 0;
+  const wins = stats?.wins ?? 0;
   const losses = stats?.losses ?? 0;
-  const streak = stats?.current_streak ?? 0;
+  const streak = stats?.currentStreak ?? 0;
 
   return (
     <motion.div
