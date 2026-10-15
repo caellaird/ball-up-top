@@ -1,7 +1,6 @@
 import React from 'react';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { Link } from 'react-router-dom';
-import InstagramStoryShareButton from '@/components/feed/InstagramStoryShareButton';
 
 // Clean "scorecard" visual for highlight_card posts: a white card with the
 // author header, a 3-column stats row (blue values, grey caps labels), and the
@@ -39,11 +38,8 @@ export default function HighlightCardVisual({ post }) {
       )}
 
       {post.body && (
-        <p className="text-sm text-muted-foreground px-4 pb-3 pt-1 whitespace-pre-wrap">{post.body}</p>
+        <p className="text-sm text-muted-foreground px-4 pb-4 pt-1 whitespace-pre-wrap">{post.body}</p>
       )}
-      <div className="px-4 pb-4 flex items-center justify-end">
-        <InstagramStoryShareButton post={post} />
-      </div>
     </div>
   );
 }
