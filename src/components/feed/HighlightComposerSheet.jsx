@@ -29,7 +29,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
   }, [open]);
 
   const validStats = stats.filter((s) => s.label.trim() && s.value.trim());
-  const canPost = title.trim() && imageUrl && validStats.length >= 1 && !uploading;
+  const canPost = title.trim() && validStats.length >= 1 && !uploading;
 
   const setStat = (i, field, val) => {
     setStats(stats.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
@@ -64,7 +64,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
         author_username: profile.username,
         author_avatar: profile.avatar_url,
         body: caption.trim() || title.trim(),
-        media_urls: [imageUrl],
+        media_urls: imageUrl ? [imageUrl] : undefined,
         post_type: 'highlight_card',
         highlight_title: title.trim(),
         highlight_stats: validStats.map((s) => ({ label: s.label.trim(), value: s.value.trim() })),
