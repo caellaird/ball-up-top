@@ -2,7 +2,6 @@ import React from 'react';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Star } from 'lucide-react';
 
 // Personal "trading card" visual for highlight_card posts: a photo-forward card
 // with the event/league title, the author, and 1-3 custom stat rows.
@@ -19,10 +18,6 @@ export default function HighlightCardVisual({ post }) {
           <div className="w-full h-56 brand-gradient" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25">
-          <Star className="w-3.5 h-3.5 text-white fill-white" />
-          <span className="text-[11px] font-bold text-white uppercase tracking-wide">Highlight</span>
-        </div>
         <div className="absolute bottom-3 left-3 right-3">
           <p className="text-[11px] font-semibold text-white/80 uppercase tracking-wide">{format(new Date(post.created_date), 'MMM d, yyyy')}</p>
           <h3 className="font-heading font-extrabold text-xl text-white leading-tight drop-shadow">{post.highlight_title}</h3>
