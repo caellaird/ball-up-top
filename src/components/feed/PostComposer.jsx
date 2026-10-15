@@ -5,6 +5,8 @@ import { UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import TagFriendsSheet from '@/components/feed/TagFriendsSheet';
+import HighlightComposerSheet from '@/components/feed/HighlightComposerSheet';
+import { Star } from 'lucide-react';
 
 export default function PostComposer({ onPosted }) {
   const [body, setBody] = useState('');
@@ -12,6 +14,7 @@ export default function PostComposer({ onPosted }) {
   const [userId, setUserId] = useState(null);
   const [tagged, setTagged] = useState([]);
   const [showTagSheet, setShowTagSheet] = useState(false);
+  const [showHighlight, setShowHighlight] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then((u) => setUserId(u.id));
@@ -41,10 +44,16 @@ export default function PostComposer({ onPosted }) {
     <div className="bg-card border border-border rounded-xl p-4 mb-6">
       <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What's on your court?" className="resize-none mb-3" rows={3} />
 
-      <button onClick={() => setShowTagSheet(true)} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-3">
-        <UserPlus className="w-4 h-4" />
-        {tagged.length > 0 ? `Tagged: ${tagged.map((t) => t.name).join(', ')}` : 'Tag Players'}
-      </button>
+      <div className="flex items-center gap-3 mb-3">
+        <button onClick={() => setShowTagSheet(true)} className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+          <UserPlus className="w-4 h-4" />
+          {tagged.length > 0 ? `Tagged: ${tagged.map((t) => t.name).join(', ')}` : 'Tag Players'}
+        </button>
+        <button onClick={() => setShowHighlight(true)} className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+          <Star className="w-4 h-4" />
+          Highlight Card
+        </button>
+      </div>
 
       <div className="flex justify-end">
         <Button onClick={submit} disabled={posting || !body.trim()} className="rounded-full">
@@ -58,6 +67,12 @@ export default function PostComposer({ onPosted }) {
         userId={userId}
         initialSelected={tagged}
         onConfirm={setTagged}
+      />
+
+      <HighlightComposerSheet
+        open={showHighlight}
+        onOpenChange={setShowHighlight}
+        onPosted={onPosted}
       />
     </div>
   );

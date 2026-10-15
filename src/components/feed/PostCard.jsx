@@ -8,6 +8,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { usePhotoViewer } from '@/lib/photoViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
+import HighlightCardVisual from '@/components/feed/HighlightCardVisual';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
@@ -66,18 +67,8 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
 
   return (
     <article className="bg-card rounded-3xl arena-shadow border border-border/50 p-4 mb-4 mx-4">
-      <div className="flex items-center gap-3 mb-3">
-        <Link to={`/profile/${post.author_username || 'me'}`}>
-          <UserAvatar userId={post.created_by_id} src={post.author_avatar} name={post.author_name} className="w-11 h-11 border-2 border-primary/20" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <Link to={`/profile/${post.author_username || 'me'}`}><p className="font-semibold text-sm">{post.author_name}</p></Link>
-          <p className="text-xs text-muted-foreground truncate">
-            {post.location_name ? `📍 ${post.location_name} · ` : ''}
-            {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+      {post.post_type === 'highlight_card' ? (
+        <div className="flex items-center justify-end gap-2 mb-2">
           {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
           {post.created_by_id && post.created_by_id !== userId && (
             <>
@@ -103,10 +94,54 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
               </button>
             </>
           )}
-          {post.game_emoji && <span className="text-2xl">{post.game_emoji}</span>}
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3 mb-3">
+          <Link to={`/profile/${post.author_username || 'me'}`}>
+            <UserAvatar userId={post.created_by_id} src={post.author_avatar} name={post.author_name} className="w-11 h-11 border-2 border-primary/20" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <Link to={`/profile/${post.author_username || 'me'}`}><p className="font-semibold text-sm">{post.author_name}</p></Link>
+            <p className="text-xs text-muted-foreground truncate">
+              {post.location_name ? `📍 ${post.location_name} · ` : ''}
+              {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {isEdited && <span className="text-[10px] text-muted-foreground italic">edited</span>}
+            {post.created_by_id && post.created_by_id !== userId && (
+              <>
+                <FriendButton
+                  currentUserId={userId}
+                  currentUserName={currentUserName}
+                  targetUserId={post.created_by_id}
+                  targetUserName={post.author_name}
+                  record={friendRecordByUserId ? (friendRecordByUserId[post.created_by_id] ?? null) : undefined}
+                />
+                <button onClick={() => setShowReport(true)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Report post">
+                  <Flag className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            {post.created_by_id === userId && (
+              <>
+                <button onClick={() => setShowEdit(true)} className="p-1 text-muted-foreground hover:text-foreground">
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => setShowDelete(true)} className="p-1 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            {post.game_emoji && <span className="text-2xl">{post.game_emoji}</span>}
+          </div>
+        </div>
+      )}
 
+      {post.post_type === 'highlight_card' ? (
+        <HighlightCardVisual post={post} />
+      ) : (
+      <>
       {scoreText && (
         <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-2 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
           <span className="font-heading font-bold text-sm">{scoreText}</span>
@@ -149,6 +184,8 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
             </button>
           ))}
         </div>
+      )}
+      </>
       )}
 
       <ReactionBar
