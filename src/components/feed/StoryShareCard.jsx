@@ -58,11 +58,8 @@ export default function StoryShareCard({ post }) {
       {/* bottom content */}
       <div style={{ position: 'relative', padding: '0 72px 110px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22, marginBottom: 40 }}>
-          {post.author_avatar ? (
-            <img src={post.author_avatar} crossOrigin="anonymous" alt="" style={{ width: 92, height: 92, borderRadius: 999, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.85)' }} />
-          ) : (
-            <div style={{ width: 92, height: 92, borderRadius: 999, background: '#1697f3', color: '#000', fontWeight: 800, fontSize: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{initial}</div>
-          )}
+          {/* Letter avatar — avoids canvas tainting from un-CORS-able avatar URLs. */}
+          <div style={{ width: 92, height: 92, borderRadius: 999, background: 'rgba(255,255,255,0.16)', border: '3px solid rgba(255,255,255,0.85)', color: '#fff', fontWeight: 800, fontSize: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{initial}</div>
           <div style={{ fontWeight: 800, fontSize: 48 }}>{author}</div>
         </div>
 
