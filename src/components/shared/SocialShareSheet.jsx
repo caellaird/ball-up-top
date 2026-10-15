@@ -2,58 +2,85 @@ import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Share2, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  canShareFiles,
+  hasNativeShare,
+  copyToClipboard,
+  saveImageToDevice,
+  shareImageToApp,
+} from '@/lib/shareImage';
 
-// Bottom sheet that lets users share an event/result to Instagram, TikTok, or
-// copy the link. When an imageFile is attached (e.g. a result card), the native
-// share sheet shares the image file directly — Instagram/TikTok receive the
-// image instead of just a URL.
+// Bottom sheet that lets users share an event/result/post to Instagram,
+// TikTok, copy the link, save the generated image to the device, or open the
+// native share sheet. When an imageFile is attached, Instagram/TikTok/Save
+// share the actual image (via the native share sheet), not just a URL.
 export default function SocialShareSheet({ open, onOpenChange, title, text, url, imageFile }) {
-  const canShareFiles = imageFile && typeof navigator.canShare === 'function' && navigator.canShare({ files: [imageFile] });
-  const data = { title: title || 'Ball Up Top', text, url };
-  if (canShareFiles) data.files = [imageFile];
+  const close = () => onOpenChange(false);
+  const linkTitle = title || 'Ball Up Top';
 
-  const nativeShare = async () => {
-    if (navigator.share) {
-      try { await navigator.share(data); return true; } catch { return false; }
+  const handleInstagram = async () => {
+    try {
+      await shareImageToApp(imageFile, {
+        url,
+        scheme: 'instagram://app',
+        fallback: 'https://www.instagram.com/',
+        label: 'Instagram',
+      });
+      close();
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast.error('Couldn’t share to Instagram');
     }
-    return false;
   };
 
-  const copyLink = async () => {
-    try { await navigator.clipboard.writeText(url); toast.success('Link copied'); }
-    catch { toast.error('Couldn’t copy link'); }
-  };
-
-  const shareSocial = async () => {
-    const ok = await nativeShare();
-    if (!ok && !canShareFiles) await copyLink();
-    onOpenChange(false);
-  };
-
-  // Instagram and TikTok don't accept arbitrary text via URL scheme, so the
-  // reliable path is: copy the link to the clipboard, then launch the app via
-  // its deep link (web fallback if the app isn't installed) and nudge the user
-  // to paste. `document.hidden` lets us avoid the web fallback when the app
-  // actually took over.
-  const shareToApp = async (scheme, fallback, label) => {
-    if (canShareFiles) {
-      try { await navigator.share(data); onOpenChange(false); return; }
-      catch { /* user cancelled — fall through to URL scheme */ }
+  const handleTiktok = async () => {
+    try {
+      await shareImageToApp(imageFile, {
+        url,
+        scheme: 'tiktok://',
+        fallback: 'https://www.tiktok.com/',
+        label: 'TikTok',
+      });
+      close();
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast.error('Couldn’t share to TikTok');
     }
-    await navigator.clipboard.writeText(url).catch(() => {});
-    toast.success(`Link copied — paste in ${label}`);
-    const start = Date.now();
-    try { window.location.href = scheme; } catch { /* ignore */ }
-    setTimeout(() => {
-      if (!document.hidden && Date.now() - start < 2500) {
-        window.open(fallback, '_blank', 'noopener');
+  };
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(url);
+    toast.success(ok ? 'Link copied' : 'Couldn’t copy link');
+    close();
+  };
+
+  const handleSave = async () => {
+    if (!imageFile) return;
+    try {
+      await saveImageToDevice(imageFile, 'ball-up-top-story.png');
+      toast.success('Saved to your device');
+      close();
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast.error('Couldn’t save image');
+    }
+  };
+
+  const handleMore = async () => {
+    if (hasNativeShare()) {
+      try {
+        await navigator.share({ title: linkTitle, text, url });
+        close();
+      } catch (e) {
+        if (e?.name !== 'AbortError') {
+          const ok = await copyToClipboard(url);
+          toast.success(ok ? 'Link copied' : 'Couldn’t copy');
+          close();
+        }
       }
-    }, 1200);
-    onOpenChange(false);
+    } else {
+      const ok = await copyToClipboard(url);
+      toast.success(ok ? 'Link copied' : 'Couldn’t copy');
+      close();
+    }
   };
-
-  const instagram = () => shareToApp('instagram://app', 'https://www.instagram.com/', 'Instagram');
-  const tiktok = () => shareToApp('tiktok://', 'https://www.tiktok.com/', 'TikTok');
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -63,31 +90,29 @@ export default function SocialShareSheet({ open, onOpenChange, title, text, url,
         </SheetHeader>
         <p className="text-sm text-muted-foreground text-center -mt-1 mb-4 truncate">{title}</p>
         <div className="grid grid-cols-3 gap-3">
-          <ShareOption emoji="📸" label="Instagram" gradient="from-fuchsia-500 via-pink-500 to-amber-400" onClick={instagram} />
-          <ShareOption emoji="🎵" label="TikTok" gradient="from-slate-800 to-black" onClick={tiktok} />
-          <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={async () => { await copyLink(); onOpenChange(false); }} />
+          <ShareOption emoji="📸" label="Instagram" gradient="from-fuchsia-500 via-pink-500 to-amber-400" onClick={handleInstagram} />
+          <ShareOption emoji="🎵" label="TikTok" gradient="from-slate-800 to-black" onClick={handleTiktok} />
+          <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={handleCopy} />
         </div>
         {imageFile && (
           <button
-            onClick={() => {
-              const a = document.createElement('a');
-              a.href = URL.createObjectURL(imageFile);
-              a.download = 'ball-up-top-result.png';
-              a.click();
-              URL.revokeObjectURL(a.href);
-              onOpenChange(false);
-            }}
+            onClick={handleSave}
             className="w-full mt-3 h-12 rounded-full border border-input bg-transparent font-semibold inline-flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4" /> Save Image
           </button>
         )}
         <button
-          onClick={async () => { await shareSocial(); }}
+          onClick={handleMore}
           className="w-full mt-5 h-12 rounded-full bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2"
         >
           <Share2 className="w-4 h-4" /> More options
         </button>
+        {imageFile && canShareFiles(imageFile) && (
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Instagram, TikTok & Save share the image. More options shares the link.
+          </p>
+        )}
       </SheetContent>
     </Sheet>
   );

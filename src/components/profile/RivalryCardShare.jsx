@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 import { LOGO_URL } from '@/lib/constants';
+import { saveImageToDevice, copyToClipboard } from '@/lib/shareImage';
 
 const APP_URL = 'https://ball-up-pro.base44.app';
 
@@ -125,20 +126,17 @@ export default function RivalryCardShare({ open, onOpenChange, record, currentUs
     try {
       const blob = await captureCard();
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'ball-up-top-rivalry.png';
-      a.click();
-      URL.revokeObjectURL(url);
+      await saveImageToDevice(new File([blob], 'ball-up-top-rivalry.png', { type: 'image/png' }), 'ball-up-top-rivalry.png');
       toast.success('Saved rivalry card');
-    } catch { toast.error('Couldn’t save image'); }
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast.error('Couldn’t save image');
+    }
     setGenerating(false);
   };
 
   const handleCopy = async () => {
-    try { await navigator.clipboard.writeText(shareMessage); toast.success('Message copied'); }
-    catch { toast.error('Couldn’t copy'); }
+    const ok = await copyToClipboard(shareMessage);
+    toast.success(ok ? 'Message copied' : 'Couldn’t copy');
   };
 
   const handleShare = async () => {
