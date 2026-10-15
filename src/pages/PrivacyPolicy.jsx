@@ -3,7 +3,7 @@ import LegalLayout from "@/components/LegalLayout";
 
 export default function PrivacyPolicy() {
   return (
-    <LegalLayout title="Privacy Policy" updated="August 25, 2026">
+    <LegalLayout title="Privacy Policy" updated="October 15, 2026">
       <p>
         Ball Up Top ("we," "us," or "our") operates the Ball Up Top mobile application (the "Service").
         This Privacy Policy explains what information we collect, how we use it, and the choices you have.
@@ -17,7 +17,9 @@ export default function PrivacyPolicy() {
         <li><strong>Sign-in providers:</strong> If you use "Sign in with Apple" or Google, we receive the name and email Apple or Google shares with us.</li>
         <li><strong>User content:</strong> Posts, comments, direct and group messages, challenges, game scores, photos and media you upload, awards, and game statistics.</li>
         <li><strong>Connections:</strong> Friends and challenge participants you interact with, and your messages with them.</li>
-        <li><strong>Usage and device information:</strong> Approximate device type, and interaction data such as which screens you open.</li>
+        <li><strong>Location information:</strong> When you enable nearby features, we collect and use your device location (latitude and longitude) to show nearby games, attribute activity to a city, and power local leaderboards. Location is only collected while the feature is in use, and you can turn it off anytime in Settings.</li>
+        <li><strong>Notifications information:</strong> Push notification identifiers needed to deliver in-app notifications and alerts you enable.</li>
+        <li><strong>Analytics and usage:</strong> We measure events such as registrations, challenges sent, and games played, along with approximate device type and which screens you open, to understand and improve the Service.</li>
       </ul>
 
       <h2>How We Use Your Information</h2>
@@ -60,6 +62,9 @@ export default function PrivacyPolicy() {
 
       <h2>Third-Party Services</h2>
       <p>Sign in with Apple and Google are governed by their respective privacy policies. We only receive the data those providers choose to share with us.</p>
+
+      <h2>U.S. State Privacy Rights</h2>
+      <p>If you are a U.S. resident, you may have rights under your state's privacy laws — for example, to know, access, delete, or correct your personal information, and to opt out of certain "sales" or "sharing" or targeted advertising. We do not sell personal information or share it for cross-context behavioral advertising. To exercise these rights, contact us through the app.</p>
 
       <h2>Changes to This Policy</h2>
       <p>We may update this Privacy Policy from time to time. We will reflect the "Last updated" date above. Continued use after changes means you accept the updated policy.</p>
