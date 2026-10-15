@@ -16,6 +16,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
   const [uploading, setUploading] = useState(false);
   const [stats, setStats] = useState([{ label: '', value: '' }, { label: '', value: '' }]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -23,6 +24,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
       setCaption('');
       setImageUrl('');
       setStats([{ label: '', value: '' }, { label: '', value: '' }]);
+      setError('');
     }
   }, [open]);
 
@@ -69,6 +71,8 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
       });
       onPosted?.(post);
       onOpenChange(false);
+    } catch (e) {
+      setError("Couldn't post your highlight. Tap Post Highlight to try again.");
     } finally {
       setSaving(false);
     }
@@ -158,6 +162,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
             <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Say something about it..." rows={2} className="resize-none" />
           </div>
 
+          {error && <p className="text-sm text-destructive text-center">{error}</p>}
           <Button onClick={submit} disabled={!canPost || saving} className="w-full rounded-full h-12">
             {saving ? 'Posting...' : 'Post Highlight'}
           </Button>
