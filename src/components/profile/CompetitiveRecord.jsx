@@ -5,15 +5,15 @@ function RecordStat({ icon, value, label }) {
     <div className="flex flex-col items-center text-center">
       <span className="text-lg leading-none mb-0.5">{icon}</span>
       <span className="font-heading font-extrabold text-lg leading-none">{value}</span>
-      <span className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5 leading-none">{label}</span>
-    </div>
-  );
+      <span className="text-[9px] uppercase tracking-wide mt-0.5 leading-none text-[hsl(var(--muted-foreground))]">{label}</span>
+    </div>);
+
 }
 
 export default function CompetitiveRecord({ stats }) {
   if (!stats) return null;
 
-  const totalGames = stats.totalGames ?? (stats.wins + stats.losses + stats.draws);
+  const totalGames = stats.totalGames ?? stats.wins + stats.losses + stats.draws;
   const rivalriesWon = stats.rivalriesWon ?? 0;
 
   return (
@@ -35,6 +35,6 @@ export default function CompetitiveRecord({ stats }) {
           <RecordStat icon="👥" value={stats.uniqueOpponents ?? 0} label="Opponents" />
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
