@@ -60,9 +60,21 @@ export async function computeProfileStats(userId) {
       const display = getSportDisplay(c);
       if (g.is_draw) {
         results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won: false, draw: true });
-      } else if (g.winner_id) {
-        results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won: g.winner_id === userId, draw: false });
+        return;
       }
+      if (g.winner_id) {
+        results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won: g.winner_id === userId, draw: false });
+        return;
+      }
+      // Legacy series games (logged before winner_id was stored): derive the
+      // winner side from the two scores so historical results still count.
+      const sc = g.score_creator ?? 0;
+      const so = g.score_opponent ?? 0;
+      if (sc === so) return; // can't determine a winner
+      const isCreator = c.created_by_id === userId;
+      const creatorWon = sc > so;
+      const won = isCreator ? creatorWon : !creatorWon;
+      results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won, draw: false });
     });
   }
 
