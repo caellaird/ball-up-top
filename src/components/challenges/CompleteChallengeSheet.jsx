@@ -32,6 +32,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const [scoreCreator, setScoreCreator] = useState('');
   const [scoreOpponent, setScoreOpponent] = useState('');
   const [gameWinnerId, setGameWinnerId] = useState('');
+  const [participantScores, setParticipantScores] = useState({});
   const [caption, setCaption] = useState('');
   const [award, setAward] = useState('');
   const [photos, setPhotos] = useState([]);
@@ -72,7 +73,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
   // Every participant gets an individual result — the winner gets a win, everyone else a loss.
   // For isMultiplayer challenges the winner is picked directly rather than derived from two scores.
-  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, overrideWinnerId, isDraw = false) => {
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, overrideWinnerId, isDraw = false, scoresArr = []) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
     // Use pre-selected winner if set, otherwise derive from scores
@@ -88,6 +89,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       winner_id: winnerId,
       winner_name: winnerName,
       is_draw: isDraw,
+      participant_scores: scoresArr.length ? scoresArr : undefined,
       photos: [...(challenge.photos || []), ...photos],
     });
 
@@ -149,6 +151,10 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     }
     setSaving(true);
 
+    const scoresArr = isMultiplayer
+      ? participants.map((p) => ({ user_id: p.id, name: p.name, score: Number(participantScores[p.id]) || 0 }))
+      : [];
+
     const [opponentProfileLists, myProfiles] = await Promise.all([
       Promise.all(opponentIds.map((oid) => base44.entities.Profile.filter({ created_by_id: oid }))),
       base44.entities.Profile.filter({ created_by_id: user.id }),
@@ -159,7 +165,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
     if (!isSeries) {
       const isDraw = isMultiplayer ? gameWinnerId === 'draw' : sc === so;
-      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar, isMultiplayer && gameWinnerId !== 'draw' ? gameWinnerId : undefined, isDraw);
+      const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar, isMultiplayer && gameWinnerId !== 'draw' ? gameWinnerId : undefined, isDraw, scoresArr);
       const winnerName = isDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
       setSaving(false);
@@ -178,6 +184,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       game_number: gameNumber,
       score_creator: sc,
       score_opponent: so,
+      participant_scores: isMultiplayer ? scoresArr : undefined,
       winner_name: gameWinnerName,
       is_draw: isDrawGame,
       caption,
@@ -199,7 +206,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     if (seriesClinched) {
       // An open-ended series can end in a draw if the final game leaves it tied.
       const isSeriesDraw = !challenge.games_to_win && finalGame && creatorWins === opponentWins;
-      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw, scoresArr);
       // The series is now complete — record exactly ONE overall result (win/loss/draw)
       // to each participant's record, plus the city score and rivalry update. Individual
       // games above did not touch the record, so there is no double counting.
@@ -251,24 +258,44 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         </SheetHeader>
         <div className="space-y-4 mt-4">
           {isMultiplayer ? (
-            <div>
-              <p className="text-sm font-bold mb-2 flex items-center gap-1.5"><Crown className="w-4 h-4 text-accent" /> Who won?</p>
-              <div className="flex gap-2 flex-wrap">
-                {participants.map((p) => (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-bold mb-2">Scores</p>
+                <p className="text-xs text-muted-foreground mb-2">Enter each player's score for {isSeries ? `Game ${gameNumber}` : 'this challenge'}.</p>
+                <div className="space-y-2">
+                  {participants.map((p) => (
+                    <div key={p.id} className="flex items-center gap-3">
+                      <span className="flex-1 text-sm font-medium truncate">{p.name}</span>
+                      <Input
+                        type="number"
+                        value={participantScores[p.id] ?? ''}
+                        onChange={(e) => setParticipantScores({ ...participantScores, [p.id]: e.target.value })}
+                        placeholder="Score"
+                        className="w-24 h-10 rounded-xl"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-bold mb-2 flex items-center gap-1.5"><Crown className="w-4 h-4 text-accent" /> Who won?</p>
+                <div className="flex gap-2 flex-wrap">
+                  {participants.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setGameWinnerId(p.id)}
+                      className={`flex-1 min-w-[90px] rounded-2xl p-3 border-2 text-sm font-bold transition ${gameWinnerId === p.id ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted-foreground'}`}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
                   <button
-                    key={p.id}
-                    onClick={() => setGameWinnerId(p.id)}
-                    className={`flex-1 min-w-[90px] rounded-2xl p-3 border-2 text-sm font-bold transition ${gameWinnerId === p.id ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted-foreground'}`}
+                    onClick={() => setGameWinnerId('draw')}
+                    className={`flex-1 min-w-[90px] rounded-2xl p-3 border-2 text-sm font-bold transition ${gameWinnerId === 'draw' ? 'border-secondary bg-secondary/10 text-secondary' : 'border-border text-muted-foreground'}`}
                   >
-                    {p.name}
+                    Draw 🤝
                   </button>
-                ))}
-                <button
-                  onClick={() => setGameWinnerId('draw')}
-                  className={`flex-1 min-w-[90px] rounded-2xl p-3 border-2 text-sm font-bold transition ${gameWinnerId === 'draw' ? 'border-secondary bg-secondary/10 text-secondary' : 'border-border text-muted-foreground'}`}
-                >
-                  Draw 🤝
-                </button>
+                </div>
               </div>
             </div>
           ) : (

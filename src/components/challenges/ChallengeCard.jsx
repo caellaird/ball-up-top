@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { getSportDisplay } from '@/lib/constants';
+import { isGroupChallenge, getChallengeTitle } from '@/lib/challengeGroup';
 
 export default function ChallengeCard({ challenge }) {
   const isSeries = challenge.series_type !== 'single';
   const sportDisplay = getSportDisplay(challenge);
+  const isGroup = isGroupChallenge(challenge);
+  const title = getChallengeTitle(challenge);
   const opponentsLabel = challenge.opponent_names?.length > 1
     ? challenge.opponent_names.join(', ')
     : challenge.opponent_name;
@@ -64,14 +67,20 @@ export default function ChallengeCard({ challenge }) {
   return (
     <Link to={`/challenges/${challenge.id}`} className="block bg-card rounded-3xl shadow-sm p-4 mb-3 mx-4">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-2xl">{sportDisplay.emoji}</span>
-          <h3 className={`font-heading font-bold min-w-0 break-words ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
-            {challenge.status === 'completed' && challenge.winner_id === challenge.created_by_id && '👑 '}
-            vs {opponentsLabel}
-            {challenge.status === 'completed' && challenge.winner_id === challenge.opponent_id && ' 👑'}
-          </h3>
-        </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-2xl">{sportDisplay.emoji}</span>
+            <h3 className={`font-heading font-bold min-w-0 break-words ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>
+              {isGroup ? (
+                <span className="text-[hsl(var(--accent))]">{title}</span>
+              ) : (
+                <>
+                  {challenge.status === 'completed' && challenge.winner_id === challenge.created_by_id && '👑 '}
+                  vs {opponentsLabel}
+                  {challenge.status === 'completed' && challenge.winner_id === challenge.opponent_id && ' 👑'}
+                </>
+              )}
+            </h3>
+          </div>
         {challenge.status === 'completed' && (
           <div className="flex flex-col items-end gap-1">
             <span className={`text-xs font-bold px-2 py-1 rounded-full ${challenge.winner_name ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'}`}>

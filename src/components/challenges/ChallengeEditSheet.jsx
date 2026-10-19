@@ -4,11 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
+import { isGroupChallenge } from '@/lib/challengeGroup';
 
 export default function ChallengeEditSheet({ open, onOpenChange, challenge, onSaved }) {
+  const isGroup = isGroupChallenge(challenge);
   const [location, setLocation] = useState(challenge.location_name || '');
   const [date, setDate] = useState(challenge.scheduled_time ? challenge.scheduled_time.slice(0, 16) : '');
   const [notes, setNotes] = useState(challenge.notes || '');
+  const [groupName, setGroupName] = useState(challenge.group_name || '');
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
@@ -17,6 +20,7 @@ export default function ChallengeEditSheet({ open, onOpenChange, challenge, onSa
       location_name: location,
       scheduled_time: date ? new Date(date).toISOString() : undefined,
       notes,
+      group_name: isGroup ? groupName.trim() : undefined,
     });
     setSaving(false);
     onSaved(updated);
@@ -27,6 +31,9 @@ export default function ChallengeEditSheet({ open, onOpenChange, challenge, onSa
       <SheetContent side="bottom" className="rounded-t-3xl">
         <SheetHeader><SheetTitle className="font-heading">Edit Challenge</SheetTitle></SheetHeader>
         <div className="space-y-3 mt-4">
+          {isGroup && (
+            <Input placeholder="Group name" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="h-12 rounded-2xl" />
+          )}
           <Input placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="h-12 rounded-2xl" />
           <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="h-12 rounded-2xl" />
           <Textarea placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />

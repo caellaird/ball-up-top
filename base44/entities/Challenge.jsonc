@@ -26,6 +26,10 @@
     "custom_sport_emoji": {
       "type": "string"
     },
+    "group_name": {
+      "type": "string",
+      "description": "Name for a group (multiplayer) challenge, shown as the title instead of 'A vs B'"
+    },
     "creator_name": {
       "type": "string"
     },
@@ -66,6 +70,24 @@
               "declined"
             ],
             "default": "pending"
+          }
+        }
+      }
+    },
+    "participant_scores": {
+      "type": "array",
+      "description": "Per-player scores for group (multiplayer) challenges, recorded at completion or per series game",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
           }
         }
       }

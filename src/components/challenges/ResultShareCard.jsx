@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { LOGO_URL } from '@/lib/constants';
+import { isGroupChallenge, getChallengeTitle } from '@/lib/challengeGroup';
 
 // A branded, self-contained card rendered as a styled div. Uses inline styles
 // for reliable html2canvas capture across light/dark themes. Visible on the
@@ -7,10 +8,15 @@ import { LOGO_URL } from '@/lib/constants';
 const ResultShareCard = forwardRef(({ challenge, sportDisplay, creatorWins, opponentWins }, ref) => {
   const isSeries = challenge.series_type !== 'single';
   const isDraw = challenge.is_draw;
+  const isGroup = isGroupChallenge(challenge);
   const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const rankedScores = (challenge.participant_scores || []).slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const scoreText = isSeries
     ? `${creatorWins} - ${opponentWins}`
-    : `${challenge.score_creator} - ${challenge.score_opponent}`;
+    : (rankedScores.length > 0
+        ? rankedScores.map((s) => `${s.score}`).join(' · ')
+        : `${challenge.score_creator} - ${challenge.score_opponent}`);
+  const subtitle = challenge.group_name || getChallengeTitle(challenge);
 
   return (
     <div ref={ref} style={{
@@ -46,10 +52,21 @@ const ResultShareCard = forwardRef(({ challenge, sportDisplay, creatorWins, oppo
         {isDraw ? 'Tied' : (challenge.winner_name || 'Result')}
       </span>
 
-      <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '38px', marginBottom: '12px' }}>{scoreText}</span>
+      {rankedScores.length > 0 && !isSeries ? (
+        <div style={{ width: '100%', marginBottom: '12px' }}>
+          {rankedScores.map((s) => (
+            <div key={s.user_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 600, opacity: 0.95, padding: '2px 0' }}>
+              <span style={{ textAlign: 'left' }}>{s.name}</span>
+              <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700 }}>{s.score}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 700, fontSize: '38px', marginBottom: '12px' }}>{scoreText}</span>
+      )}
 
       <span style={{ fontSize: '13px', opacity: 0.85, textAlign: 'center' }}>
-        {challenge.creator_name} vs {opponentNames.join(', ')}
+        {isGroup && challenge.group_name ? challenge.group_name : `${challenge.creator_name} vs ${opponentNames.join(', ')}`}
       </span>
     </div>
   );

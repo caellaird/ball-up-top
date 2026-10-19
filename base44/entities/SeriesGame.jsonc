@@ -14,6 +14,24 @@
     "score_opponent": {
       "type": "number"
     },
+    "participant_scores": {
+      "type": "array",
+      "description": "Per-player scores for this game in a group (multiplayer) series",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
     "winner_name": {
       "type": "string"
     },

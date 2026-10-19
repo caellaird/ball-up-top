@@ -27,6 +27,7 @@ export default function BallUp() {
   const [date, setDate] = useState('');
   const [seriesType, setSeriesType] = useState('single');
   const [seriesName, setSeriesName] = useState('');
+  const [groupName, setGroupName] = useState('');
   const [customSportName, setCustomSportName] = useState('');
   const [customSportEmoji, setCustomSportEmoji] = useState('');
   const [sending, setSending] = useState(false);
@@ -83,6 +84,7 @@ export default function BallUp() {
       scheduled_time: date ? new Date(date).toISOString() : undefined,
       series_type: seriesType,
       series_name: seriesType !== 'single' ? seriesName : undefined,
+      group_name: opponents.length > 1 ? groupName.trim() : undefined,
       games_to_win: GAMES_TO_WIN[seriesType],
     });
     base44.analytics.track({ eventName: 'challenge_sent' });
@@ -182,6 +184,13 @@ export default function BallUp() {
                 </div>
               </div>
             )}
+            {opponents.length > 1 && (
+              <div className="mt-5">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Group name</p>
+                <Input placeholder="e.g. Tuesday Night Run" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="h-12 rounded-2xl" />
+                <p className="text-[11px] text-muted-foreground mt-1.5">This shows as the challenge title instead of a long list of names.</p>
+              </div>
+            )}
             <Button onClick={() => setStep(3)} disabled={opponents.length === 0} className="w-full rounded-full h-12 mt-6">
               {opponents.length === 0 ? 'Select friends' : `Continue${opponents.length > 1 ? ` (${opponents.length})` : ''}`}
             </Button>
@@ -224,6 +233,7 @@ export default function BallUp() {
             <div className="bg-card rounded-3xl shadow-sm p-5 space-y-3 mb-6">
               <Row label="Sport" value={sport === 'custom' ? (customSportName || 'Custom') : SPORTS.find((s) => s.key === sport)?.label} />
               <Row label="Opponent(s)" value={opponents.map((o) => o.name).join(', ')} />
+              {opponents.length > 1 && groupName.trim() && <Row label="Group Name" value={groupName.trim()} />}
               <Row label="Location" value={location} />
               <Row label="Date" value={date ? new Date(date).toLocaleString() : '—'} />
               <Row label="Series" value={SERIES_TYPES.find((s) => s.key === seriesType)?.label} />

@@ -16,8 +16,10 @@ import WinnerSelector from '@/components/challenges/WinnerSelector';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import SocialShareSheet from '@/components/shared/SocialShareSheet';
 import SquadNudgeSheet from '@/components/challenges/SquadNudgeSheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { usePhotoViewer } from '@/lib/photoViewer';
 import { isPendingChallengeExpired } from '@/lib/challengeExpiry';
+import { isGroupChallenge, getParticipants } from '@/lib/challengeGroup';
 
 export default function ChallengeDetail() {
   const { id } = useParams();
@@ -33,6 +35,7 @@ export default function ChallengeDetail() {
   const [deleting, setDeleting] = useState(false);
   const [creatorUsername, setCreatorUsername] = useState('');
   const [opponentUsername, setOpponentUsername] = useState('');
+  const [participantProfiles, setParticipantProfiles] = useState([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareImageFile, setShareImageFile] = useState(null);
   const shareCardRef = useRef(null);
@@ -66,6 +69,26 @@ export default function ChallengeDetail() {
     ]);
     if (creatorProfiles[0]) setCreatorUsername(creatorProfiles[0].username);
     if (opponentProfiles[0]) setOpponentUsername(opponentProfiles[0].username);
+
+    // For group challenges, fetch every participant's profile so we can show a
+    // roster with avatars. Skipped for 1v1 challenges to avoid extra calls.
+    if (isGroupChallenge(c)) {
+      const parts = getParticipants(c);
+      const profileLists = await Promise.all(
+        parts.map((p) => base44.entities.Profile.filter({ created_by_id: p.id }))
+      );
+      setParticipantProfiles(
+        parts.map((p, i) => ({
+          id: p.id,
+          name: p.name,
+          username: profileLists[i]?.[0]?.username || '',
+          avatar_url: profileLists[i]?.[0]?.avatar_url || '',
+        }))
+      );
+    } else {
+      setParticipantProfiles([]);
+    }
+
     if (c.series_type !== 'single') {
       const g = await base44.entities.SeriesGame.filter({ challenge_id: id }, 'game_number');
       setGames(g);
@@ -138,6 +161,8 @@ export default function ChallengeDetail() {
 
   const opponentIdList = challenge.opponent_ids?.length ? challenge.opponent_ids : [challenge.opponent_id];
   const opponentNameList = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
+  const isGroup = isGroupChallenge(challenge);
+  const rankedFinalScores = (challenge.participant_scores || []).slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const participantStatuses = challenge.participant_statuses?.length
     ? challenge.participant_statuses
     : opponentIdList.map((oid, i) => ({
@@ -169,11 +194,23 @@ export default function ChallengeDetail() {
             <p className="font-heading text-sm font-bold text-[hsl(var(--accent))] mt-2">{challenge.series_name}</p>
           )}
           <h1 className="font-heading text-xl font-bold mt-1 break-words leading-tight">
-            {challenge.winner_id === challenge.created_by_id && <span className="mr-1">👑</span>}
-            <Link to={`/profile/${creatorUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.created_by_id ? 'text-accent' : ''}`}>{challenge.creator_name}</Link>
-            <span className="mx-2 text-muted-foreground">vs</span>
-            {challenge.winner_id === challenge.opponent_id && <span className="mr-1">👑</span>}
-            <Link to={`/profile/${opponentUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>{challenge.opponent_name}</Link>
+            {challenge.group_name ? (
+              <span>{challenge.group_name}</span>
+            ) : isGroup ? (
+              <span>
+                <Link to={`/profile/${creatorUsername || 'me'}`} className="hover:underline">{challenge.creator_name}</Link>
+                <span className="mx-2 text-muted-foreground">vs</span>
+                {opponentNameList.join(', ')}
+              </span>
+            ) : (
+              <span>
+                {challenge.winner_id === challenge.created_by_id && <span className="mr-1">👑</span>}
+                <Link to={`/profile/${creatorUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.created_by_id ? 'text-accent' : ''}`}>{challenge.creator_name}</Link>
+                <span className="mx-2 text-muted-foreground">vs</span>
+                {challenge.winner_id === challenge.opponent_id && <span className="mr-1">👑</span>}
+                <Link to={`/profile/${opponentUsername || 'me'}`} className={`hover:underline ${challenge.winner_id === challenge.opponent_id ? 'text-accent' : ''}`}>{challenge.opponent_name}</Link>
+              </span>
+            )}
           </h1>
           <p className="text-sm text-muted-foreground capitalize mt-1">
             {sportDisplay.label} · {challenge.series_type}
@@ -215,11 +252,25 @@ export default function ChallengeDetail() {
 
           {!isSeries && challenge.status === 'completed' && (
             <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
-              <p className="font-heading font-bold text-lg">{challenge.score_creator} - {challenge.score_opponent}</p>
+              {rankedFinalScores.length > 0 ? (
+                <div className="space-y-1.5 text-left">
+                  {rankedFinalScores.map((s, i) => (
+                    <div key={s.user_id} className="flex items-center justify-between text-sm">
+                      <span className="font-medium truncate">
+                        {i === 0 && !challenge.is_draw && <span className="mr-1">👑</span>}
+                        {s.name}
+                      </span>
+                      <span className="font-heading font-bold">{s.score}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-heading font-bold text-lg">{challenge.score_creator} - {challenge.score_opponent}</p>
+              )}
               {challenge.is_draw ? (
-                <p className="text-sm text-secondary font-semibold">🤝 Draw</p>
+                <p className="text-sm text-secondary font-semibold mt-1">🤝 Draw</p>
               ) : challenge.winner_name ? (
-                <p className="text-sm text-accent font-semibold">👑 {challenge.winner_name} wins</p>
+                <p className="text-sm text-accent font-semibold mt-1">👑 {challenge.winner_name} wins</p>
               ) : null}
               {challenge.caption && <p className="text-sm mt-2">{challenge.caption}</p>}
             </div>
@@ -246,7 +297,18 @@ export default function ChallengeDetail() {
                     <span className="text-xs font-semibold text-muted-foreground">Game {g.game_number}</span>
                     {g.winner_name && <span className="text-xs font-bold text-accent">👑 {g.winner_name}</span>}
                   </div>
-                  <p className="font-heading font-bold mt-1">{g.score_creator} - {g.score_opponent}</p>
+                  {g.participant_scores?.length > 0 ? (
+                    <div className="mt-1 space-y-1">
+                      {[...g.participant_scores].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).map((s) => (
+                        <div key={s.user_id} className="flex items-center justify-between text-sm">
+                          <span className="font-medium truncate">{s.name}</span>
+                          <span className="font-heading font-bold">{s.score}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="font-heading font-bold mt-1">{g.score_creator} - {g.score_opponent}</p>
+                  )}
                   {g.caption && <p className="text-sm text-muted-foreground mt-1">{g.caption}</p>}
                   {g.photos?.length > 0 && (
                     <div className="grid grid-cols-3 gap-1.5 mt-2">
@@ -263,17 +325,36 @@ export default function ChallengeDetail() {
           </div>
         )}
 
-        {showMultiStatus && challenge.status !== 'completed' && (
+        {isGroup && (
           <div className="bg-card rounded-2xl shadow-sm p-4 mb-4">
-            <p className="text-sm font-semibold mb-2">{acceptedCount}/{participantStatuses.length} Players Accepted</p>
-            <div className="space-y-1.5">
-              {participantStatuses.map((p) => (
-                <div key={p.user_id} className="flex items-center gap-2 text-sm">
-                  <span>{p.status === 'accepted' ? '✓' : p.status === 'declined' ? '✕' : '⏳'}</span>
-                  <span className={p.status === 'declined' ? 'text-muted-foreground line-through' : ''}>{p.name}</span>
-                  <span className="text-xs text-muted-foreground capitalize">— {p.status}</span>
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-bold">The Squad <span className="text-muted-foreground font-normal">({participantStatuses.length})</span></p>
+              {challenge.status !== 'completed' && (
+                <p className="text-xs text-muted-foreground">{acceptedCount}/{participantStatuses.length} accepted</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              {participantStatuses.map((p, i) => {
+                const profile = participantProfiles.find((pp) => pp.id === p.user_id);
+                const status = challenge.status === 'completed' ? null : p.status;
+                return (
+                  <div key={p.user_id} className="flex items-center gap-3 text-sm">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={profile?.avatar_url} />
+                      <AvatarFallback>{p.name?.[0] || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{p.name}</p>
+                      {profile?.username && <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>}
+                    </div>
+                    {status && (
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${status === 'accepted' ? 'bg-accent/15 text-accent' : status === 'declined' ? 'bg-muted text-muted-foreground line-through' : 'bg-muted/60 text-muted-foreground'}`}>
+                        {status === 'accepted' ? '✓ In' : status === 'declined' ? '✕ Out' : '⏳ Pending'}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -350,7 +431,7 @@ export default function ChallengeDetail() {
         open={shareOpen}
         onOpenChange={setShareOpen}
         imageFile={shareImageFile}
-        title={`${sportDisplay.emoji} ${challenge.creator_name} vs ${opponentNameList.join(', ')}`}
+        title={`${sportDisplay.emoji} ${challenge.group_name || `${challenge.creator_name} vs ${opponentNameList.join(', ')}`}`}
         text={
           challenge.winner_name
             ? `${challenge.winner_name} won ${sportDisplay.label}! ${challenge.series_type !== 'single' ? `${creatorWins}–${opponentWins}` : ''} #BallUpTop`
