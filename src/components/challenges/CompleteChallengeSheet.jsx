@@ -119,6 +119,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       score_text: isMultiplayer
         ? `🏆 ${winnerName || 'No winner set'}`
         : `${winnerId === challenge.created_by_id ? '👑 ' : ''}${challenge.creator_name} ${creatorWins} - ${opponentWins} ${opponentsLabel}${winnerId === challenge.opponent_id ? ' 👑' : ''}`,
+      participant_scores: isMultiplayer && scoresArr.length ? scoresArr : undefined,
       tagged_user_ids: opponentIds,
       tagged_user_names: opponentNames,
       tagged_usernames: opponentUsernames,
@@ -185,15 +186,16 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       score_creator: sc,
       score_opponent: so,
       participant_scores: isMultiplayer ? scoresArr : undefined,
+      winner_id: winnerIdThisGame || undefined,
       winner_name: gameWinnerName,
       is_draw: isDrawGame,
       caption,
       photos,
     });
 
-    // Individual series games only update the series score — they do NOT record a
-    // win/loss/draw to each player's overall record. The overall record is updated
-    // once, when the series ends (auto-clinch below, or the End Series action).
+    // Each published series game updates the series score AND each player's overall
+    // record (recorded below per game). The series outcome (city score + rivalries)
+    // is finalized once, when the series ends (auto-clinch below, or End Series).
     base44.analytics.track({ eventName: 'game_played' });
 
     const creatorWins = (challenge.creator_games_won || 0) + (isCreatorGameWinner ? 1 : 0);
@@ -206,14 +208,24 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     if (seriesClinched) {
       // An open-ended series can end in a draw if the final game leaves it tied.
       const isSeriesDraw = !challenge.games_to_win && finalGame && creatorWins === opponentWins;
+
+      // Record this clinching game's individual result to each player's stats first,
+      // while the series is still open (so city/rivalry don't fire yet).
+      if (isDrawGame) {
+        await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, isDraw: true });
+      } else if (winnerIdThisGame) {
+        await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
+      }
+
       const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw, scoresArr);
-      // The series is now complete — record exactly ONE overall result (win/loss/draw)
-      // to each participant's record, plus the city score and rivalry update. Individual
-      // games above did not touch the record, so there is no double counting.
+
+      // Close out the series: fire the city score + rivalry update once, without
+      // double-counting stats (each game above already recorded its own W/L/D).
       await base44.functions.invoke('recordGameResult', {
         challengeId: challenge.id,
         winnerId: updated.winner_id,
         isDraw: updated.is_draw,
+        skipStats: true,
       });
       const winnerName = isSeriesDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
@@ -234,6 +246,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         score_text: isMultiplayer
           ? `Game ${gameNumber}: 🏆 ${gameWinnerName || 'No winner set'}`
           : `Game ${gameNumber}: ${challenge.creator_name} ${sc} - ${so} ${opponentsLabel} · Series ${creatorWins}-${opponentWins}`,
+        participant_scores: isMultiplayer ? scoresArr : undefined,
         tagged_user_ids: opponentIds,
         tagged_user_names: opponentNames,
         tagged_usernames: opponentUsernames,
@@ -243,6 +256,16 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         creator_games_won: creatorWins,
         opponent_games_won: opponentWins,
       });
+
+      // Each published series game counts as a W/L/D toward every player's overall
+      // record — even while the series is still open. City score and rivalries only
+      // fire when the series completes, so this just updates per-player stats.
+      if (isDrawGame) {
+        await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, isDraw: true });
+      } else if (winnerIdThisGame) {
+        await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
+      }
+
       await notifyResult(challenge, participants, user, gameWinnerName);
       setSaving(false);
       finishWithCelebration(updated, winnerIdThisGame, isDrawGame);

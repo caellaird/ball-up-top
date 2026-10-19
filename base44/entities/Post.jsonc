@@ -45,6 +45,24 @@
     "score_text": {
       "type": "string"
     },
+    "participant_scores": {
+      "type": "array",
+      "description": "Per-player scores for a group (multiplayer) challenge post, shown ranked on the feed",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          }
+        }
+      }
+    },
     "tagged_user_ids": {
       "type": "array",
       "items": {

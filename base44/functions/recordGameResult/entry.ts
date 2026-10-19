@@ -13,9 +13,10 @@ import { processRivalries } from '../../shared/rivalries.ts';
 // edits, or repeated calls never double-count.
 //
 // endSeries: when true, computes the overall series winner from the challenge's
-// creator_games_won / opponent_games_won, closes the series (status -> completed),
-// and records exactly ONE result to each participant's record. Used by the
-// "End Series" action so a series can be closed without logging another game.
+// creator_games_won / opponent_games_won and closes the series (status -> completed).
+// It does NOT record per-player stats — each individual game already recorded its
+// own W/L/D as it was logged — but it does fire the one-time city score + rivalry
+// update for the completed series. Used by the "End Series" action.
 // Refuses if the series is already completed (prevents double-ending).
 export default async function(req) {
   try {
@@ -98,12 +99,14 @@ export default async function(req) {
       isDraw = seriesIsDraw;
     }
 
-    if (!skipStats && !isDraw && !winnerId) {
+    if (!skipStats && !endSeries && !isDraw && !winnerId) {
       return Response.json({ error: 'winnerId is required when not a draw' }, { status: 400 });
     }
 
-    // --- Stats recording (skipped when skipStats=true) ---
-    if (!skipStats) {
+    // --- Stats recording (skipped when skipStats=true or endSeries=true) ---
+    // endSeries skips per-player stats because each individual game already recorded
+    // its own W/L/D as it was logged; the series close only finalizes city + rivalries.
+    if (!skipStats && !endSeries) {
       for (const p of participants) {
         const won = !isDraw && p.id === winnerId;
         const existing = await admin.entities.UserStats.filter({ created_by_id: p.id });

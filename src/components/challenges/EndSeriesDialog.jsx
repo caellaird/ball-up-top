@@ -7,10 +7,10 @@ import { getSportDisplay } from '@/lib/constants';
 import { sendNotification } from '@/lib/notify';
 
 // Ends an active series without logging another game. Computes the overall
-// result from the current series score, closes the series, and records exactly
-// one win/loss/draw to each participant's record (handled server-side by the
-// recordGameResult `endSeries` mode). Also publishes a feed post and notifies
-// the other participants.
+// result from the current series score and closes the series. Each already-
+// logged game has already counted toward the players' records, so this only
+// finalizes the series (city score + rivalries) server-side. Also publishes a
+// feed post and notifies the other participants.
 export default function EndSeriesDialog({ open, onOpenChange, challenge, user, onEnded }) {
   const [ending, setEnding] = useState(false);
 
@@ -125,7 +125,7 @@ export default function EndSeriesDialog({ open, onOpenChange, challenge, user, o
           </div>
 
           <p className="text-xs text-muted-foreground bg-muted rounded-xl p-3 leading-relaxed">
-            ⚠️ The series will be closed and cannot receive additional games. One overall series result will be added to each player's record.
+            ⚠️ The series will be closed and cannot receive additional games. Each game you already logged counts toward everyone's record; closing just finalizes the series.
           </p>
         </div>
 

@@ -32,6 +32,10 @@
         }
       }
     },
+    "winner_id": {
+      "type": "string",
+      "description": "User id of this game's winner (empty/absent for a draw)"
+    },
     "winner_name": {
       "type": "string"
     },

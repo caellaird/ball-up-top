@@ -19,34 +19,52 @@ export async function computeProfileStats(userId) {
   });
   const completed = all.filter((c) => c.status === 'completed');
   const createdCount = all.filter((c) => c.created_by_id === userId).length;
+  const challengeById = new Map(all.map((c) => [c.id, c]));
 
-  // Each completed challenge — series or single — counts as exactly ONE result toward
-  // the player's overall record. A series adds its overall outcome (win/loss/draw from
-  // the final series score), NOT one result per individual game. Individual games remain
-  // visible in the series history on the challenge detail page.
+  // Each result counts toward the player's overall record:
+  //  - A single (non-series) completed challenge = ONE result (W/L/D).
+  //  - A series challenge = ONE result PER published game (each SeriesGame),
+  //    counted even while the series is still open. The series' overall
+  //    outcome is NOT counted separately, so there is no double counting.
   const results = [];
+  const seriesChallengeIds = new Set();
 
-  completed.forEach((c) => {
+  all.forEach((c) => {
     const display = getSportDisplay(c);
+    const isParticipant = c.created_by_id === userId || c.opponent_id === userId || c.opponent_ids?.includes(userId);
+    if (!isParticipant) return;
+
+    if (c.series_type !== 'single') {
+      // Series — each published game is counted below via the SeriesGame fetch.
+      seriesChallengeIds.add(c.id);
+      return;
+    }
+
+    // Single game — only count when completed.
+    if (c.status !== 'completed') return;
     if (c.is_draw) {
-      results.push({
-        sport: display.label,
-        emoji: display.emoji,
-        date: c.completed_at || c.updated_date,
-        won: false,
-        draw: true,
-      });
+      results.push({ sport: display.label, emoji: display.emoji, date: c.completed_at || c.updated_date, won: false, draw: true });
       return;
     }
     if (!c.winner_id) return;
-    results.push({
-      sport: display.label,
-      emoji: display.emoji,
-      date: c.completed_at || c.updated_date,
-      won: c.winner_id === userId,
-      draw: false,
-    });
+    results.push({ sport: display.label, emoji: display.emoji, date: c.completed_at || c.updated_date, won: c.winner_id === userId, draw: false });
   });
+
+  // Fetch series games and count each one for series challenges the user is in.
+  if (seriesChallengeIds.size) {
+    const seriesGames = await base44.entities.SeriesGame.list('-created_date', 500);
+    seriesGames.forEach((g) => {
+      if (!seriesChallengeIds.has(g.challenge_id)) return;
+      const c = challengeById.get(g.challenge_id);
+      if (!c) return;
+      const display = getSportDisplay(c);
+      if (g.is_draw) {
+        results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won: false, draw: true });
+      } else if (g.winner_id) {
+        results.push({ sport: display.label, emoji: display.emoji, date: g.created_date, won: g.winner_id === userId, draw: false });
+      }
+    });
+  }
 
   results.sort((a, b) => new Date(b.date) - new Date(a.date));
 
