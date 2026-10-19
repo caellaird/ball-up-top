@@ -5,6 +5,7 @@ import UserAvatar from '@/components/shared/UserAvatar';
 import { base44 } from '@/api/base44Client';
 import ReactionBar from '@/components/feed/ReactionBar';
 import { format, formatDistanceToNow } from 'date-fns';
+import { parseServerDate } from '@/lib/utils';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { usePhotoViewer } from '@/lib/photoViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
@@ -98,7 +99,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
             <Link to={`/profile/${post.author_username || 'me'}`}><p className="font-semibold text-sm">{post.author_name}</p></Link>
             <p className="text-xs text-muted-foreground truncate">
               {post.location_name ? `📍 ${post.location_name} · ` : ''}
-              {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
+              {formatDistanceToNow(parseServerDate(post.created_date), { addSuffix: true })}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -161,7 +162,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
         <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 flex-wrap">
           {post.sport_label && <span>{post.sport_label}</span>}
           {post.challenge_type && <span>· {post.challenge_type === 'series' ? 'Series' : 'Single Game'}</span>}
-          <span>· {format(new Date(post.created_date), 'MMM d, yyyy')}</span>
+          <span>· {format(parseServerDate(post.created_date), 'MMM d, yyyy')}</span>
         </p>
       )}
 
