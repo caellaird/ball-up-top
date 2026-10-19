@@ -5,7 +5,7 @@ function RecordStat({ icon, value, label }) {
     <div className="flex flex-col items-center text-center">
       <span className="text-lg leading-none mb-0.5">{icon}</span>
       <span className="font-heading font-extrabold text-lg leading-none">{value}</span>
-      <span className="text-[9px] uppercase tracking-wide mt-0.5 leading-none text-[hsl(var(--muted-foreground))]">{label}</span>
+      <span className="text-[9px] uppercase tracking-wide mt-0.5 leading-none text-slate-50">{label}</span>
     </div>);
 
 }
