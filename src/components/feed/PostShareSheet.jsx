@@ -47,6 +47,6 @@ export default function PostShareSheet({ open, onOpenChange, post }) {
   }
 
   return (
-    <SocialShareSheet open={open} onOpenChange={onOpenChange} title={title} text={text} url={shareUrl} imageFile={imageFile} />
+    <SocialShareSheet open={open} onOpenChange={onOpenChange} title={title} text={text} url={shareUrl} imageFile={imageFile} minimal />
   );
 }

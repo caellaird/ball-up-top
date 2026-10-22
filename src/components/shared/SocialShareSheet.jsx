@@ -14,7 +14,7 @@ import {
 // TikTok, copy the link, save the generated image to the device, or open the
 // native share sheet. When an imageFile is attached, Instagram/TikTok/Save
 // share the actual image (via the native share sheet), not just a URL.
-export default function SocialShareSheet({ open, onOpenChange, title, text, url, imageFile }) {
+export default function SocialShareSheet({ open, onOpenChange, title, text, url, imageFile, minimal = false }) {
   const close = () => onOpenChange(false);
   const linkTitle = title || 'Ball Up Top';
 
@@ -89,29 +89,40 @@ export default function SocialShareSheet({ open, onOpenChange, title, text, url,
           <SheetTitle className="font-heading text-center">Share</SheetTitle>
         </SheetHeader>
         <p className="text-sm text-muted-foreground text-center -mt-1 mb-4 truncate">{title}</p>
-        <div className="grid grid-cols-3 gap-3">
-          <ShareOption emoji="📸" label="Instagram" gradient="from-fuchsia-500 via-pink-500 to-amber-400" onClick={handleInstagram} />
-          <ShareOption emoji="🎵" label="TikTok" gradient="from-slate-800 to-black" onClick={handleTiktok} />
-          <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={handleCopy} />
-        </div>
-        {imageFile && (
-          <button
-            onClick={handleSave}
-            className="w-full mt-3 h-12 rounded-full border border-input bg-transparent font-semibold inline-flex items-center justify-center gap-2"
-          >
-            <Download className="w-4 h-4" /> Save Image
-          </button>
-        )}
-        <button
-          onClick={handleMore}
-          className="w-full mt-5 h-12 rounded-full bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2"
-        >
-          <Share2 className="w-4 h-4" /> More options
-        </button>
-        {imageFile && canShareFiles(imageFile) && (
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Instagram, TikTok & Save share the image. More options shares the link.
-          </p>
+        {minimal ? (
+          <div className={`grid ${imageFile ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+            <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={handleCopy} />
+            {imageFile && (
+              <ShareOption emoji="💾" label="Save Image" gradient="from-slate-600 to-slate-800" onClick={handleSave} />
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              <ShareOption emoji="📸" label="Instagram" gradient="from-fuchsia-500 via-pink-500 to-amber-400" onClick={handleInstagram} />
+              <ShareOption emoji="🎵" label="TikTok" gradient="from-slate-800 to-black" onClick={handleTiktok} />
+              <ShareOption emoji="🔗" label="Copy Link" gradient="from-slate-500 to-slate-700" onClick={handleCopy} />
+            </div>
+            {imageFile && (
+              <button
+                onClick={handleSave}
+                className="w-full mt-3 h-12 rounded-full border border-input bg-transparent font-semibold inline-flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" /> Save Image
+              </button>
+            )}
+            <button
+              onClick={handleMore}
+              className="w-full mt-5 h-12 rounded-full bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2"
+            >
+              <Share2 className="w-4 h-4" /> More options
+            </button>
+            {imageFile && canShareFiles(imageFile) && (
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Instagram, TikTok & Save share the image. More options shares the link.
+              </p>
+            )}
+          </>
         )}
       </SheetContent>
     </Sheet>
