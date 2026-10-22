@@ -28,6 +28,7 @@ const Rivalry = lazy(() => import('@/pages/Rivalry'));
 const Home = lazy(() => import('@/pages/Home'));
 const BallUp = lazy(() => import('@/pages/BallUp'));
 const Groups = lazy(() => import('@/pages/Groups'));
+const GroupStandings = lazy(() => import('@/pages/GroupStandings'));
 const Challenges = lazy(() => import('@/pages/Challenges'));
 const ChallengeDetail = lazy(() => import('@/pages/ChallengeDetail'));
 const Messages = lazy(() => import('@/pages/Messages'));
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
             <Route path="/rivalry/:rivalryId" element={<Rivalry />} />
             <Route path="/ball-up" element={<BallUp />} />
             <Route path="/groups" element={<Groups />} />
+            <Route path="/groups/:challengeId" element={<GroupStandings />} />
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/challenges/:id" element={<ChallengeDetail />} />
             <Route path="/messages" element={<Messages />} />

@@ -13,6 +13,10 @@
     "name": {
       "type": "string"
     },
+    "challenge_id": {
+      "type": "string",
+      "description": "Links a group challenge's dedicated chat thread to its Challenge record"
+    },
     "participant_ids": {
       "type": "array",
       "items": {
