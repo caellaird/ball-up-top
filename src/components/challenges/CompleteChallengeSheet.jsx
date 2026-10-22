@@ -40,6 +40,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const [saving, setSaving] = useState(false);
   const [celebration, setCelebration] = useState(null);
   const completedRef = useRef(null);
+  const submittingRef = useRef(false);
 
   // Determines win/loss/tie for the current user and fires the celebration
   // overlay before handing control back to the parent.
@@ -141,6 +142,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   };
 
   const submit = async () => {
+    if (submittingRef.current) return;
     let sc = Number(scoreCreator);
     let so = Number(scoreOpponent);
     if (isMultiplayer) {
@@ -150,6 +152,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     } else if (Number.isNaN(sc) || Number.isNaN(so)) {
       return;
     }
+    submittingRef.current = true;
     setSaving(true);
 
     const scoresArr = isMultiplayer
@@ -169,7 +172,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       const updated = await finalizeSeries(sc, so, opponentUsernames, myUsername, myAvatar, isMultiplayer && gameWinnerId !== 'draw' ? gameWinnerId : undefined, isDraw, scoresArr);
       const winnerName = isDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
-      setSaving(false);
+      setSaving(false); submittingRef.current = false;
       finishWithCelebration(updated, undefined, isDraw);
       return;
     }
@@ -229,7 +232,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       });
       const winnerName = isSeriesDraw ? '' : (participants.find((p) => p.id === updated.winner_id)?.name || '');
       await notifyResult(challenge, participants, user, winnerName);
-      setSaving(false);
+      setSaving(false); submittingRef.current = false;
       finishWithCelebration(updated, undefined, isSeriesDraw);
     } else {
       await base44.entities.Post.create({
@@ -267,7 +270,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
       }
 
       await notifyResult(challenge, participants, user, gameWinnerName);
-      setSaving(false);
+      setSaving(false); submittingRef.current = false;
       finishWithCelebration(updated, winnerIdThisGame, isDrawGame);
     }
   };
