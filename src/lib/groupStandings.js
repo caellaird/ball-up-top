@@ -1,4 +1,4 @@
-import { getParticipants } from './challengeGroup';
+import { getParticipants, isGroupChallenge } from './challengeGroup';
 
 // Computes ranked win-loss-draw standings for a group challenge across every
 // game played. For a series it aggregates each SeriesGame; for a single
@@ -48,4 +48,17 @@ export function computeGroupStandings(challenge, games = []) {
     b.points - a.points || b.wins - a.wins || b.points_for - a.points_for
   );
   return records.map((r, i) => ({ ...r, rank: i + 1 }));
+}
+
+// Per-player win counts for a group challenge, sorted most wins first.
+// Used wherever a group challenge shows results so each player's individual
+// wins are displayed instead of an aggregate "creator — opponents" score.
+// For a series it aggregates every SeriesGame; for a single completed group
+// game the winner gets 1 win. Returns [] for non-group or unplayed challenges.
+export function getGroupWinCounts(challenge, games = []) {
+  if (!challenge || !isGroupChallenge(challenge)) return [];
+  const rows = computeGroupStandings(challenge, games)
+    .filter((r) => r.games > 0)
+    .sort((a, b) => b.wins - a.wins || b.points - a.points);
+  return rows.map((r) => ({ user_id: r.user_id, name: r.name, wins: r.wins, games: r.games }));
 }

@@ -1,16 +1,21 @@
 import React, { forwardRef } from 'react';
 import { LOGO_URL } from '@/lib/constants';
 import { isGroupChallenge, getChallengeTitle } from '@/lib/challengeGroup';
+import { getGroupWinCounts } from '@/lib/groupStandings';
 
 // A branded, self-contained card rendered as a styled div. Uses inline styles
 // for reliable html2canvas capture across light/dark themes. Visible on the
 // challenge detail page so users can screenshot it; captured to a PNG for sharing.
-const ResultShareCard = forwardRef(({ challenge, sportDisplay, creatorWins, opponentWins }, ref) => {
+const ResultShareCard = forwardRef(({ challenge, sportDisplay, creatorWins, opponentWins, games = [] }, ref) => {
   const isSeries = challenge.series_type !== 'single';
   const isDraw = challenge.is_draw;
   const isGroup = isGroupChallenge(challenge);
   const opponentNames = challenge.opponent_names?.length ? challenge.opponent_names : [challenge.opponent_name];
   const rankedScores = (challenge.participant_scores || []).slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  // For group series, show each player's individual win count instead of the
+  // aggregate "creator — opponents" series score (which is meaningless for 3+
+  // players). For 1v1, keep the classic "wins - wins" series score.
+  const groupWins = isGroup && isSeries ? getGroupWinCounts(challenge, games) : [];
   const scoreText = isSeries
     ? `${creatorWins} - ${opponentWins}`
     : (rankedScores.length > 0
@@ -52,7 +57,20 @@ const ResultShareCard = forwardRef(({ challenge, sportDisplay, creatorWins, oppo
         {isDraw ? 'Tied' : (challenge.winner_name || 'Result')}
       </span>
 
-      {rankedScores.length > 0 && !isSeries ? (
+      {groupWins.length > 0 ? (
+        <div style={{ width: '100%', marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px', textAlign: 'left' }}>Series Wins</div>
+          {groupWins.map((s, i) => (
+            <div key={s.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: 600, opacity: 0.95, padding: '3px 0' }}>
+              <span style={{ textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {i === 0 && s.wins > 0 && <span style={{ fontSize: '13px' }}>👑</span>}
+                {s.name}
+              </span>
+              <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 800, fontSize: '16px' }}>{s.wins}</span>
+            </div>
+          ))}
+        </div>
+      ) : rankedScores.length > 0 && !isSeries ? (
         <div style={{ width: '100%', marginBottom: '12px' }}>
           {rankedScores.map((s) => (
             <div key={s.user_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 600, opacity: 0.95, padding: '2px 0' }}>

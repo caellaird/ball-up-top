@@ -10,6 +10,7 @@ import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
 import EditSeriesGameSheet from '@/components/challenges/EditSeriesGameSheet';
+import GroupWinCounts from '@/components/challenges/GroupWinCounts';
 import EndSeriesDialog from '@/components/challenges/EndSeriesDialog';
 import ResultShareCard from '@/components/challenges/ResultShareCard';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
@@ -237,12 +238,18 @@ export default function ChallengeDetail() {
 
           {isSeries && (
             <div className="mt-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-3">
-              <p className="font-heading font-bold text-lg">{creatorWins} — {opponentWins}</p>
-              <p className="text-xs text-muted-foreground">
-                {challenge.status === 'completed'
-                  ? 'Series complete'
-                  : totalGames ? `Game ${creatorWins + opponentWins + 1} of ${totalGames}` : `Game ${creatorWins + opponentWins + 1}`}
-              </p>
+              {isGroup ? (
+                <GroupWinCounts challenge={challenge} games={games} />
+              ) : (
+                <>
+                  <p className="font-heading font-bold text-lg">{creatorWins} — {opponentWins}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {challenge.status === 'completed'
+                      ? 'Series complete'
+                      : totalGames ? `Game ${creatorWins + opponentWins + 1} of ${totalGames}` : `Game ${creatorWins + opponentWins + 1}`}
+                  </p>
+                </>
+              )}
               {challenge.status === 'completed' && challenge.is_draw && (
                 <p className="text-sm text-secondary font-semibold mt-1">🤝 Series drawn</p>
               )}
@@ -419,7 +426,7 @@ export default function ChallengeDetail() {
         {challenge.status === 'completed' && (
           <>
             <div className="flex justify-center mb-4">
-              <ResultShareCard ref={shareCardRef} challenge={challenge} sportDisplay={sportDisplay} creatorWins={creatorWins} opponentWins={opponentWins} />
+              <ResultShareCard ref={shareCardRef} challenge={challenge} sportDisplay={sportDisplay} creatorWins={creatorWins} opponentWins={opponentWins} games={games} />
             </div>
             <Button onClick={handleShareResult} variant="outline" className="w-full rounded-full h-12">
               <Share2 className="w-4 h-4" /> Share Result

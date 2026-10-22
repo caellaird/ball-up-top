@@ -4,6 +4,7 @@ import { MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { getSportDisplay } from '@/lib/constants';
 import { isGroupChallenge, getChallengeTitle } from '@/lib/challengeGroup';
+import GroupWinCounts from '@/components/challenges/GroupWinCounts';
 
 export default function ChallengeCard({ challenge }) {
   const isSeries = challenge.series_type !== 'single';
@@ -34,15 +35,24 @@ export default function ChallengeCard({ challenge }) {
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[hsl(var(--accent))] text-white uppercase tracking-wide shrink-0">Series</span>
         </div>
-        <p className="text-sm font-semibold mb-2 break-words">
-          <span className={challenge.winner_id === challenge.created_by_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
-            {challenge.winner_id === challenge.created_by_id ? '👑 ' : ''}{challenge.creator_name}
-          </span>
-          {' '}{creatorWins} — {opponentWins}{' '}
-          <span className={challenge.winner_id === challenge.opponent_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
-            {challenge.winner_id === challenge.opponent_id ? '👑 ' : ''}{opponentsLabel}
-          </span>
-        </p>
+        {isGroup ? (
+          <p className="text-sm font-semibold mb-2 break-words text-[hsl(var(--accent))]">{title}</p>
+        ) : (
+          <p className="text-sm font-semibold mb-2 break-words">
+            <span className={challenge.winner_id === challenge.created_by_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
+              {challenge.winner_id === challenge.created_by_id ? '👑 ' : ''}{challenge.creator_name}
+            </span>
+            {' '}{creatorWins} — {opponentWins}{' '}
+            <span className={challenge.winner_id === challenge.opponent_id ? 'text-accent font-bold' : 'text-muted-foreground'}>
+              {challenge.winner_id === challenge.opponent_id ? '👑 ' : ''}{opponentsLabel}
+            </span>
+          </p>
+        )}
+        {isGroup && (
+          <div className="mb-2">
+            <GroupWinCounts challenge={challenge} />
+          </div>
+        )}
         {challenge.status !== 'completed' && (
           <p className="text-xs text-muted-foreground mb-2">
             {challenge.games_to_win ? `Game ${gameNumber} of ${totalGames}` : `Game ${gameNumber}`}
