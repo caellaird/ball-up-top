@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Swords, Pencil, Trash2, Flag, Crown } from 'lucide-react';
+import { Swords, Pencil, Trash2, Flag } from 'lucide-react';
 import UserAvatar from '@/components/shared/UserAvatar';
 import { base44 } from '@/api/base44Client';
 import ReactionBar from '@/components/feed/ReactionBar';
@@ -10,6 +10,7 @@ import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { usePhotoViewer } from '@/lib/photoViewer';
 import PostEditSheet from '@/components/feed/PostEditSheet';
 import HighlightCardVisual from '@/components/feed/HighlightCardVisual';
+import GroupGameSummary from '@/components/feed/GroupGameSummary';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
@@ -137,25 +138,13 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
         <HighlightCardVisual post={post} />
       ) : (
       <>
-      {scoreText && (
+      {post.participant_scores?.length > 0 ? (
+        <GroupGameSummary post={{ ...post, score_text: scoreText }} />
+      ) : scoreText && (
         <Link to={post.challenge_id ? `/challenges/${post.challenge_id}` : '#'} className={`bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl px-4 py-2 mb-2 flex items-center justify-between ${post.challenge_id ? 'active:scale-[0.98] transition' : ''}`}>
           <span className="font-heading font-bold text-sm">{scoreText}</span>
           <Swords className="w-4 h-4 text-secondary" />
         </Link>
-      )}
-
-      {post.participant_scores?.length > 0 && (
-        <div className="bg-muted/50 rounded-2xl px-4 py-2 mb-2 space-y-1">
-          {[...post.participant_scores].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).map((s, i) => (
-            <div key={s.user_id || i} className="flex items-center justify-between text-sm">
-              <span className="font-medium truncate flex items-center gap-1.5">
-                {i === 0 && <Crown className="w-3.5 h-3.5 text-accent" />}
-                {s.name}
-              </span>
-              <span className="font-heading font-bold">{s.score}</span>
-            </div>
-          ))}
-        </div>
       )}
 
       {post.challenge_id && (post.sport_label || post.challenge_type) && (
