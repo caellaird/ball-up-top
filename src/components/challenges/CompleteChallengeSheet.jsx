@@ -74,7 +74,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
 
   // Every participant gets an individual result — the winner gets a win, everyone else a loss.
   // For isMultiplayer challenges the winner is picked directly rather than derived from two scores.
-  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, overrideWinnerId, isDraw = false, scoresArr = []) => {
+  const finalizeSeries = async (creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, overrideWinnerId, isDraw = false, scoresArr = [], gameId = undefined) => {
     const isCreatorWinner = creatorWins > opponentWins;
     const scoreWinnerId = creatorWins === opponentWins ? '' : isCreatorWinner ? challenge.created_by_id : challenge.opponent_id;
     // Use pre-selected winner if set, otherwise derive from scores
@@ -113,6 +113,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         : `${challenge.creator_name} vs ${opponentsLabel} — ${winnerName ? winnerName + ' wins!' : 'Final'}`),
       media_urls: photos,
       challenge_id: challenge.id,
+      series_game_id: gameId,
       game_emoji: sportDisplay.emoji,
       sport_label: sportDisplay.label,
       challenge_type: isSeries ? 'series' : 'single',
@@ -183,7 +184,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
     const gameWinnerName = participants.find((p) => p.id === winnerIdThisGame)?.name || '';
     const isCreatorGameWinner = winnerIdThisGame === challenge.created_by_id;
 
-    await base44.entities.SeriesGame.create({
+    const gameRecord = await base44.entities.SeriesGame.create({
       challenge_id: challenge.id,
       game_number: gameNumber,
       score_creator: sc,
@@ -220,7 +221,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         await base44.functions.invoke('recordGameResult', { challengeId: challenge.id, winnerId: winnerIdThisGame });
       }
 
-      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw, scoresArr);
+      const updated = await finalizeSeries(creatorWins, opponentWins, opponentUsernames, myUsername, myAvatar, isMultiplayer && winnerIdThisGame ? winnerIdThisGame : undefined, isSeriesDraw, scoresArr, gameRecord.id);
 
       // Close out the series: fire the city score + rivalry update once, without
       // double-counting stats (each game above already recorded its own W/L/D).
@@ -242,6 +243,7 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
         body: caption || `${challenge.series_name || sportDisplay.label}: Game ${gameNumber} — ${gameWinnerName ? gameWinnerName + ' takes it!' : 'Tied!'}${!isMultiplayer ? ` Series ${creatorWins}-${opponentWins}` : ''}`,
         media_urls: photos,
         challenge_id: challenge.id,
+        series_game_id: gameRecord.id,
         game_emoji: sportDisplay.emoji,
         sport_label: sportDisplay.label,
         challenge_type: 'series',

@@ -26,6 +26,10 @@
     "challenge_id": {
       "type": "string"
     },
+    "series_game_id": {
+      "type": "string",
+      "description": "Links a series-game post to its SeriesGame record, so the post can be updated when the game result is edited retroactively"
+    },
     "game_emoji": {
       "type": "string"
     },

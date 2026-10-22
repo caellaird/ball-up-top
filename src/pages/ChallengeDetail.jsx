@@ -9,6 +9,7 @@ import { getSportDisplay } from '@/lib/constants';
 import { buildGoogleCalendarUrl } from '@/lib/calendarLink';
 import { sendNotification } from '@/lib/notify';
 import CompleteChallengeSheet from '@/components/challenges/CompleteChallengeSheet';
+import EditSeriesGameSheet from '@/components/challenges/EditSeriesGameSheet';
 import EndSeriesDialog from '@/components/challenges/EndSeriesDialog';
 import ResultShareCard from '@/components/challenges/ResultShareCard';
 import ChallengeEditSheet from '@/components/challenges/ChallengeEditSheet';
@@ -40,6 +41,7 @@ export default function ChallengeDetail() {
   const [shareImageFile, setShareImageFile] = useState(null);
   const shareCardRef = useRef(null);
   const [showSquadNudge, setShowSquadNudge] = useState(false);
+  const [editingGame, setEditingGame] = useState(null);
 
   useEffect(() => {
     load();
@@ -295,7 +297,14 @@ export default function ChallengeDetail() {
                 <div key={g.id} className="bg-card rounded-2xl shadow-sm p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-muted-foreground">Game {g.game_number}</span>
-                    {g.winner_name && <span className="text-xs font-bold text-accent">👑 {g.winner_name}</span>}
+                    <div className="flex items-center gap-2">
+                      {g.winner_name && <span className="text-xs font-bold text-accent">👑 {g.winner_name}</span>}
+                      {g.created_by_id === user.id && (
+                        <button onClick={() => setEditingGame(g)} className="p-1 text-muted-foreground hover:text-foreground">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {g.participant_scores?.length > 0 ? (
                     <div className="mt-1 space-y-1">
@@ -476,6 +485,14 @@ export default function ChallengeDetail() {
               setChallenge(updated);
               setShowEdit(false);
             }}
+          />
+          <EditSeriesGameSheet
+            open={!!editingGame}
+            onOpenChange={(o) => { if (!o) setEditingGame(null); }}
+            challenge={challenge}
+            game={editingGame}
+            user={user}
+            onSaved={() => { setEditingGame(null); load(); }}
           />
         </>
       )}
