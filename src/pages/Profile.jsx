@@ -3,7 +3,6 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AvatarUpload from '@/components/profile/AvatarUpload';
-import ProfileBanner from '@/components/profile/ProfileBanner';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -149,9 +148,8 @@ export default function Profile({ user: userProp, usernameOverride }) {
 
   if (!profile) return (
     <div className="space-y-4">
-      <Skeleton className="w-full h-24 rounded-none" />
-      <div className="px-4 flex items-end gap-3">
-        <Skeleton className="w-20 h-20 rounded-full -mt-10" />
+      <div className="px-4 pt-4 flex items-center gap-3">
+        <Skeleton className="w-20 h-20 rounded-full" />
         <Skeleton className="h-8 w-20 rounded-full mb-2" />
       </div>
       <div className="px-4 space-y-2">
@@ -174,29 +172,12 @@ export default function Profile({ user: userProp, usernameOverride }) {
 
   return (
     <div>
-      {/* Profile header — banner with floating back / settings controls */}
+      {/* Profile header — avatar and actions straight on the page background */}
       <div className="relative">
-        <ProfileBanner profile={profile} />
-        {isSelf ? (
-          <button
-            onClick={() => navigate('/settings')}
-            className="absolute right-2 min-w-[44px] min-h-[44px] rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
-            style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-        ) : (
-          <button
-            onClick={goBack}
-            className="absolute left-2 min-w-[44px] min-h-[44px] rounded-full bg-black/30 backdrop-blur-sm text-white flex items-center justify-center"
-            style={{ top: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        )}
-        <div className="px-4 -mt-10 relative z-10">
+        <div
+          className="px-4 relative z-10"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
+        >
           <div className="flex items-end justify-between mb-2">
             {isSelf ? (
               <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} />
@@ -212,9 +193,27 @@ export default function Profile({ user: userProp, usernameOverride }) {
                 </Avatar>
               </button>
             )}
-            {isSelf && <Button size="sm" variant="secondary" className="rounded-full mb-1" onClick={() => setEditing(true)}>Edit Profile</Button>}
+            {isSelf && (
+              <div className="flex items-center gap-2 mb-1">
+                <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setEditing(true)}>Edit Profile</Button>
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="min-w-[36px] min-h-[36px] rounded-full bg-muted text-foreground flex items-center justify-center"
+                  aria-label="Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+              </div>
+            )}
             {!isSelf && (
               <div className="flex gap-2 mb-1">
+                <button
+                  onClick={goBack}
+                  className="min-w-[36px] min-h-[36px] rounded-full bg-muted text-foreground flex items-center justify-center"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
                 <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => { setActiveTab('stats'); setShowChallenge(true); }}>
                   <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
                 </Button>
