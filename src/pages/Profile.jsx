@@ -149,9 +149,9 @@ export default function Profile({ user: userProp, usernameOverride }) {
 
   if (!profile) return (
     <div className="space-y-4">
-      <Skeleton className="w-full h-32 rounded-none" />
+      <Skeleton className="w-full h-24 rounded-none" />
       <div className="px-4 flex items-end gap-3">
-        <Skeleton className="w-20 h-20 rounded-full -mt-12" />
+        <Skeleton className="w-20 h-20 rounded-full -mt-10" />
         <Skeleton className="h-8 w-20 rounded-full mb-2" />
       </div>
       <div className="px-4 space-y-2">
@@ -206,9 +206,9 @@ export default function Profile({ user: userProp, usernameOverride }) {
                 className={`shrink-0 ${profile.avatar_url ? 'active:scale-95 transition' : 'cursor-default'}`}
                 aria-label={profile.avatar_url ? 'View profile photo' : undefined}
               >
-                <Avatar className="w-16 h-16 border-4 border-background">
+                <Avatar className="w-20 h-20 border-4 border-background">
                   <AvatarImage src={profile.avatar_url} />
-                  <AvatarFallback className="text-xl">{displayName?.[0] || 'U'}</AvatarFallback>
+                  <AvatarFallback className="text-2xl">{displayName?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
               </button>
             )}
