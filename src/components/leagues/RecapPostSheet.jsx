@@ -53,9 +53,12 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
         sport_label: sport.label,
         game_emoji: sport.emoji,
         highlight_title: league.name,
+        league_id: league.id,
         tagged_user_ids: attendees.map((a) => a.user_id),
         tagged_user_names: attendees.map((a) => a.user_name),
       });
+      // League recap posts score for the author's city.
+      base44.functions.invoke('countCityActivity', { postId: post.id }).catch(() => {});
       setPosted(true);
       onPosted?.(post);
     } finally {

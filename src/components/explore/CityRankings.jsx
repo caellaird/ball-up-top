@@ -32,7 +32,7 @@ export default function CityRankings({ user }) {
     );
   }
 
-  const { topCities = [], userCity, cityOfWeek } = data || {};
+  const { topCities = [], userCity, cityOfYear, year } = data || {};
   const hasCities = topCities.length > 0;
 
   return (
@@ -41,27 +41,25 @@ export default function CityRankings({ user }) {
       <div className="px-4 pt-5 pb-2">
         <h1 className="font-heading text-3xl font-extrabold tracking-tight">WHO'S ON TOP?</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          See which cities are competing the hardest this week.
+          See which cities are competing the hardest in {year || new Date().getFullYear()}.
         </p>
       </div>
 
-      {/* City of the Week */}
-      {cityOfWeek ? (
+      {/* City of the Year */}
+      {cityOfYear ? (
         <div className="px-4 mb-5">
           <div className="rounded-3xl brand-gradient p-6 text-white text-center arena-shadow">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-2">
-              🏆 City of the Week
+              🏆 City of the Year
             </p>
             <h2 className="font-heading text-2xl font-extrabold mb-3 leading-tight">
-              {cityOfWeek.city}
+              {cityOfYear.city}
             </h2>
             <div className="text-5xl mb-2">🏆</div>
-            <p className="text-3xl font-extrabold">{cityOfWeek.completedCount}</p>
-            <p className="text-xs opacity-80 uppercase tracking-wide font-semibold">
-              Challenges Completed
-            </p>
+            <p className="text-3xl font-extrabold">{cityOfYear.points}</p>
+            <p className="text-xs opacity-80 uppercase tracking-wide font-semibold">City Points</p>
             <p className="text-[11px] opacity-70 mt-3 leading-snug">
-              The most competitive city on Ball Up Top this week.
+              The most competitive city on Ball Up Top this year.
             </p>
           </div>
         </div>
@@ -69,18 +67,18 @@ export default function CityRankings({ user }) {
         <div className="px-4 mb-5">
           <div className="rounded-3xl border-2 border-dashed border-border p-6 text-center">
             <div className="text-4xl mb-2">🏆</div>
-            <p className="font-bold text-sm">No cities ranked yet this week.</p>
+            <p className="font-bold text-sm">No cities ranked yet this year.</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Complete a challenge to put your city on top!
+              Compete to put your city on top!
             </p>
           </div>
         </div>
       )}
 
-      {/* Top Cities This Week */}
+      {/* Top Cities This Year */}
       {hasCities && (
         <div className="px-4 mb-5">
-          <h3 className="font-heading text-lg font-bold mb-3">🌎 Top Cities This Week</h3>
+          <h3 className="font-heading text-lg font-bold mb-3">🌎 Top Cities This Year</h3>
           <div className="space-y-2">
             {topCities.map((city, i) => {
               const isUserCity = userCity?.cityKey === city.cityKey;
@@ -103,8 +101,8 @@ export default function CityRankings({ user }) {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-extrabold text-lg leading-none">{city.completedCount}</p>
-                    <p className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5">Challenges</p>
+                    <p className="font-extrabold text-lg leading-none">{city.points}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-wide mt-0.5">Points</p>
                   </div>
                 </div>
               );
@@ -133,17 +131,17 @@ export default function CityRankings({ user }) {
             </div>
             <p className="text-sm font-bold text-primary">
               {userCity.rank === 1
-                ? '🏆 #1 This Week'
+                ? '🏆 #1 This Year'
                 : userCity.rank
-                  ? `#${userCity.rank} This Week`
-                  : 'Unranked this week'}
+                  ? `#${userCity.rank} This Year`
+                  : 'Unranked this year'}
             </p>
             <p className="text-sm text-muted-foreground">
-              {userCity.completedCount} Completed {userCity.completedCount === 1 ? 'Challenge' : 'Challenges'}
+              {userCity.points} {userCity.points === 1 ? 'City Point' : 'City Points'}
             </p>
             {userCity.behindFifth !== null && userCity.behindFifth > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
-                {userCity.behindFifth} {userCity.behindFifth === 1 ? 'challenge' : 'challenges'} behind #5
+                {userCity.behindFifth} {userCity.behindFifth === 1 ? 'point' : 'points'} behind #5
               </p>
             )}
           </div>
@@ -155,7 +153,7 @@ export default function CityRankings({ user }) {
             <div className="text-3xl mb-2">📍</div>
             <p className="font-bold text-sm mb-1">Add Your City</p>
             <p className="text-xs text-muted-foreground mb-3 leading-snug">
-              Tell us where you're from to help put your city on the map.
+              Pick where you're from so every game you play scores for your city.
             </p>
             <Button asChild variant="secondary" className="rounded-full" size="sm">
               <Link to="/profile/me">Add City</Link>
@@ -168,14 +166,14 @@ export default function CityRankings({ user }) {
       <div className="px-4 pb-8 pt-1">
         <div className="rounded-2xl bg-muted/60 p-4 text-center mb-4">
           <p className="text-sm font-semibold text-muted-foreground leading-snug">
-            Don't see your city? Challenge more friends in your area to boost your weekly city score.
+            Challenges, scorecards and league recaps all score for your city. Rep your area and climb.
           </p>
         </div>
         <Button asChild className="w-full rounded-full h-12 font-bold">
           <Link to="/ball-up">Challenge a Friend</Link>
         </Button>
         <p className="text-center text-[11px] text-muted-foreground mt-3">
-          Every challenge counts. Your city is competing too.
+          Every game counts. Your city is competing too.
         </p>
       </div>
     </PullToRefresh>

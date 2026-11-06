@@ -1,5 +1,5 @@
 {
-  "name": "CityWeeklyScore",
+  "name": "CityYearScore",
   "type": "object",
   "properties": {
     "city_key": {
@@ -10,18 +10,19 @@
       "type": "string",
       "description": "Display name, e.g. 'Durham, NC'"
     },
-    "week": {
-      "type": "string",
-      "description": "ISO string of the week's Monday 00:00 UTC start"
-    },
-    "completed_count": {
+    "year": {
       "type": "number",
-      "default": 0
+      "description": "Calendar year the points belong to, e.g. 2026"
+    },
+    "points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total city points earned this year"
     }
   },
   "required": [
     "city_key",
-    "week"
+    "year"
   ],
   "rls": {
     "read": {},

@@ -21,7 +21,16 @@
       "type": "string"
     },
     "city": {
-      "type": "string"
+      "type": "string",
+      "description": "Home city picked by the player, stored as 'City, ST'"
+    },
+    "city_key": {
+      "type": "string",
+      "description": "Normalized city key used to credit this player's activity to their city, e.g. 'durham, nc'"
+    },
+    "city_display": {
+      "type": "string",
+      "description": "Display form of the player's city, e.g. 'Durham, NC'"
     },
     "favorite_team": {
       "type": "string"

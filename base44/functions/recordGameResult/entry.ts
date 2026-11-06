@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { normalizeCity, getWeekKey } from '../../shared/cityScore.ts';
+import { awardCityPoints } from '../../shared/cityScore.ts';
 import { processRivalries } from '../../shared/rivalries.ts';
 
 // Records a single game result toward every participant's UserStats. Runs as the
@@ -8,7 +8,7 @@ import { processRivalries } from '../../shared/rivalries.ts';
 //
 // Also counts the city competition score exactly once per completed challenge:
 // when challenge.status === 'completed' and city_score_counted is not yet true,
-// the completing user's profile city gets +1 on the weekly CityWeeklyScore row.
+// the completing user's profile city gets +1 on the yearly CityYearScore row.
 // The city_score_counted flag makes this idempotent — page refreshes, result
 // edits, or repeated calls never double-count.
 //
@@ -140,42 +140,14 @@ export default async function(req) {
     // completed (status === 'completed') and hasn't been counted yet.
     if (challenge.status === 'completed' && !challenge.city_score_counted) {
       try {
-        const profiles = await admin.entities.Profile.filter({ created_by_id: user.id });
-        const profile = profiles?.[0];
-        const rawCity = profile?.city?.trim();
-        const weekKey = getWeekKey();
+        // +1 to the city the user picked as their own, for the current year.
+        const attribution = await awardCityPoints(admin, user.id, 1);
 
-        if (rawCity) {
-          const { key, display } = normalizeCity(rawCity);
-          const existing = await admin.entities.CityWeeklyScore.filter({ city_key: key, week: weekKey });
-          let score = existing[0];
-          if (!score) {
-            score = await admin.entities.CityWeeklyScore.create({
-              city_key: key,
-              city_display: display,
-              week: weekKey,
-              completed_count: 1,
-            });
-          } else {
-            await admin.entities.CityWeeklyScore.update(score.id, {
-              completed_count: (score.completed_count || 0) + 1,
-            });
-          }
-          await admin.entities.Challenge.update(challengeId, {
-            city_score_counted: true,
-            city_attribution: key,
-            leaderboard_week: weekKey,
-            completed_at: new Date().toISOString(),
-          });
-        } else {
-          // No city in profile — mark as counted to prevent future counting.
-          // The user is prompted to add their city in the Explore page.
-          await admin.entities.Challenge.update(challengeId, {
-            city_score_counted: true,
-            leaderboard_week: weekKey,
-            completed_at: new Date().toISOString(),
-          });
-        }
+        await admin.entities.Challenge.update(challengeId, {
+          city_score_counted: true,
+          city_attribution: attribution?.key || '',
+          completed_at: new Date().toISOString(),
+        });
 
         // Rivalry processing — runs after city_score_counted is set so it
         // only fires once per completed challenge. Wrapped in its own try

@@ -69,6 +69,8 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
         highlight_title: title.trim(),
         highlight_stats: validStats.map((s) => ({ label: s.label.trim(), value: s.value.trim() })),
       });
+      // Scorecard posts score for the author's city.
+      base44.functions.invoke('countCityActivity', { postId: post.id }).catch(() => {});
       onPosted?.(post);
       onOpenChange(false);
     } catch (e) {

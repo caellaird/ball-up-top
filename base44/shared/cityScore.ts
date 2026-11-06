@@ -1,6 +1,6 @@
-// Shared city-normalization + weekly-boundary logic used by backend functions
-// (recordGameResult, getCityLeaderboard) so city attribution and leaderboard
-// weeks are computed consistently on the server side.
+// Shared city-normalization + yearly leaderboard logic used by backend functions
+// (recordGameResult, countCityActivity, getCityLeaderboard) so city attribution
+// and the yearly city totals are computed consistently on the server side.
 
 // Normalizes a free-text city string into a consistent key and display format.
 // "Durham, NC" → { key: "durham, nc", display: "Durham, NC" }
@@ -24,18 +24,45 @@ export function normalizeCity(rawCity: string): { key: string; display: string }
   return { key, display };
 }
 
-// Returns the Monday 00:00:00 (UTC) of the current week as a Date.
-// Weekly leaderboard boundary: Monday 12:00 AM through Sunday 11:59 PM.
-export function getWeekStart(date: Date = new Date()): Date {
-  const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
-  const day = d.getUTCDay(); // 0 = Sunday, 1 = Monday, ...
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d;
+// The city competition runs on a calendar-year window.
+export function getYearKey(date: Date = new Date()): number {
+  return date.getUTCFullYear();
 }
 
-// Returns the ISO string of the current week's Monday start (UTC).
-export function getWeekKey(date: Date = new Date()): string {
-  return getWeekStart(date).toISOString();
+// Resolves the city a user represents, from the canonical fields stored by the
+// city picker, falling back to their free-text profile city.
+export function resolveUserCity(profile: any): { key: string; display: string } {
+  const normalized = normalizeCity(profile?.city || '');
+  const key = (profile?.city_key || normalized.key || '').trim();
+  const display = (profile?.city_display || normalized.display || '').trim();
+  return { key, display };
+}
+
+// Adds points to the user's city total for the current year.
+// Returns the attribution ({ key, display, year }) or null when the user has no city.
+export async function awardCityPoints(admin: any, userId: string, points = 1) {
+  const profiles = await admin.entities.Profile.filter({ created_by_id: userId });
+  const profile = profiles?.[0];
+  const { key, display } = resolveUserCity(profile);
+  if (!key) return null;
+
+  const year = getYearKey();
+  const existing = await admin.entities.CityYearScore.filter({ city_key: key, year });
+  const row = existing?.[0];
+
+  if (!row) {
+    await admin.entities.CityYearScore.create({
+      city_key: key,
+      city_display: display || key,
+      year,
+      points,
+    });
+  } else {
+    await admin.entities.CityYearScore.update(row.id, {
+      city_display: display || row.city_display,
+      points: (row.points || 0) + points,
+    });
+  }
+
+  return { key, display: display || key, year };
 }

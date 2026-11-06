@@ -28,6 +28,8 @@ import FriendsTab from '@/components/profile/tabs/FriendsTab';
 import AwardsTab from '@/components/profile/tabs/AwardsTab';
 import HighlightsTab from '@/components/profile/tabs/HighlightsTab';
 import FavoriteSportPicker from '@/components/profile/FavoriteSportPicker';
+import CityPicker from '@/components/profile/CityPicker';
+import { toCityAttribution } from '@/lib/cities';
 import CompetitiveRecord from '@/components/profile/CompetitiveRecord';
 import CurrentRival from '@/components/profile/CurrentRival';
 import AnimatedNumber from '@/components/shared/AnimatedNumber';
@@ -49,7 +51,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const [awards, setAwards] = useState([]);
   const [displayName, setDisplayName] = useState('');
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ nickname: '', bio: '', city: '', favorite_sport: '' });
+  const [form, setForm] = useState({ nickname: '', bio: '', city: '', city_key: '', city_display: '', favorite_sport: '' });
   const [friendRecords, setFriendRecords] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [showChallenge, setShowChallenge] = useState(false);
@@ -103,7 +105,14 @@ export default function Profile({ user: userProp, usernameOverride }) {
     setDisplayName(name);
     if (p) {
       setAvatar(ownerId, p.avatar_url);
-      setForm({ nickname: p.nickname || '', bio: p.bio || '', city: p.city || '', favorite_sport: p.favorite_sport || '' });
+      setForm({
+        nickname: p.nickname || '',
+        bio: p.bio || '',
+        city: p.city_display || p.city || '',
+        city_key: p.city_key || '',
+        city_display: p.city_display || '',
+        favorite_sport: p.favorite_sport || '',
+      });
       // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
       const friendsAsCreator = await base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' });
@@ -118,7 +127,14 @@ export default function Profile({ user: userProp, usernameOverride }) {
   };
 
   const save = async () => {
-    const updated = await base44.entities.Profile.update(profile.id, form);
+    // Store the city in its canonical form so competitions credit the right city.
+    const city = toCityAttribution(form.city);
+    const updated = await base44.entities.Profile.update(profile.id, {
+      ...form,
+      city: city.city,
+      city_key: city.key,
+      city_display: city.display,
+    });
     invalidateProfile(user.id);
     invalidateProfileStats(user.id);
     setProfile(updated);
@@ -334,7 +350,13 @@ export default function Profile({ user: userProp, usernameOverride }) {
               <Input placeholder="Nickname" value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} />
             </div>
             <Textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-            <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Home City</label>
+              <CityPicker
+                value={form.city}
+                onChange={(c) => setForm({ ...form, city: c.label, city_key: c.key, city_display: c.label })}
+              />
+            </div>
             <FavoriteSportPicker value={form.favorite_sport} onChange={(v) => setForm({ ...form, favorite_sport: v })} />
             <Button onClick={save} className="w-full rounded-full h-12">Save</Button>
           </div>

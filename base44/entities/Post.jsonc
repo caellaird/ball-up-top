@@ -26,6 +26,10 @@
     "challenge_id": {
       "type": "string"
     },
+    "league_id": {
+      "type": "string",
+      "description": "Links a league recap post to its League record, so it counts toward the city tally"
+    },
     "series_game_id": {
       "type": "string",
       "description": "Links a series-game post to its SeriesGame record, so the post can be updated when the game result is edited retroactively"
@@ -140,6 +144,15 @@
         }
       },
       "description": "1-3 custom stat rows displayed on a highlight card"
+    },
+    "city_points_awarded": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set once this post has added a point to the author's city tally"
+    },
+    "city_attribution": {
+      "type": "string",
+      "description": "Normalized city key this post's point was credited to"
     }
   },
   "required": [
