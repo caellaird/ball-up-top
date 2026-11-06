@@ -73,7 +73,8 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
         {!posted ? (
           <div className="pt-2 pb-6">
             <p className="text-xs text-muted-foreground">
-              {league.name} · {format(new Date(session.start_time), 'EEEE, MMM d')}
+              {league.name}
+              {session?.start_time ? ` · ${format(new Date(session.start_time), 'EEEE, MMM d')}` : ''}
             </p>
 
             <div className="mt-4 rounded-2xl border border-border p-3">

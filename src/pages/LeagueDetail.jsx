@@ -233,13 +233,15 @@ export default function LeagueDetail() {
 
       <AddSessionSheet open={showAdd} onOpenChange={setShowAdd} onCreate={addSession} />
 
-      <RecapPostSheet
-        open={!!recapSession}
-        onOpenChange={(o) => !o && setRecapSession(null)}
-        league={league}
-        session={recapSession || {}}
-        attendees={recapSession ? rsvps.filter((r) => r.session_id === recapSession.id && r.status === 'going') : []}
-      />
+      {recapSession && (
+        <RecapPostSheet
+          open
+          onOpenChange={() => setRecapSession(null)}
+          league={league}
+          session={recapSession}
+          attendees={rsvps.filter((r) => r.session_id === recapSession.id && r.status === 'going')}
+        />
+      )}
     </div>
   );
 }
