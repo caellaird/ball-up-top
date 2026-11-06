@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import AnimatedNumber from '@/components/shared/AnimatedNumber';
 import { getCachedProfileStats } from '@/lib/ensureProfile';
+import { isPendingChallengeExpired } from '@/lib/challengeExpiry';
 
 // Personalized feed header — greets the user by first name and shows their
 // live win/loss/streak summary pulled from real competition history.
@@ -18,8 +19,15 @@ export default function FeedPersonalHeader({ user }) {
       // shared) so Home and Profile always show identical wins/losses/streak.
       const s = await getCachedProfileStats(user.id);
       setStats(s);
-      const mine = await base44.entities.Challenge.filter({ created_by_id: user.id }, '-created_date', 20);
-      setActiveCount(mine.filter((c) => c.status === 'pending' || c.status === 'accepted').length);
+      // Same rule the Challenges page uses: both sides of a challenge count, and
+      // a pending challenge that sat past its grace window is no longer active.
+      const all = await base44.entities.Challenge.list('-created_date', 100);
+      const mine = all.filter(
+        (c) => c.created_by_id === user.id || c.opponent_id === user.id || c.opponent_ids?.includes(user.id)
+      );
+      setActiveCount(
+        mine.filter((c) => c.status === 'accepted' || (c.status === 'pending' && !isPendingChallengeExpired(c))).length
+      );
     })();
   }, [user.id]);
 
