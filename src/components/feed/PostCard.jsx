@@ -20,6 +20,9 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
+  const [addedComments, setAddedComments] = useState(0);
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentError, setCommentError] = useState(null);
   const { open: openPhotoViewer } = usePhotoViewer();
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -28,10 +31,12 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
   const [editState, setEditState] = useState({});
   const [showShare, setShowShare] = useState(false);
 
+  // Tapping the comment badge toggles the thread, and only fetches on open.
   const loadComments = async () => {
+    if (showComments) { setShowComments(false); return; }
+    setShowComments(true);
     const data = await base44.entities.Comment.filter({ post_id: post.id }, '-created_date');
     setComments(data);
-    setShowComments(true);
   };
 
   const body = editState.body ?? post.body;
@@ -42,13 +47,25 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
   const handleShare = () => setShowShare(true);
 
   const submitComment = async () => {
-    if (!commentText.trim()) return;
-    const user = await base44.auth.me();
-    const profile = await getOrCreateProfile(user);
-    const c = await base44.entities.Comment.create({ post_id: post.id, author_name: user.full_name, author_username: profile.username, author_avatar: profile.avatar_url, body: commentText });
-    await base44.entities.Post.update(post.id, { comment_count: (post.comment_count || 0) + 1 });
-    setComments([c, ...comments]);
-    setCommentText('');
+    const body = commentText.trim();
+    if (!body) return;
+    // Guard against duplicate comments from a fast double tap / Enter.
+    if (submittingComment) return;
+    setSubmittingComment(true);
+    setCommentError(null);
+    try {
+      const me = await base44.auth.me();
+      const profile = await getOrCreateProfile(me);
+      const c = await base44.entities.Comment.create({ post_id: post.id, author_name: me.full_name, author_username: profile.username, author_avatar: profile.avatar_url, body });
+      await base44.entities.Post.update(post.id, { comment_count: (post.comment_count || 0) + addedComments + 1 });
+      setComments((prev) => [c, ...prev]);
+      setAddedComments((n) => n + 1);
+      setCommentText('');
+    } catch {
+      setCommentError("Couldn't post your comment. Try again.");
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const deletePost = async () => {
@@ -59,7 +76,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
     onDeleted?.(post.id);
   };
 
-  const allNames = post.tagged_user_names?.length ? [post.author_name, ...post.tagged_user_names] : null;
+  const commentCount = (post.comment_count || 0) + addedComments;
 
   return (
     <article className="bg-card rounded-3xl arena-shadow border border-border/50 p-4 mb-4 mx-4">
@@ -191,7 +208,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
         counts={reactionCounts}
         myEmoji={myEmoji}
         onReact={onReact}
-        commentCount={post.comment_count}
+        commentCount={commentCount}
         onComment={loadComments}
         onShare={handleShare}
       />
@@ -234,16 +251,26 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
               <p><Link to={`/profile/${c.author_username || 'me'}`} className="font-semibold">{c.author_name}</Link><span>: </span><span>{c.body}</span></p>
             </div>
           ))}
+          {comments.length === 0 && !commentError && (
+            <p className="text-xs text-muted-foreground">No comments yet. Start the conversation.</p>
+          )}
           <div className="flex gap-2 pt-1">
             <input
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a comment..."
               className="flex-1 text-base bg-muted rounded-full px-3 py-1.5 outline-none"
-              onKeyDown={(e) => e.key === 'Enter' && submitComment()}
+              onKeyDown={(e) => { if (e.key === 'Enter') submitComment(); }}
             />
-            <button onClick={submitComment} className="text-primary text-sm font-semibold px-2 py-1.5">Post</button>
+            <button
+              onClick={submitComment}
+              disabled={submittingComment || !commentText.trim()}
+              className="text-primary text-sm font-semibold px-2 py-1.5 disabled:opacity-40"
+            >
+              {submittingComment ? 'Posting…' : 'Post'}
+            </button>
           </div>
+          {commentError && <p className="text-xs text-destructive">{commentError}</p>}
         </div>
       )}
     </article>
