@@ -1,0 +1,42 @@
+{
+  "name": "LeagueRsvp",
+  "type": "object",
+  "properties": {
+    "league_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "going",
+        "not_going"
+      ],
+      "default": "going"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_avatar": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "status"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

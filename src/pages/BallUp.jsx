@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { X, ChevronLeft, Star } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
@@ -124,6 +124,19 @@ export default function BallUp() {
                 <span className="block text-xs text-muted-foreground">Log your own stats & highlights — no challenge needed</span>
               </span>
             </motion.button>
+            <Link
+              to="/leagues"
+              className="w-full flex items-center gap-3 rounded-3xl border-2 border-border bg-card p-4 mb-6 text-left active:scale-[0.97] transition"
+            >
+              <span className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center shrink-0">
+                <Users className="w-6 h-6 text-primary" />
+              </span>
+              <span className="flex-1">
+                <span className="block font-heading font-bold">Leagues</span>
+                <span className="block text-xs text-muted-foreground">Create a league, add players & set game times</span>
+              </span>
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            </Link>
             <div className="grid grid-cols-3 gap-3">
               {SPORTS.map((s, i) => (
                 <motion.button

@@ -39,6 +39,9 @@ const Notifications = lazy(() => import('@/pages/Notifications'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const AddFriend = lazy(() => import('@/pages/AddFriend'));
 const Explore = lazy(() => import('@/pages/Explore'));
+const Leagues = lazy(() => import('@/pages/Leagues'));
+const CreateLeague = lazy(() => import('@/pages/CreateLeague'));
+const LeagueDetail = lazy(() => import('@/pages/LeagueDetail'));
 
 function RouteFallback() {
   return (
@@ -106,6 +109,9 @@ const AuthenticatedApp = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/add-friend/:userId" element={<AddFriend />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/leagues" element={<Leagues />} />
+            <Route path="/leagues/new" element={<CreateLeague />} />
+            <Route path="/leagues/:leagueId" element={<LeagueDetail />} />
           </Route>
         </Route>
         <Route path="*" element={<PageNotFound />} />

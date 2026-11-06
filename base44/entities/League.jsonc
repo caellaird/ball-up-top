@@ -1,0 +1,75 @@
+{
+  "name": "League",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sport": {
+      "type": "string",
+      "enum": [
+        "basketball",
+        "golf",
+        "pickleball",
+        "darts",
+        "disc_golf",
+        "cornhole",
+        "trivia",
+        "chugging",
+        "ping_pong",
+        "spikeball",
+        "board_games",
+        "custom"
+      ],
+      "default": "basketball"
+    },
+    "custom_sport_name": {
+      "type": "string"
+    },
+    "custom_sport_emoji": {
+      "type": "string"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "creator_name": {
+      "type": "string"
+    },
+    "members": {
+      "type": "array",
+      "description": "Everyone in the league; the creator is included",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
