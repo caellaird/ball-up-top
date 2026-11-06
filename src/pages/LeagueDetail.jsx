@@ -7,6 +7,7 @@ import EmptyState from '@/components/shared/EmptyState';
 import ListSkeleton from '@/components/shared/ListSkeleton';
 import SessionCard from '@/components/leagues/SessionCard';
 import AddSessionSheet from '@/components/leagues/AddSessionSheet';
+import RecapPostSheet from '@/components/leagues/RecapPostSheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getSportDisplay } from '@/lib/constants';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
@@ -22,6 +23,7 @@ export default function LeagueDetail() {
   const [profile, setProfile] = useState(null);
   const [savingId, setSavingId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [recapSession, setRecapSession] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -196,7 +198,16 @@ export default function LeagueDetail() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Past times</p>
           <div className="space-y-3">
             {past.slice(0, 5).map((s) => (
-              <SessionCard key={s.id} session={s} rsvps={rsvps} myStatus={myStatusFor(s.id)} saving={false} onRsvp={() => {}} isPast />
+              <SessionCard
+                key={s.id}
+                session={s}
+                rsvps={rsvps}
+                myStatus={myStatusFor(s.id)}
+                saving={false}
+                onRsvp={() => {}}
+                isPast
+                onRecap={setRecapSession}
+              />
             ))}
           </div>
         </div>
@@ -221,6 +232,14 @@ export default function LeagueDetail() {
       </div>
 
       <AddSessionSheet open={showAdd} onOpenChange={setShowAdd} onCreate={addSession} />
+
+      <RecapPostSheet
+        open={!!recapSession}
+        onOpenChange={(o) => !o && setRecapSession(null)}
+        league={league}
+        session={recapSession || {}}
+        attendees={recapSession ? rsvps.filter((r) => r.session_id === recapSession.id && r.status === 'going') : []}
+      />
     </div>
   );
 }

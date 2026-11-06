@@ -1,8 +1,8 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Check, X } from 'lucide-react';
+import { Check, X, Sparkles } from 'lucide-react';
 
-export default function SessionCard({ session, rsvps, myStatus, saving, onRsvp, isPast }) {
+export default function SessionCard({ session, rsvps, myStatus, saving, onRsvp, isPast, onRecap }) {
   const going = rsvps.filter((r) => r.session_id === session.id && r.status === 'going');
   const date = new Date(session.start_time);
   const goingLabel = going.length
@@ -26,6 +26,16 @@ export default function SessionCard({ session, rsvps, myStatus, saving, onRsvp, 
 
       {session.note && <p className="text-sm text-muted-foreground mt-2">{session.note}</p>}
       <p className="text-xs text-muted-foreground mt-2 truncate">{goingLabel}</p>
+
+      {isPast && onRecap && (
+        <button
+          type="button"
+          onClick={() => onRecap(session)}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 h-10 rounded-full border border-border text-xs font-bold text-foreground active:scale-[0.97] transition"
+        >
+          <Sparkles className="w-4 h-4 text-primary" /> Post recap
+        </button>
+      )}
 
       {!isPast && (
         <div className="flex gap-2 mt-3">
