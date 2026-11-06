@@ -176,20 +176,20 @@ export default function Profile({ user: userProp, usernameOverride }) {
       <div className="relative">
         <div
           className="px-4 relative z-10"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)' }}
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.5rem)' }}
         >
-          <div className="flex items-end justify-between mb-2">
+          <div className="flex items-center justify-between gap-3 mb-1.5">
             {isSelf ? (
-              <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} />
+              <AvatarUpload profile={profile} fallback={displayName?.[0] || 'U'} onUploaded={setProfile} size="w-16 h-16" />
             ) : (
               <button
                 onClick={() => profile.avatar_url && openPhotoViewer(profile.avatar_url)}
                 className={`shrink-0 ${profile.avatar_url ? 'active:scale-95 transition' : 'cursor-default'}`}
                 aria-label={profile.avatar_url ? 'View profile photo' : undefined}
               >
-                <Avatar className="w-20 h-20 border-4 border-background">
+                <Avatar className="w-16 h-16 border-2 border-background">
                   <AvatarImage src={profile.avatar_url} />
-                  <AvatarFallback className="text-2xl">{displayName?.[0] || 'U'}</AvatarFallback>
+                  <AvatarFallback className="text-xl">{displayName?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
               </button>
             )}
@@ -245,11 +245,13 @@ export default function Profile({ user: userProp, usernameOverride }) {
               </div>
             )}
           </div>
-          <h1 className="font-heading text-lg font-bold leading-tight">{displayName}</h1>
-          <p className="text-sm text-muted-foreground">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}{sportDisplay ? ` · ${sportDisplay.emoji} ${sportDisplay.label}` : ''}</p>
-          {profile.bio && <p className="text-sm mt-1.5">{profile.bio}</p>}
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h1 className="font-heading text-lg font-bold leading-tight">{displayName}</h1>
+            <p className="text-xs text-muted-foreground truncate">@{profile.username}{profile.city ? ` · ${profile.city}` : ''}{sportDisplay ? ` · ${sportDisplay.emoji} ${sportDisplay.label}` : ''}</p>
+          </div>
+          {profile.bio && <p className="text-sm mt-1 leading-snug">{profile.bio}</p>}
 
-          <div className="flex items-center gap-5 mt-3 text-sm">
+          <div className="flex items-center gap-4 mt-2 text-xs">
             <span><AnimatedNumber value={wins} className="font-heading font-bold" /> <span className="text-muted-foreground">Wins</span></span>
             <span><AnimatedNumber value={losses} className="font-heading font-bold" /> <span className="text-muted-foreground">Losses</span></span>
 
@@ -261,7 +263,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
           {isSelf && (
             <button
               onClick={() => setShowQR(true)}
-              className="mt-3 mb-1 flex items-center gap-1.5 text-xs font-semibold text-primary"
+              className="mt-2 mb-1 flex items-center gap-1.5 text-xs font-semibold text-primary"
             >
               <QrCode className="w-3.5 h-3.5" /> Show My QR
             </button>
@@ -270,7 +272,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
       </div>
 
       {/* Competitive Record + Current Rival */}
-      <div className="px-4 pb-3 space-y-3">
+      <div className="px-4 pb-2 space-y-2">
         <CompetitiveRecord stats={{ ...profileStats, rivalriesWon: stats?.rivalries_won ?? 0 }} />
         <CurrentRival userId={ownerId} profile={profile} isSelf={isSelf} />
         <AchievementBadges stats={{ wins, losses, draws: profileStats?.draws ?? stats?.draws ?? 0, currentStreak, longestStreak }} />
