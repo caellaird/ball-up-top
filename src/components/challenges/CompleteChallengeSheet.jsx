@@ -8,6 +8,7 @@ import { AWARD_TYPES, getSportDisplay } from '@/lib/constants';
 import { Crown } from 'lucide-react';
 import { sendNotification } from '@/lib/notify';
 import CelebrationOverlay from '@/components/shared/CelebrationOverlay';
+import ImageCropSheet from '@/components/shared/ImageCropSheet';
 
 // Notifies every other participant that a result was published, gated by each
 // recipient's "Challenge Results" notification preference.
@@ -36,6 +37,8 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   const [caption, setCaption] = useState('');
   const [award, setAward] = useState('');
   const [photos, setPhotos] = useState([]);
+  const [cropQueue, setCropQueue] = useState([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [finalGame, setFinalGame] = useState(false);
   const [saving, setSaving] = useState(false);
   const [celebration, setCelebration] = useState(null);
@@ -65,11 +68,22 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
   ].filter((p) => p.id && p.name);
   const isMultiplayer = participants.length > 2;
 
-  const uploadPhotos = async (files) => {
-    const uploads = await Promise.all(
-      Array.from(files).slice(0, 5 - photos.length).map((file) => base44.integrations.Core.UploadFile({ file }))
-    );
-    setPhotos([...photos, ...uploads.map((u) => u.file_url)]);
+  // Every picked photo goes through the cropper, then uploads as it's confirmed.
+  const uploadPhotos = (files) => {
+    const room = 5 - photos.length;
+    if (room <= 0) return;
+    setCropQueue(Array.from(files).slice(0, room));
+  };
+
+  const uploadCroppedPhoto = async (file) => {
+    setUploadingPhoto(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setPhotos((prev) => [...prev, file_url]);
+    } finally {
+      setUploadingPhoto(false);
+      setCropQueue((prev) => prev.slice(1));
+    }
   };
 
   // Every participant gets an individual result — the winner gets a win, everyone else a loss.
@@ -348,8 +362,11 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
               {photos.map((p) => <img key={p} src={p} alt="" className="w-16 h-16 rounded-xl object-cover" />)}
               {photos.length < 5 && (
                 <label className="w-16 h-16 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-xs cursor-pointer">
-                  +
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadPhotos(e.target.files)} />
+                  {uploadingPhoto ? '...' : '+'}
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
+                    uploadPhotos(e.target.files);
+                    e.target.value = '';
+                  }} />
                 </label>
               )}
             </div>
@@ -383,6 +400,13 @@ export default function CompleteChallengeSheet({ open, onOpenChange, challenge, 
             {saving ? 'Publishing...' : isSeries ? 'Save Game Result' : 'Publish Result'}
           </Button>
         </div>
+
+        <ImageCropSheet
+          file={cropQueue[0]}
+          open={cropQueue.length > 0}
+          onCancel={() => setCropQueue([])}
+          onCropped={uploadCroppedPhoto}
+        />
       </SheetContent>
     </Sheet>
     <CelebrationOverlay result={celebration} onDone={() => { setCelebration(null); onCompleted(completedRef.current); }} />

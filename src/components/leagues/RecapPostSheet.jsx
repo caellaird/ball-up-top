@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { base44 } from '@/api/base44Client';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
 import { getSportDisplay } from '@/lib/constants';
+import ImageCropSheet from '@/components/shared/ImageCropSheet';
 
 export default function RecapPostSheet({ open, onOpenChange, league, session, attendees, onPosted }) {
   const [body, setBody] = useState('');
@@ -15,6 +16,7 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [cropFile, setCropFile] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -22,6 +24,7 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
       setImageUrl('');
       setPosted(false);
       setSaving(false);
+      setCropFile(null);
     }
   }, [open]);
 
@@ -131,7 +134,10 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
                   accept="image/*"
                   className="sr-only"
                   disabled={uploading}
-                  onChange={(e) => uploadImage(e.target.files?.[0])}
+                  onChange={(e) => {
+                    setCropFile(e.target.files?.[0] || null);
+                    e.target.value = '';
+                  }}
                 />
               </label>
             )}
@@ -154,6 +160,16 @@ export default function RecapPostSheet({ open, onOpenChange, league, session, at
           </div>
         )}
       </SheetContent>
+
+      <ImageCropSheet
+        file={cropFile}
+        open={!!cropFile}
+        onCancel={() => setCropFile(null)}
+        onCropped={(cropped) => {
+          setCropFile(null);
+          uploadImage(cropped);
+        }}
+      />
     </Sheet>
   );
 }

@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, ImagePlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getOrCreateProfile } from '@/lib/ensureProfile';
+import ImageCropSheet from '@/components/shared/ImageCropSheet';
 
 const MAX_STATS = 3;
 
@@ -17,6 +18,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
   const [stats, setStats] = useState([{ label: '', value: '' }, { label: '', value: '' }]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [cropFile, setCropFile] = useState(null);
 
   useEffect(() => {
     if (open) {
@@ -25,6 +27,7 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
       setImageUrl('');
       setStats([{ label: '', value: '' }, { label: '', value: '' }]);
       setError('');
+      setCropFile(null);
     }
   }, [open]);
 
@@ -119,7 +122,10 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
                   type="file"
                   accept="image/*"
                   className="sr-only"
-                  onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])}
+                  onChange={(e) => {
+                    setCropFile(e.target.files?.[0] || null);
+                    e.target.value = '';
+                  }}
                 />
               </label>
             )}
@@ -170,6 +176,16 @@ export default function HighlightComposerSheet({ open, onOpenChange, onPosted })
           </Button>
         </div>
       </SheetContent>
+
+      <ImageCropSheet
+        file={cropFile}
+        open={!!cropFile}
+        onCancel={() => setCropFile(null)}
+        onCropped={(cropped) => {
+          setCropFile(null);
+          uploadImage(cropped);
+        }}
+      />
     </Sheet>
   );
 }
