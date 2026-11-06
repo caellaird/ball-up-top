@@ -1,23 +1,10 @@
-import React, { useRef } from 'react';
-import { useOutlet, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import TabContainer from './TabContainer';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const TAB_PATHS = ['/', '/challenges', '/groups', '/profile/me'];
-
-// Renders the overlay page's outlet. While the overlay animates out after
-// navigating back to a tab route, the live outlet would render a SECOND copy
-// of that tab page (e.g. Challenges) on top of the real one in TabContainer.
-// Keep showing the last non-tab page instead, so there's only ever one copy.
-function OverlayOutlet({ context }) {
-  const location = useLocation();
-  const outlet = useOutlet(context);
-  const last = useRef(outlet);
-  if (!TAB_PATHS.includes(location.pathname)) last.current = outlet;
-  return last.current;
-}
 
 export default function MobileShell() {
   const { user, loading } = useCurrentUser();
@@ -39,20 +26,14 @@ export default function MobileShell() {
         {/* Content area — the only part that scrolls. Bottom nav below is a fixed sibling. */}
         <div className="relative flex-1 min-h-0">
           <TabContainer user={user} pathname={location.pathname} />
-          <AnimatePresence mode="wait">
-            {!isTabRoute && (
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="absolute inset-0 bg-background overflow-y-auto overscroll-contain pb-4 z-10"
-              >
-                <OverlayOutlet context={{ user }} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {!isTabRoute && (
+            <div
+              key={location.pathname}
+              className="absolute inset-0 z-20 bg-background overflow-y-auto overscroll-contain pb-4"
+            >
+              <Outlet context={{ user }} />
+            </div>
+          )}
         </div>
         <BottomNav />
       </div>

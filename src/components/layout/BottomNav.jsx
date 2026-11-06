@@ -21,7 +21,7 @@ export default function BottomNav() {
   const isActive = (to) => location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
 
   return (
-    <nav className="sticky bottom-0 z-40 bg-card/95 backdrop-blur border-t border-border/70 arena-shadow pb-[env(safe-area-inset-bottom)]">
+    <nav className="relative sticky bottom-0 z-50 shrink-0 bg-card/95 backdrop-blur border-t border-border/70 arena-shadow pb-[env(safe-area-inset-bottom)]">
       <div className="relative flex items-end justify-around px-2 pt-2 pb-2">
         {items.map(({ to, icon: Icon, label }) => {
           const active = isActive(to);
