@@ -118,12 +118,17 @@ export default function Profile({ user: userProp, usernameOverride }) {
       });
       // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
       const awardList = await base44.entities.Award.filter({ recipient_id: ownerId }, '-created_date', 20);
-      const friendsAsCreator = await base44.entities.Friend.filter({ created_by_id: ownerId, status: 'accepted' });
-      const friendsAsAddressee = await base44.entities.Friend.filter({ addressee_id: ownerId, status: 'accepted' });
+      // One $or query covers both directions instead of two separate filters.
+      const friendRows = await base44.entities.Friend.filter({
+        $or: [
+          { created_by_id: ownerId, status: 'accepted' },
+          { addressee_id: ownerId, status: 'accepted' },
+        ],
+      });
       const profileStatsResult = await getCachedProfileStats(ownerId);
       const pendingList = isSelf ? await base44.entities.Friend.filter({ addressee_id: user.id, status: 'pending' }) : [];
       setAwards(awardList);
-      setFriendRecords([...friendsAsCreator, ...friendsAsAddressee]);
+      setFriendRecords(friendRows);
       setProfileStats(profileStatsResult);
       if (isSelf) setPendingCount(pendingList.length);
     }
