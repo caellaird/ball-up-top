@@ -12,8 +12,15 @@
 
 const PREF_BY_TYPE: Record<string, string> = {
   challenge_invite: "notif_challenge_invites",
+  challenge_response: "notif_challenge_results",
   direct_message: "notif_direct_messages",
   challenge_result: "notif_challenge_results",
+  post_comment: "notif_post_comments",
+  friend_request: "notif_friend_activity",
+  friend_response: "notif_friend_activity",
+  friend_accepted: "notif_friend_activity",
+  friend_removed: "notif_friend_activity",
+  league_invite: "notif_friend_activity",
   event_reminder: "notif_public_reminders",
   favorite_event_update: "notif_explore_favorites",
   // Public-event lifecycle notifications are gated by the nearby/public toggle.
@@ -26,25 +33,20 @@ const PREF_BY_TYPE: Record<string, string> = {
   rivalry_lead_change: "notif_challenge_results",
 };
 
-// Only these types also fire a native lock-screen push. Everything else is
-// in-app-only, to avoid spamming the lock screen with low-signal updates.
-const HIGH_SIGNAL_PUSH_TYPES = new Set<string>([
-  "direct_message",
-  "challenge_invite",
-  "challenge_result",
-  "event_reminder",
-  "event_cancelled",
-  "rivalry_activated",
-  "rivalry_lead_change",
-]);
+// Every notification category also fires a native push, so a category that
+// appears in the in-app center always mirrors to the lock screen when the
+// recipient allows it (master push toggle + per-category preference).
 
 export function prefFieldForType(type?: string): string | null {
   if (!type) return null;
   return PREF_BY_TYPE[type] ?? null;
 }
 
+// Push is available for every category, so a new in-app notification can never
+// silently skip the lock screen; the recipient's preferences still decide
+// whether it is delivered.
 export function isHighSignal(type?: string): boolean {
-  return !!type && HIGH_SIGNAL_PUSH_TYPES.has(type);
+  return !!type;
 }
 
 // Unmapped types are always allowed (preserves existing behavior for anything
@@ -56,11 +58,10 @@ export function shouldSend(profile: any, type?: string): boolean {
   return profile?.[field] !== false;
 }
 
-// A native push fires only for high-signal types, and only when BOTH the
-// recipient's master push toggle (push_enabled) and the per-category
-// preference are on. Defaults permissive (undefined = on) for both.
+// A native push fires whenever BOTH the recipient's master push toggle
+// (push_enabled) and the per-category preference are on. Defaults permissive
+// (undefined = on) for both.
 export function shouldPush(profile: any, type?: string): boolean {
-  if (!isHighSignal(type)) return false;
   if (profile?.push_enabled === false) return false;
   return shouldSend(profile, type);
 }
@@ -77,7 +78,7 @@ export async function sendPush(
   actionUrl?: string,
   profile?: any,
 ) {
-  if (!userId || !isHighSignal(type)) return;
+  if (!userId || !type) return;
   try {
     const p = profile ?? (await admin.entities.Profile.filter({ created_by_id: userId }))?.[0];
     if (!shouldPush(p, type)) return;
@@ -85,6 +86,7 @@ export async function sendPush(
       user_id: userId,
       title,
       content,
+      action_label: "Open",
       action_url: actionUrl,
     });
   } catch {
@@ -121,7 +123,7 @@ export async function sendIfAllowed(admin: any, params: {
       body: params.body,
       link: params.link,
     });
-    if (notif && isHighSignal(params.type)) {
+    if (notif) {
       await sendPush(
         admin,
         params.user_id,

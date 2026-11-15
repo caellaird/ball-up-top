@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { shouldSend, isHighSignal, sendPush } from '../../shared/notifPrefs.ts';
+import { shouldSend, sendPush } from '../../shared/notifPrefs.ts';
 
 // Validates that a notification link is a safe same-origin app path. Rejects
 // absolute URLs, protocol-relative URLs (//evil.com), and backslash escapes
@@ -76,7 +76,18 @@ export default async function(req) {
 
     // The recipient must have a legitimate relationship with the sender —
     // prevents spam and phishing via notifications to arbitrary users.
-    if (!(await hasRelationship(admin, user.id, b.user_id))) {
+    let allowed = await hasRelationship(admin, user.id, b.user_id);
+    // Post comments are the one exception: the sender's relationship is with the
+    // recipient's post, not necessarily with the recipient.
+    if (!allowed && b.type === 'post_comment' && b.post_id) {
+      try {
+        const post = await admin.entities.Post.get(b.post_id);
+        allowed = !!post && post.created_by_id === b.user_id;
+      } catch {
+        allowed = false;
+      }
+    }
+    if (!allowed) {
       return Response.json({ error: 'No relationship with recipient' }, { status: 403 });
     }
 
@@ -91,6 +102,21 @@ export default async function(req) {
     } catch { /* ignore */ }
     if (!shouldSend(profile, b.type)) return Response.json({ suppressed: true });
 
+    // Two events can describe the same action (a result logged from the client
+    // and from a backend helper). Skip an identical notification — and its push —
+    // when one was already created for this recipient in the last 20 seconds.
+    try {
+      const recent = await admin.entities.Notification.filter(
+        { user_id: b.user_id, type: b.type }, '-created_date', 5,
+      );
+      const now = Date.now();
+      const duplicate = (recent || []).some((n: any) => {
+        const created = new Date(n.created_date).getTime();
+        return (now - created) < 20000 && n.title === b.title && (n.body || '') === (b.body || '') && (n.link || '') === (link || '');
+      });
+      if (duplicate) return Response.json({ deduped: true });
+    } catch { /* dedupe is best-effort */ }
+
     const notif = await admin.entities.Notification.create({
       user_id: b.user_id,
       type: b.type,
@@ -103,9 +129,9 @@ export default async function(req) {
       link,
     });
 
-    if (isHighSignal(b.type)) {
-      await sendPush(admin, b.user_id, b.type, b.title, b.body || b.title, link, profile);
-    }
+    // Native push for every category; sendPush itself applies the recipient's
+    // master toggle + category preference, and never throws.
+    await sendPush(admin, b.user_id, b.type, b.title, b.body || b.title, link, profile);
 
     return Response.json({ id: notif?.id ?? null });
   } catch (error) {

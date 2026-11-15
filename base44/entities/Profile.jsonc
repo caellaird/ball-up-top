@@ -119,6 +119,16 @@
       "type": "boolean",
       "default": true
     },
+    "notif_friend_activity": {
+      "type": "boolean",
+      "default": true,
+      "description": "Friend requests, acceptances and league invites (in-app + push)"
+    },
+    "notif_post_comments": {
+      "type": "boolean",
+      "default": true,
+      "description": "Comments on the player's own posts (in-app + push)"
+    },
     "push_enabled": {
       "type": "boolean",
       "default": true

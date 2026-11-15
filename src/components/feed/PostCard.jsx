@@ -15,6 +15,7 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import ReportSheet from '@/components/shared/ReportSheet';
 import FriendButton from '@/components/profile/FriendButton';
 import PostShareSheet from '@/components/feed/PostShareSheet';
+import { sendNotification } from '@/lib/notify';
 
 export default function PostCard({ post, reactionCounts, myEmoji, onReact, userId, currentUserName, onDeleted, friendRecordByUserId }) {
   const [showComments, setShowComments] = useState(false);
@@ -61,6 +62,20 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
       setComments((prev) => [c, ...prev]);
       setAddedComments((n) => n + 1);
       setCommentText('');
+      // Notify the post's author (in-app + native push). Best-effort: a failed
+      // notification never blocks the comment that was just saved.
+      if (post.created_by_id && post.created_by_id !== me.id) {
+        sendNotification({
+          userId: post.created_by_id,
+          type: 'post_comment',
+          actorName: me.full_name,
+          actorAvatar: profile.avatar_url,
+          title: `${me.full_name} commented on your post`,
+          body,
+          link: '/',
+          postId: post.id,
+        }).catch(() => {});
+      }
     } catch {
       setCommentError("Couldn't post your comment. Try again.");
     } finally {

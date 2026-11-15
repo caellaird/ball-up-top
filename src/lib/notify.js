@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 // creates the in-app Notification under the service role (required to create
 // records for other users), and — for the high-signal subset — fires a native
 // lock-screen push. Push cannot be sent from client code, so this stays thin.
-export async function sendNotification({ userId, type, actorId, actorName, actorUsername, actorAvatar, title, body, link }) {
+export async function sendNotification({ userId, type, actorId, actorName, actorUsername, actorAvatar, title, body, link, postId }) {
   if (!userId) return;
   return base44.functions.invoke('sendNotification', {
     user_id: userId,
@@ -17,5 +17,6 @@ export async function sendNotification({ userId, type, actorId, actorName, actor
     title,
     body,
     link,
+    post_id: postId,
   });
 }
