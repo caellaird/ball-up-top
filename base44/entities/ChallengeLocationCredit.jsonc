@@ -1,0 +1,48 @@
+{
+  "name": "ChallengeLocationCredit",
+  "type": "object",
+  "properties": {
+    "challenge_id": {
+      "type": "string",
+      "description": "Completed challenge this credit belongs to"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Participant who earned the credit"
+    },
+    "city_key": {
+      "type": "string",
+      "description": "City key the participant's credit was applied to"
+    },
+    "state_code": {
+      "type": "string",
+      "description": "State code the participant's credit was applied to"
+    }
+  },
+  "required": [
+    "challenge_id",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

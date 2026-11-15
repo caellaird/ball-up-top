@@ -27,8 +27,9 @@ import FriendsTab from '@/components/profile/tabs/FriendsTab';
 import AwardsTab from '@/components/profile/tabs/AwardsTab';
 import HighlightsTab from '@/components/profile/tabs/HighlightsTab';
 import FavoriteSportPicker from '@/components/profile/FavoriteSportPicker';
-import CityPicker from '@/components/profile/CityPicker';
-import { toCityAttribution } from '@/lib/cities';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toLocationAttribution } from '@/lib/cities';
+import { US_STATES, STATE_NAME_BY_CODE, splitProfileLocation } from '@/lib/usStates';
 import CompetitiveRecord from '@/components/profile/CompetitiveRecord';
 import CurrentRival from '@/components/profile/CurrentRival';
 import AnimatedNumber from '@/components/shared/AnimatedNumber';
@@ -50,7 +51,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const [awards, setAwards] = useState([]);
   const [displayName, setDisplayName] = useState('');
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ nickname: '', bio: '', city: '', city_key: '', city_display: '', favorite_sport: '' });
+  const [form, setForm] = useState({ nickname: '', bio: '', city: '', city_key: '', city_display: '', state_code: '', state_name: '', favorite_sport: '' });
   const [friendRecords, setFriendRecords] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [showChallenge, setShowChallenge] = useState(false);
@@ -104,12 +105,15 @@ export default function Profile({ user: userProp, usernameOverride }) {
     setDisplayName(name);
     if (p) {
       setAvatar(ownerId, p.avatar_url);
+      const savedLocation = splitProfileLocation(p);
       setForm({
         nickname: p.nickname || '',
         bio: p.bio || '',
-        city: p.city_display || p.city || '',
+        city: savedLocation.city,
         city_key: p.city_key || '',
         city_display: p.city_display || '',
+        state_code: savedLocation.stateCode,
+        state_name: STATE_NAME_BY_CODE[savedLocation.stateCode] || '',
         favorite_sport: p.favorite_sport || '',
       });
       // Sequential fetches to avoid rate-limit bursts (parallel Promise.all caused 429s).
@@ -126,13 +130,17 @@ export default function Profile({ user: userProp, usernameOverride }) {
   };
 
   const save = async () => {
-    // Store the city in its canonical form so competitions credit the right city.
-    const city = toCityAttribution(form.city);
+    // Store the city and state in their canonical form so completed challenges
+    // credit the right city and state. A city without a state keeps no city key,
+    // so an incomplete location never ranks.
+    const city = toLocationAttribution(form.city, form.state_code);
     const updated = await base44.entities.Profile.update(profile.id, {
       ...form,
       city: city.city,
       city_key: city.key,
       city_display: city.display,
+      state_code: form.state_code || '',
+      state_name: STATE_NAME_BY_CODE[form.state_code] || '',
     });
     invalidateProfile(user.id);
     invalidateProfileStats(user.id);
@@ -171,7 +179,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
   const sportDisplay = getSportDisplay(profile.favorite_sport);
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* Profile header — avatar and actions straight on the page background */}
       <div className="relative">
         <div
@@ -206,7 +214,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
               </div>
             )}
             {!isSelf && (
-              <div className="flex gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1">
                 <button
                   onClick={goBack}
                   className="min-w-[36px] min-h-[36px] rounded-full bg-muted text-foreground flex items-center justify-center"
@@ -214,16 +222,6 @@ export default function Profile({ user: userProp, usernameOverride }) {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <Button size="sm" className="rounded-full bg-gradient-to-r from-primary to-accent" onClick={() => { setActiveTab('stats'); setShowChallenge(true); }}>
-                  <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
-                </Button>
-                <FriendButton
-                  currentUserId={user.id}
-                  currentUserName={user.full_name}
-                  targetUserId={profile.created_by_id}
-                  targetUserName={displayName}
-                />
-                <Button size="sm" variant="secondary" className="rounded-full" onClick={message}>Message</Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="secondary" className="rounded-full px-2" aria-label="More options">
@@ -267,6 +265,29 @@ export default function Profile({ user: userProp, usernameOverride }) {
             >
               <QrCode className="w-3.5 h-3.5" /> Show My QR
             </button>
+          )}
+
+          {!isSelf && (
+            <div className="flex items-stretch gap-2 mt-2 mb-1">
+              <Button
+                size="sm"
+                className="flex-1 rounded-full whitespace-nowrap"
+                onClick={() => { setActiveTab('stats'); setShowChallenge(true); }}
+              >
+                <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
+              </Button>
+              <div className="flex-1 min-w-0 overflow-hidden [&>button]:w-full [&>button]:px-2 [&>div]:w-full [&_button]:px-2">
+                <FriendButton
+                  currentUserId={user.id}
+                  currentUserName={user.full_name}
+                  targetUserId={profile.created_by_id}
+                  targetUserName={displayName}
+                />
+              </div>
+              <Button size="sm" variant="secondary" className="flex-1 rounded-full whitespace-nowrap" onClick={message}>
+                Message
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -343,7 +364,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
       )}
 
       <Sheet open={editing} onOpenChange={setEditing}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85dvh] overflow-y-auto">
           <SheetHeader><SheetTitle className="font-heading">Edit Profile</SheetTitle></SheetHeader>
           <div className="space-y-3 mt-4">
             <div>
@@ -353,10 +374,29 @@ export default function Profile({ user: userProp, usernameOverride }) {
             <Textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Home City</label>
-              <CityPicker
-                value={form.city}
-                onChange={(c) => setForm({ ...form, city: c.label, city_key: c.key, city_display: c.label })}
-              />
+              <div className="space-y-2">
+                <Input
+                  placeholder="City (e.g. Durham)"
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+                <Select
+                  value={form.state_code}
+                  onValueChange={(v) => setForm({ ...form, state_code: v, state_name: STATE_NAME_BY_CODE[v] || '' })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select your state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {US_STATES.map((state) => (
+                      <SelectItem key={state.code} value={state.code}>{state.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Add both your city and state so every completed challenge scores for them.
+              </p>
             </div>
             <FavoriteSportPicker value={form.favorite_sport} onChange={(v) => setForm({ ...form, favorite_sport: v })} />
             <Button onClick={save} className="w-full rounded-full h-12">Save</Button>

@@ -29,7 +29,7 @@ export default function MobileShell() {
           {!isTabRoute && (
             <div
               key={location.pathname}
-              className="absolute inset-0 z-20 bg-background overflow-y-auto overscroll-contain pb-4"
+              className="app-scroll absolute inset-0 z-20 bg-background overflow-y-auto overflow-x-hidden overscroll-contain pb-4"
             >
               <Outlet context={{ user }} />
             </div>

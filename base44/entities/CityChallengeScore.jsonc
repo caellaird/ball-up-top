@@ -1,0 +1,48 @@
+{
+  "name": "CityChallengeScore",
+  "type": "object",
+  "properties": {
+    "city_key": {
+      "type": "string",
+      "description": "Normalized 'city, st' key, e.g. 'durham, nc'"
+    },
+    "city_display": {
+      "type": "string",
+      "description": "Display form, e.g. 'Durham, NC'"
+    },
+    "state_code": {
+      "type": "string",
+      "description": "Two-letter state abbreviation, e.g. 'NC'"
+    },
+    "state_name": {
+      "type": "string",
+      "description": "Full state name, e.g. 'North Carolina'"
+    },
+    "completed_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Completed challenges credited to this city"
+    }
+  },
+  "required": [
+    "city_key"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

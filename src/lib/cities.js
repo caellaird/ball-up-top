@@ -93,6 +93,28 @@ export function searchCities(query) {
   return [...starts, ...contains].slice(0, 40);
 }
 
+// Builds a canonical location from a free-text city and a chosen state code.
+// City names are title-cased word by word, matching the server-side tally so
+// the same city always produces the same key ("durham, nc") and display.
+export function toLocationAttribution(rawCity, stateCode) {
+  const cityName = (rawCity || '').trim().replace(/\s+/g, ' ');
+  const state = (stateCode || '').trim().toUpperCase();
+  if (!cityName) return { city: '', key: '', display: '' };
+
+  const titled = cityName
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  if (!state) return { city: titled, key: '', display: titled };
+
+  return {
+    city: `${titled}, ${state}`,
+    key: `${titled.toLowerCase()}, ${state.toLowerCase()}`,
+    display: `${titled}, ${state}`,
+  };
+}
+
 // Resolves any stored city string into a canonical { city, key, display } trio.
 // Known cities come from the dataset; anything else is normalized the same way
 // the server does, so older free-text profiles still score consistently.

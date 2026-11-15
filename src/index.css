@@ -119,6 +119,13 @@
   .overflow-y-auto, .overflow-auto, .overflow-y-scroll {
     overscroll-behavior-y: contain;
   }
+
+  /* Native modal behavior: while a sheet or dialog is open, the screen behind
+     it is frozen. Radix marks the open dialog with data-state="open". */
+  body:has([role="dialog"][data-state="open"]) .app-scroll,
+  body:has([role="alertdialog"][data-state="open"]) .app-scroll {
+    overflow: hidden !important;
+  }
 }
 
 @layer components {

@@ -35,7 +35,7 @@ export default function TabContainer({ user, pathname }) {
           <div
             key={path}
             ref={active ? activeScrollRef : null}
-            className={`absolute inset-0 pb-4 ${scroll ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden'}`}
+            className={`absolute inset-0 pb-4 ${scroll ? 'app-scroll overflow-y-auto overflow-x-hidden overscroll-contain' : 'overflow-hidden'}`}
             style={{ display: active ? 'block' : 'none' }}
           >
             <Component user={user} {...(extraProps || {})} />

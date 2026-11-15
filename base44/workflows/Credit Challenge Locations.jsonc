@@ -1,0 +1,40 @@
+{
+  "name": "Credit Challenge Locations",
+  "description": "When a challenge becomes completed, adds one completed-challenge count to each participant's home city and state.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "Challenge",
+      "events": [
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"completed\" and .trigger.old_data.status != \"completed\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "credit_challenge_locations",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "credit_locations": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "creditChallengeLocations",
+            "args": {
+              "challengeId": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Credit city and state totals",
+            "description": "One count per participant"
+          }
+        }
+      }
+    ]
+  }
+}

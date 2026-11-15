@@ -22,15 +22,23 @@
     },
     "city": {
       "type": "string",
-      "description": "Home city picked by the player, stored as 'City, ST'"
+      "description": "Home city entered by the player, stored as 'City, ST'"
     },
     "city_key": {
       "type": "string",
-      "description": "Normalized city key used to credit this player's activity to their city, e.g. 'durham, nc'"
+      "description": "Normalized city key used to credit this player's completed challenges to their city, e.g. 'durham, nc'"
     },
     "city_display": {
       "type": "string",
       "description": "Display form of the player's city, e.g. 'Durham, NC'"
+    },
+    "state_code": {
+      "type": "string",
+      "description": "Two-letter state abbreviation selected by the player, e.g. 'NC'"
+    },
+    "state_name": {
+      "type": "string",
+      "description": "Full state name for display, e.g. 'North Carolina'"
     },
     "favorite_team": {
       "type": "string"

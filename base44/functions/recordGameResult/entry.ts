@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { awardCityPoints } from '../../shared/cityScore.ts';
+import { creditChallengeParticipants } from '../../shared/locationTally.ts';
 import { processRivalries } from '../../shared/rivalries.ts';
 
 // Records a single game result toward every participant's UserStats. Runs as the
@@ -159,6 +160,18 @@ export default async function(req) {
         }
       } catch (e) {
         // Best-effort: don't fail the result recording if city scoring fails.
+      }
+    }
+
+    // --- City + state completed-challenge totals (idempotent per participant) ---
+    // Runs for any completed challenge so both participants' locations get one
+    // count each. The workflow trigger covers completion edits made elsewhere;
+    // ChallengeLocationCredit rows keep the two paths from double-counting.
+    if (challenge.status === 'completed') {
+      try {
+        await creditChallengeParticipants(admin, challenge);
+      } catch (e) {
+        // Best-effort: the workflow retries crediting on the next completion update.
       }
     }
 
