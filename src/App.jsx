@@ -42,6 +42,7 @@ const Explore = lazy(() => import('@/pages/Explore'));
 const Leagues = lazy(() => import('@/pages/Leagues'));
 const CreateLeague = lazy(() => import('@/pages/CreateLeague'));
 const LeagueDetail = lazy(() => import('@/pages/LeagueDetail'));
+const BusinessPlan = lazy(() => import('@/pages/BusinessPlan'));
 
 function RouteFallback() {
   return (
@@ -93,6 +94,7 @@ const AuthenticatedApp = () => {
         <Route path="/aso-screenshots" element={<AsoScreenshots />} />
         <Route path="/award/:awardId" element={<AwardPage />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route path="/business-plan" element={<BusinessPlan />} />
           <Route element={<MobileShell />}>
             <Route path="/" element={<Home />} />
             <Route path="/rivalry/:rivalryId" element={<Rivalry />} />

@@ -3,7 +3,7 @@ import { useOutletContext, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, LogOut, Moon, Sun, Trash2, Shield, FileText } from 'lucide-react';
+import { Loader2, LogOut, Moon, Sun, Trash2, Shield, FileText, BookOpen } from 'lucide-react';
 import { getOrCreateProfile, invalidateProfile } from '@/lib/ensureProfile';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { useTheme } from '@/hooks/useTheme';
@@ -97,6 +97,13 @@ export default function Settings() {
 
       {/* Other / Legal */}
       <SettingsSection title="Other">
+        <Link to="/business-plan" className="flex items-center gap-3 px-4 py-3 min-h-[56px] hover:bg-muted/50">
+          <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Business Plan &amp; App Reference</p>
+            <p className="text-xs text-muted-foreground">Read or download the full document</p>
+          </div>
+        </Link>
         <Link to="/privacy-policy" className="flex items-center gap-3 px-4 py-3 min-h-[56px] hover:bg-muted/50">
           <Shield className="w-5 h-5 text-muted-foreground shrink-0" />
           <span className="text-sm font-medium">Privacy Policy</span>
