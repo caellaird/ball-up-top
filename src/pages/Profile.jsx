@@ -281,7 +281,7 @@ export default function Profile({ user: userProp, usernameOverride }) {
               >
                 <Swords className="w-3.5 h-3.5 mr-1" /> Challenge
               </Button>
-              <div className="flex-1 min-w-0 overflow-hidden [&>button]:w-full [&>button]:px-2 [&>div]:w-full [&_button]:px-2">
+              <div className="shrink-0 [&_button]:px-2.5">
                 <FriendButton
                   currentUserId={user.id}
                   currentUserName={user.full_name}
