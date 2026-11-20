@@ -106,6 +106,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
                 targetUserId={post.created_by_id}
                 targetUserName={post.author_name}
                 record={friendRecordByUserId ? (friendRecordByUserId[post.created_by_id] ?? null) : undefined}
+                hidePendingOutgoing
               />
               <button onClick={() => setShowReport(true)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Report post">
                 <Flag className="w-4 h-4" />
@@ -145,6 +146,7 @@ export default function PostCard({ post, reactionCounts, myEmoji, onReact, userI
                   targetUserId={post.created_by_id}
                   targetUserName={post.author_name}
                   record={friendRecordByUserId ? (friendRecordByUserId[post.created_by_id] ?? null) : undefined}
+                  hidePendingOutgoing
                 />
                 <button onClick={() => setShowReport(true)} className="p-1 text-muted-foreground hover:text-destructive" aria-label="Report post">
                   <Flag className="w-4 h-4" />

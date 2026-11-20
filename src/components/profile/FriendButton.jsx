@@ -35,7 +35,7 @@ async function fetchRelation(currentUserId, targetUserId) {
   return promise;
 }
 
-export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName, record }) {
+export default function FriendButton({ currentUserId, currentUserName, currentUserAvatar, targetUserId, targetUserName, record, hidePendingOutgoing = false }) {
   const [relation, setRelation] = useState(null);
   const [friendRecord, setFriendRecord] = useState(null);
   const [loading, setLoading] = useState(record === undefined);
@@ -175,6 +175,8 @@ export default function FriendButton({ currentUserId, currentUserName, currentUs
   }
 
   if (relation === 'pending_outgoing') {
+    // Feed cards hide this state: a request already sent is not news on a post.
+    if (hidePendingOutgoing) return null;
     return (
       <Button size="sm" variant="secondary" className="rounded-full" disabled>
         <Clock className="w-3.5 h-3.5 mr-1" /> Request Sent
